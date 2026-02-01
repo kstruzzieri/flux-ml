@@ -13,6 +13,10 @@ describe('Content', () => {
     expect(screen.getByTestId('resize-handle-right')).toBeInTheDocument()
     // Horizontal handle above output panel
     expect(screen.getByTestId('resize-handle-output')).toBeInTheDocument()
+    // Horizontal handle between Experiments and Files
+    expect(screen.getByTestId('resize-handle-left-row')).toBeInTheDocument()
+    // Horizontal handle between Inspector and Config
+    expect(screen.getByTestId('resize-handle-right-row')).toBeInTheDocument()
   })
 
   // Users resize panels by dragging handles. The panel width should update
@@ -119,5 +123,39 @@ describe('Content', () => {
 
     expect(handle).toHaveClass('resize-handle--horizontal')
     // CSS will apply cursor: row-resize
+  })
+
+  // Left column row divider allows resizing Experiments vs Files panels.
+  // Users may want more space for experiments list or file tree.
+  it('updates left top panel height when row handle is dragged', () => {
+    render(<Content />)
+
+    const handle = screen.getByTestId('resize-handle-left-row')
+    const content = screen.getByTestId('content')
+
+    // Simulate drag (moving down increases top panel height)
+    fireEvent.mouseDown(handle, { clientY: 200 })
+    fireEvent.mouseMove(document, { clientY: 300 })
+    fireEvent.mouseUp(document)
+
+    // Check that CSS variable was updated (default is 200px + 100px drag)
+    expect(content.style.getPropertyValue('--panel-left-top-height')).toBe('300px')
+  })
+
+  // Right column row divider allows resizing Inspector vs Config panels.
+  // Users may want more space for inspection details or configuration.
+  it('updates right top panel height when row handle is dragged', () => {
+    render(<Content />)
+
+    const handle = screen.getByTestId('resize-handle-right-row')
+    const content = screen.getByTestId('content')
+
+    // Simulate drag (moving down increases top panel height)
+    fireEvent.mouseDown(handle, { clientY: 200 })
+    fireEvent.mouseMove(document, { clientY: 350 })
+    fireEvent.mouseUp(document)
+
+    // Check that CSS variable was updated (default is 200px + 150px drag)
+    expect(content.style.getPropertyValue('--panel-right-top-height')).toBe('350px')
   })
 })

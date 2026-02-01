@@ -9,6 +9,7 @@
   /* ========================================
    * Colors - Backgrounds (Island Layout)
    * Lighter base with dark panels for contrast
+   * Chrome (header/toolbar) is cooler/bluer
    * ======================================== */
   --color-bg-base: #161b22;
   --color-bg-panel: #0d1117;
@@ -16,6 +17,10 @@
   --color-bg-content: #161b22;
   --color-bg-hover: #1c2128;
   --color-bg-active: #21262d;
+
+  /* Chrome - cooler/bluer for header and activity bar */
+  --color-bg-chrome: #080b10;
+  --color-bg-chrome-hover: #0d1118;
 
   /* ========================================
    * Colors - Borders
