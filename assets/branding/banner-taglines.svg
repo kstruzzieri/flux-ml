@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="640" fill="#030508"/>
+
+  <!-- Subtle grid pattern -->
+  <g stroke="#1c2733" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="160" x2="1280" y2="160"/>
+    <line x1="0" y1="320" x2="1280" y2="320"/>
+    <line x1="0" y1="480" x2="1280" y2="480"/>
+    <line x1="320" y1="0" x2="320" y2="640"/>
+    <line x1="640" y1="0" x2="640" y2="640"/>
+    <line x1="960" y1="0" x2="960" y2="640"/>
+  </g>
+
+  <!-- Large decorative signal lines in background -->
+  <g opacity="0.15">
+    <path d="M0 400 Q200 400 400 350 Q600 300 800 200 Q1000 100 1280 50"
+          stroke="#10B981"
+          stroke-width="8"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glowStrong)"/>
+    <path d="M0 400 Q200 400 400 420 Q600 450 800 500 Q1000 550 1280 590"
+          stroke="#F59E0B"
+          stroke-width="8"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glowStrong)"/>
+    <path d="M0 400 Q200 400 500 380 Q700 360 1280 340"
+          stroke="#06B6D4"
+          stroke-width="8"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glowStrong)"/>
+  </g>
+
+  <!-- Icon -->
+  <g transform="translate(470, 200)">
+    <!-- Background -->
+    <rect x="0" y="0" width="140" height="140" rx="28" fill="#0a0e14"/>
+
+    <!-- Three reward component lines -->
+    <path d="M28 77 Q46 77 60 70 Q74 63 88 46 Q98 35 112 32"
+          stroke="#10B981"
+          stroke-width="5"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glow)"/>
+
+    <path d="M28 77 Q46 77 60 82 Q74 88 88 100 Q98 110 112 114"
+          stroke="#F59E0B"
+          stroke-width="5"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glow)"/>
+
+    <path d="M28 77 Q46 77 68 74 Q86 70 112 66"
+          stroke="#06B6D4"
+          stroke-width="5"
+          stroke-linecap="round"
+          fill="none"
+          filter="url(#glow)"/>
+
+    <!-- Starting point -->
+    <circle cx="28" cy="77" r="6" fill="#F0F6FC" opacity="0.8"/>
+
+    <!-- Endpoints -->
+    <circle cx="112" cy="32" r="5" fill="#10B981" filter="url(#glow)"/>
+    <circle cx="112" cy="114" r="5" fill="#F59E0B" filter="url(#glow)"/>
+    <circle cx="112" cy="66" r="5" fill="#06B6D4" filter="url(#glow)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="640" y="300"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="96"
+        font-weight="700"
+        letter-spacing="-2"
+        fill="#F0F6FC">Flux</text>
+
+  <!-- Tagline -->
+  <text x="470" y="400"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="28"
+        font-weight="500"
+        fill="#8B9EB0">The ML development environment</text>
+
+  <!-- Secondary tagline -->
+  <text x="470" y="450"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="20"
+        font-weight="400"
+        fill="#4a5d73">Write code. Watch it learn.</text>
+</svg>
