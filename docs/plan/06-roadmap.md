@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a fresh start with ML at the forefront. The old flux-ide repo is archived; this roadmap is for the new repo.
+Flux is an ML development environment focused on reward model workflows, experiment tracking, and training visualization.
 
 ## Phase 1: Foundation (Weeks 1-3)
 
