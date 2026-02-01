@@ -74,12 +74,25 @@ flux-ml/
 ├── frontend/            # React + TypeScript frontend
 │   ├── src/
 │   │   ├── components/  # React components
-│   │   ├── stores/      # Zustand state management
-│   │   └── wailsjs/     # Generated Wails bindings
-│   └── ...
+│   │   ├── styles/      # CSS design tokens and components
+│   │   └── hooks/       # Custom React hooks
+│   └── wailsjs/         # Generated Wails bindings
 ├── docs/                # Design docs and TDD documentation
 └── assets/              # Branding and static assets
 ```
+
+### Architecture Decisions
+
+Key technical choices and their rationale:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| CSS | Vanilla CSS + BEM | Zero runtime overhead, optimal for fixed desktop UI |
+| State | React built-in | Sufficient for Phase 1; evaluate libraries as complexity grows |
+| Charts | uPlot (planned) | Lightweight Canvas-based, handles 100k+ points |
+| Database | SQLite (planned) | Embedded, no server, works offline |
+
+See [`docs/plan/08-frontend-architecture.md`](docs/plan/08-frontend-architecture.md) for detailed documentation.
 
 ## License
 

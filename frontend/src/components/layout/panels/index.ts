@@ -1,0 +1,6 @@
+export { ExperimentsPanel } from './ExperimentsPanel'
+export { FilesPanel } from './FilesPanel'
+export { MainPanel } from './MainPanel'
+export { InspectorPanel } from './InspectorPanel'
+export { ConfigPanel } from './ConfigPanel'
+export { OutputPanel } from './OutputPanel'

@@ -1,0 +1,143 @@
+/**
+ * Flux Design Tokens
+ *
+ * CSS custom properties defining the design system.
+ * See docs/plan/02-design-principles.md for rationale.
+ */
+
+:root {
+  /* ========================================
+   * Colors - Backgrounds (Island Layout)
+   * Lighter base with dark panels for contrast
+   * ======================================== */
+  --color-bg-base: #161b22;
+  --color-bg-panel: #0d1117;
+  --color-bg-elevated: #0f1419;
+  --color-bg-content: #161b22;
+  --color-bg-hover: #1c2128;
+  --color-bg-active: #21262d;
+
+  /* ========================================
+   * Colors - Borders
+   * ======================================== */
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+  --color-border-subtle: #1b1f24;
+
+  /* ========================================
+   * Colors - Primary Accent (Cyan)
+   * ======================================== */
+  --color-accent: #06b6d4;
+  --color-accent-bright: #22d3ee;
+  --color-accent-dim: rgba(6, 182, 212, 0.12);
+  --color-accent-glow: rgba(6, 182, 212, 0.4);
+
+  /* ========================================
+   * Colors - Status
+   * ======================================== */
+  --color-success: #10b981;
+  --color-success-dim: rgba(16, 185, 129, 0.12);
+  --color-warning: #f59e0b;
+  --color-warning-dim: rgba(245, 158, 11, 0.12);
+  --color-error: #ef4444;
+  --color-error-dim: rgba(239, 68, 68, 0.12);
+
+  /* ========================================
+   * Colors - Charts
+   * ======================================== */
+  --color-chart-1: #06b6d4;
+  --color-chart-2: #8b5cf6;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #10b981;
+  --color-chart-5: #ec4899;
+
+  /* ========================================
+   * Colors - Text
+   * ======================================== */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b9eb0;
+  --color-text-muted: #4a5d73;
+  --color-text-accent: var(--color-accent);
+
+  /* ========================================
+   * Typography - Font Families
+   * ======================================== */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* ========================================
+   * Typography - Font Sizes
+   * ======================================== */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 20px;
+
+  /* ========================================
+   * Typography - Font Weights
+   * ======================================== */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* ========================================
+   * Typography - Line Heights
+   * ======================================== */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ========================================
+   * Spacing
+   * ======================================== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+
+  /* ========================================
+   * Layout - Panel Sizes (Island Layout)
+   * ======================================== */
+  --header-height: 48px;
+  --activity-bar-width: 52px;
+  --panel-left-width: 280px;
+  --panel-right-width: 320px;
+  --panel-bottom-height: 180px;
+  --panel-output-height: 160px;
+  --panel-gap: 6px;
+  --panel-radius: 10px;
+
+  /* ========================================
+   * Layout - Borders & Radius
+   * ======================================== */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* ========================================
+   * Transitions
+   * ======================================== */
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ========================================
+   * Shadows
+   * ======================================== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+
+  /* ========================================
+   * Z-Index Scale
+   * ======================================== */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
+}
