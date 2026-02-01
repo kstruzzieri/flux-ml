@@ -1,4 +1,6 @@
-const ACTIVITY_ITEMS = [
+import type { ViewId } from './Header'
+
+const ACTIVITY_ITEMS: { id: ViewId; label: string; icon: JSX.Element }[] = [
   {
     id: 'experiments',
     label: 'Experiments',
@@ -70,7 +72,7 @@ const ACTIVITY_ITEMS = [
       </svg>
     ),
   },
-] as const
+]
 
 const BOTTOM_ITEMS = [
   {
@@ -111,8 +113,8 @@ const BOTTOM_ITEMS = [
 ] as const
 
 interface ActivityBarProps {
-  activeItem?: string
-  onItemClick?: (id: string) => void
+  activeItem?: ViewId
+  onItemClick?: (id: ViewId) => void
 }
 
 export function ActivityBar({ activeItem = 'experiments', onItemClick }: ActivityBarProps) {
@@ -133,31 +135,25 @@ export function ActivityBar({ activeItem = 'experiments', onItemClick }: Activit
 
       <div className="activity-bar__divider" />
 
-      {BOTTOM_ITEMS.slice(0, 1).map((item) => (
-        <button
-          key={item.id}
-          className={`activity-bar__btn ${item.id === activeItem ? 'activity-bar__btn--active' : ''}`}
-          title={item.label}
-          aria-label={item.label}
-          onClick={() => onItemClick?.(item.id)}
-        >
-          {item.icon}
-        </button>
-      ))}
+      {/* Alerts button - not a navigation view */}
+      <button
+        className="activity-bar__btn"
+        title={BOTTOM_ITEMS[0].label}
+        aria-label={BOTTOM_ITEMS[0].label}
+      >
+        {BOTTOM_ITEMS[0].icon}
+      </button>
 
       <div className="activity-bar__spacer" />
 
-      {BOTTOM_ITEMS.slice(1).map((item) => (
-        <button
-          key={item.id}
-          className={`activity-bar__btn ${item.id === activeItem ? 'activity-bar__btn--active' : ''}`}
-          title={item.label}
-          aria-label={item.label}
-          onClick={() => onItemClick?.(item.id)}
-        >
-          {item.icon}
-        </button>
-      ))}
+      {/* Settings button - not a navigation view */}
+      <button
+        className="activity-bar__btn"
+        title={BOTTOM_ITEMS[1].label}
+        aria-label={BOTTOM_ITEMS[1].label}
+      >
+        {BOTTOM_ITEMS[1].icon}
+      </button>
     </aside>
   )
 }
