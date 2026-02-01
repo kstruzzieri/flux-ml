@@ -1,0 +1,186 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '20'
+  GO_VERSION: '1.23'
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: darwin-arm64
+            wails_platform: darwin/arm64
+            artifact_name: flux-darwin-arm64
+          - os: macos-13
+            platform: darwin-amd64
+            wails_platform: darwin/amd64
+            artifact_name: flux-darwin-amd64
+          - os: ubuntu-latest
+            platform: linux-amd64
+            wails_platform: linux/amd64
+            artifact_name: flux-linux-amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux-amd64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build application
+        run: |
+          if [ "${{ matrix.platform }}" = "linux-amd64" ]; then
+            wails build -platform ${{ matrix.wails_platform }} -tags webkit2_41
+          else
+            wails build -platform ${{ matrix.wails_platform }}
+          fi
+
+      - name: Package binary (macOS)
+        if: startsWith(matrix.platform, 'darwin')
+        run: |
+          cd build/bin
+          tar -czvf ${{ matrix.artifact_name }}.tar.gz Flux.app
+          shasum -a 256 ${{ matrix.artifact_name }}.tar.gz > ${{ matrix.artifact_name }}.tar.gz.sha256
+
+      - name: Package binary (Linux)
+        if: matrix.platform == 'linux-amd64'
+        run: |
+          cd build/bin
+          tar -czvf ${{ matrix.artifact_name }}.tar.gz flux
+          sha256sum ${{ matrix.artifact_name }}.tar.gz > ${{ matrix.artifact_name }}.tar.gz.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            build/bin/${{ matrix.artifact_name }}.tar.gz
+            build/bin/${{ matrix.artifact_name }}.tar.gz.sha256
+          retention-days: 1
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -type f -name "*.tar.gz" -exec mv {} release/ \;
+          find artifacts -type f -name "*.sha256" -exec mv {} release/ \;
+
+          # Combine checksums into single file
+          cd release
+          cat *.sha256 > checksums.txt
+          rm -f *.sha256
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "Initial release" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine if prerelease
+        id: prerelease
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          if [[ "$TAG_NAME" == *"-"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease == 'true' }}
+          generate_release_notes: true
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Installation
+
+            Download the appropriate binary for your platform:
+
+            | Platform | File |
+            |----------|------|
+            | macOS (Apple Silicon) | `flux-darwin-arm64.tar.gz` |
+            | macOS (Intel) | `flux-darwin-amd64.tar.gz` |
+            | Linux (x64) | `flux-linux-amd64.tar.gz` |
+
+            ### Verify checksums
+
+            ```bash
+            # macOS
+            shasum -a 256 -c checksums.txt
+
+            # Linux
+            sha256sum -c checksums.txt
+            ```
+          files: |
+            release/*
