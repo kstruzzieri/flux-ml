@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <filter id="glow5" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14"/>
+
+  <!-- F vertical stem -->
+  <path d="M26 72 L26 28"
+        stroke="#F0F6FC"
+        stroke-width="6"
+        stroke-linecap="round"
+        fill="none"
+        opacity="0.9"/>
+
+  <!-- Three reward signal lines diverging from the F -->
+  <!-- Helpfulness (green) - top bar, curves up -->
+  <path d="M26 34 Q42 34 52 28 Q62 22 75 20"
+        stroke="#10B981"
+        stroke-width="4"
+        stroke-linecap="round"
+        fill="none"
+        filter="url(#glow5)"/>
+
+  <!-- Honesty (cyan) - middle bar, stays level -->
+  <path d="M26 50 Q42 50 58 50 Q68 50 75 50"
+        stroke="#06B6D4"
+        stroke-width="4"
+        stroke-linecap="round"
+        fill="none"
+        filter="url(#glow5)"/>
+
+  <!-- Harmlessness (amber) - curves down (diverging) -->
+  <path d="M26 66 Q42 66 52 72 Q62 78 75 80"
+        stroke="#F59E0B"
+        stroke-width="4"
+        stroke-linecap="round"
+        fill="none"
+        filter="url(#glow5)"/>
+
+  <!-- Live endpoints -->
+  <circle cx="75" cy="20" r="3" fill="#34D399" filter="url(#glow5)"/>
+  <circle cx="75" cy="50" r="3" fill="#22D3EE" filter="url(#glow5)"/>
+  <circle cx="75" cy="80" r="3" fill="#FBBF24" filter="url(#glow5)"/>
+</svg>

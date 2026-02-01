@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flux Logo Concepts</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #030508;
+      color: #f0f6fc;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #06b6d4;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .concept {
+      background: #0a0e14;
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid #1c2733;
+    }
+    .concept:hover {
+      border-color: #06b6d4;
+    }
+    .concept h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #06b6d4;
+    }
+    .concept p {
+      font-size: 13px;
+      color: #8b9eb0;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .icon-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .icon-container img {
+      width: 120px;
+      height: 120px;
+    }
+    .sizes {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+    }
+    .sizes img {
+      border-radius: 8px;
+    }
+    .size-label {
+      text-align: center;
+      font-size: 10px;
+      color: #4a5d73;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flux Logo Concepts</h1>
+
+  <div class="grid">
+    <div class="concept">
+      <h2>1. Neural / Learning</h2>
+      <p>Interconnected nodes suggesting a learning network. Central bright node represents the trained/learned state.</p>
+      <div class="icon-container">
+        <img src="concept-1-neural.svg" alt="Neural concept">
+      </div>
+      <div class="sizes">
+        <div>
+          <img src="concept-1-neural.svg" width="64" height="64">
+          <div class="size-label">64px</div>
+        </div>
+        <div>
+          <img src="concept-1-neural.svg" width="32" height="32">
+          <div class="size-label">32px</div>
+        </div>
+        <div>
+          <img src="concept-1-neural.svg" width="16" height="16">
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="concept">
+      <h2>2. Data Flow / Streaming</h2>
+      <p>Multiple streams converging to a central point. Represents live metrics flowing into the system.</p>
+      <div class="icon-container">
+        <img src="concept-2-dataflow.svg" alt="Data flow concept">
+      </div>
+      <div class="sizes">
+        <div>
+          <img src="concept-2-dataflow.svg" width="64" height="64">
+          <div class="size-label">64px</div>
+        </div>
+        <div>
+          <img src="concept-2-dataflow.svg" width="32" height="32">
+          <div class="size-label">32px</div>
+        </div>
+        <div>
+          <img src="concept-2-dataflow.svg" width="16" height="16">
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="concept">
+      <h2>3. Reward Signal / Divergence</h2>
+      <p>Three lines (reward components) starting together then diverging. Directly represents what Flux monitors.</p>
+      <div class="icon-container">
+        <img src="concept-3-reward.svg" alt="Reward signal concept">
+      </div>
+      <div class="sizes">
+        <div>
+          <img src="concept-3-reward.svg" width="64" height="64">
+          <div class="size-label">64px</div>
+        </div>
+        <div>
+          <img src="concept-3-reward.svg" width="32" height="32">
+          <div class="size-label">32px</div>
+        </div>
+        <div>
+          <img src="concept-3-reward.svg" width="16" height="16">
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="concept">
+      <h2>4. Abstract F / Chart</h2>
+      <p>Stylized "F" that resembles ascending chart lines with data points. Blends brand letter with ML visualization.</p>
+      <div class="icon-container">
+        <img src="concept-4-abstract-f.svg" alt="Abstract F concept">
+      </div>
+      <div class="sizes">
+        <div>
+          <img src="concept-4-abstract-f.svg" width="64" height="64">
+          <div class="size-label">64px</div>
+        </div>
+        <div>
+          <img src="concept-4-abstract-f.svg" width="32" height="32">
+          <div class="size-label">32px</div>
+        </div>
+        <div>
+          <img src="concept-4-abstract-f.svg" width="16" height="16">
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="concept" style="grid-column: 1 / -1; border-color: #06b6d4;">
+      <h2>5. F + Reward Divergence (Hybrid)</h2>
+      <p>The "F" stem with reward signal lines as the horizontal bars - diverging to show the three components. Combines brand identity with core function.</p>
+      <div class="icon-container">
+        <img src="concept-5-f-reward.svg" alt="F + Reward concept">
+      </div>
+      <div class="sizes">
+        <div>
+          <img src="concept-5-f-reward.svg" width="64" height="64">
+          <div class="size-label">64px</div>
+        </div>
+        <div>
+          <img src="concept-5-f-reward.svg" width="32" height="32">
+          <div class="size-label">32px</div>
+        </div>
+        <div>
+          <img src="concept-5-f-reward.svg" width="16" height="16">
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
