@@ -626,3 +626,74 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-default);
 }
+
+/* ========================================
+ * Resize Handles
+ * ======================================== */
+
+.resize-handle {
+  z-index: var(--z-sticky);
+  background: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background: var(--color-accent-dim);
+}
+
+.resize-handle--vertical {
+  width: var(--panel-gap);
+  cursor: col-resize;
+}
+
+.resize-handle--horizontal {
+  height: var(--panel-gap);
+  cursor: row-resize;
+}
+
+/* Left handle: spans vertically between left column and main/output */
+.resize-handle--left {
+  grid-row: 1 / -1;
+  grid-column: 1 / 2;
+  justify-self: end;
+  width: var(--panel-gap);
+  margin-right: calc(-1 * var(--panel-gap));
+}
+
+/* Right handle: spans vertically between main/output and right column */
+.resize-handle--right {
+  grid-row: 1 / -1;
+  grid-column: 3 / 4;
+  justify-self: start;
+  width: var(--panel-gap);
+  margin-left: calc(-1 * var(--panel-gap));
+}
+
+/* Output handle: horizontal, above output panel in the center column */
+.resize-handle--output {
+  grid-row: 3 / 4;
+  grid-column: 2 / 3;
+  align-self: start;
+  height: var(--panel-gap);
+  margin-top: calc(-1 * var(--panel-gap));
+}
+
+/* Body classes for cursor during drag */
+body.resizing-col {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.resizing-col * {
+  cursor: col-resize !important;
+}
+
+body.resizing-row {
+  cursor: row-resize !important;
+  user-select: none;
+}
+
+body.resizing-row * {
+  cursor: row-resize !important;
+}
