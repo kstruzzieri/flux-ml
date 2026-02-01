@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux ML — Mockup v2 (Island Layout)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Surface Hierarchy - Lighter base with dark panels for contrast */
+      --surface-base: #161b22;
+      --surface-panel: #0d1117;
+      --surface-elevated: #0f1419;
+      --surface-content: #161b22;
+      --surface-hover: #1c2128;
+      --surface-active: #21262d;
+
+      /* Borders */
+      --border-subtle: #1b2028;
+      --border-default: #30363d;
+      --border-accent: rgba(6, 182, 212, 0.3);
+
+      /* Text */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b9eb0;
+      --text-muted: #4a5d73;
+
+      /* Accent - Cyan */
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.12);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+
+      /* Status */
+      --status-success: #10b981;
+      --status-warning: #f59e0b;
+      --status-error: #ef4444;
+      --status-running: #06b6d4;
+
+      /* Charts */
+      --chart-1: #06b6d4;
+      --chart-2: #10b981;
+      --chart-3: #f59e0b;
+      --chart-4: #8b5cf6;
+
+      /* Layout */
+      --header-height: 48px;
+      --sidebar-width: 52px;
+      --panel-gap: 6px;
+      --panel-radius: 10px;
+      --panel-left-width: 280px;
+      --panel-right-width: 320px;
+      --panel-bottom-height: 180px;
+      --panel-output-height: 160px;
+
+      /* Typography */
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Misc */
+      --transition: 150ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Reset
+    ═══════════════════════════════════════════════════════════════ */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      background: var(--surface-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar content";
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Header
+    ═══════════════════════════════════════════════════════════════ */
+
+    .header {
+      grid-area: header;
+      background: var(--surface-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+    }
+
+    .header__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header__title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .header__nav-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .header__nav-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .header__nav-item--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .header__spacer {
+      flex: 1;
+    }
+
+    .header__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header__status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-success);
+      box-shadow: 0 0 8px var(--status-success);
+    }
+
+    .header__version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Activity Bar (Icon Sidebar)
+    ═══════════════════════════════════════════════════════════════ */
+
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--surface-panel);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .sidebar__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+
+    .sidebar__btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .sidebar__btn--active {
+      color: var(--accent);
+    }
+
+    .sidebar__btn--active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .sidebar__btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sidebar__spacer {
+      flex: 1;
+    }
+
+    .sidebar__divider {
+      width: 24px;
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Content Area - Island Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .content {
+      grid-area: content;
+      display: grid;
+      grid-template-columns: var(--panel-left-width) 1fr var(--panel-right-width);
+      grid-template-rows: 1fr var(--panel-bottom-height) var(--panel-output-height);
+      grid-template-areas:
+        "left-top main right-top"
+        "left-bottom main right-bottom"
+        "left-bottom output right-bottom";
+      gap: var(--panel-gap);
+      padding: var(--panel-gap);
+      background: var(--surface-base);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Panel Base Styles
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel {
+      background: var(--surface-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel__header {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      gap: 8px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .panel__badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 4px;
+    }
+
+    .panel__actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .panel__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .panel__action:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .panel__action svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .panel__content {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+      padding-right: 4px;
+      margin-right: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Left Panels - Experiments & Files
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--experiments {
+      grid-area: left-top;
+    }
+
+    .panel--files {
+      grid-area: left-bottom;
+    }
+
+    /* Experiment List */
+    .experiment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .experiment-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: var(--surface-content);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .experiment-item:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-subtle);
+    }
+
+    .experiment-item--active {
+      background: var(--accent-dim);
+      border-color: var(--border-accent);
+    }
+
+    .experiment-item__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .experiment-item__status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .experiment-item__status--running {
+      background: var(--status-running);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: pulse 2s infinite;
+    }
+
+    .experiment-item__status--completed {
+      background: var(--status-success);
+    }
+
+    .experiment-item__status--failed {
+      background: var(--status-error);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .experiment-item__name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .experiment-item__time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .experiment-item__metrics {
+      display: flex;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .experiment-item__metric-label {
+      color: var(--text-muted);
+    }
+
+    .experiment-item__metric-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* File Tree Breadcrumb */
+    .file-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-elevated);
+    }
+
+    .file-breadcrumb__item {
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color var(--transition);
+    }
+
+    .file-breadcrumb__item:hover {
+      color: var(--text-primary);
+    }
+
+    .file-breadcrumb__item--current {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .file-breadcrumb__sep {
+      color: var(--text-muted);
+    }
+
+    /* File Tree */
+    .file-tree {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: all var(--transition);
+    }
+
+    .file-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .file-item--active {
+      background: var(--accent-dim);
+      color: var(--text-primary);
+    }
+
+    .file-item--indent-1 { padding-left: 32px; }
+    .file-item--indent-2 { padding-left: 52px; }
+
+    .file-item__chevron {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+
+    .file-item__chevron--open {
+      transform: rotate(90deg);
+    }
+
+    .file-item__chevron--hidden {
+      visibility: hidden;
+    }
+
+    .file-item__icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Folder icons */
+    .file-item__icon--folder { color: #dcb67a; }
+    .file-item__icon--folder-open { color: #6A9AB0; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Panel - Charts & Metrics
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--main {
+      grid-area: main;
+    }
+
+    .main-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .main-header__title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .main-header__title h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .main-header__tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+
+    .main-header__tag--running {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .main-header__tag--alert {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--status-warning);
+    }
+
+    .main-header__tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    .main-header__actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn--secondary {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn--secondary:hover {
+      background: var(--surface-active);
+      border-color: var(--border-default);
+    }
+
+    .btn--danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--status-error);
+    }
+
+    .btn--danger:hover {
+      background: var(--status-error);
+      color: white;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 14px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .metric-card {
+      padding: 12px 14px;
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent));
+      border-radius: 8px 8px 0 0;
+    }
+
+    .metric-card:nth-child(1) { --card-accent: var(--chart-1); }
+    .metric-card:nth-child(2) { --card-accent: var(--chart-2); }
+    .metric-card:nth-child(3) { --card-accent: var(--chart-3); }
+    .metric-card:nth-child(4) { --card-accent: var(--chart-4); }
+
+    .metric-card--alert {
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .metric-card--alert::before {
+      background: var(--status-warning);
+    }
+
+    .metric-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .metric-card__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .metric-card__trend {
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .metric-card__trend--positive {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--status-success);
+    }
+
+    .metric-card__trend--warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--status-warning);
+    }
+
+    .metric-card__value {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+    }
+
+    .metric-card__value--warning {
+      color: var(--status-warning);
+    }
+
+    /* Charts Area */
+    .charts-area {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1.5fr 1fr;
+      gap: 12px;
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .chart-card {
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chart-card--full {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card--alert {
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .chart-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-elevated);
+    }
+
+    .chart-card__title {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-card__alert-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      background: var(--status-warning);
+      color: var(--surface-panel);
+      border-radius: 4px;
+    }
+
+    .chart-card__legend {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .chart-card__legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-card__legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .chart-card__body {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Right Panels - Inspector & Config
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--inspector {
+      grid-area: right-top;
+    }
+
+    .panel--config {
+      grid-area: right-bottom;
+    }
+
+    /* Alert Card */
+    .alert-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 8px;
+      padding: 14px;
+      position: relative;
+    }
+
+    .alert-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--status-warning);
+      border-radius: 8px 0 0 8px;
+    }
+
+    .alert-card__header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .alert-card__icon {
+      width: 28px;
+      height: 28px;
+      background: var(--status-warning);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .alert-card__info {
+      flex: 1;
+    }
+
+    .alert-card__type {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--status-warning);
+    }
+
+    .alert-card__step {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .alert-card__confidence {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      background: var(--surface-panel);
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .alert-card__message {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .alert-card__evidence {
+      background: var(--surface-panel);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .alert-card__evidence-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .alert-card__evidence-row:last-child {
+      border-bottom: none;
+    }
+
+    .alert-card__evidence-label {
+      color: var(--text-muted);
+    }
+
+    .alert-card__evidence-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .alert-card__evidence-value--bad {
+      color: var(--status-warning);
+    }
+
+    .alert-card__actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .alert-card__action {
+      flex: 1;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .alert-card__action--primary {
+      background: var(--status-warning);
+      color: var(--surface-panel);
+    }
+
+    .alert-card__action--primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .alert-card__action--secondary {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .alert-card__action--secondary:hover {
+      background: var(--surface-active);
+      color: var(--text-primary);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Output Panel - Terminal
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--output {
+      grid-area: output;
+    }
+
+    .output-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .output-tab {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .output-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .output-tab--active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-tab--add {
+      padding: 8px 10px;
+      border-bottom: none;
+      margin-left: auto;
+    }
+
+    .output-tab--add svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .output-tab--add:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+      border-radius: 4px;
+    }
+
+    .output-terminal {
+      flex: 1;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow: auto;
+    }
+
+    .output-line {
+      display: flex;
+      gap: 12px;
+    }
+
+    .output-line__time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .output-line__level {
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .output-line__level--info { color: var(--accent); }
+    .output-line__level--warn { color: var(--status-warning); }
+    .output-line__level--error { color: var(--status-error); }
+
+    .output-line__msg {
+      color: var(--text-secondary);
+    }
+
+    .output-line__highlight {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Config Grid */
+    .config-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .config-item__key {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .config-item__value {
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .config-item__value--link {
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .config-item__value--link:hover {
+      text-decoration: underline;
+    }
+
+    .config-item__value--warning {
+      color: var(--status-warning);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Scrollbar
+    ═══════════════════════════════════════════════════════════════ */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-default);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__brand">
+        <svg class="header__logo" viewBox="0 0 100 100">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14"/>
+          <path d="M22 55 Q35 55 45 50 Q55 45 65 30 Q72 22 78 20" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 45 58 Q55 62 65 70 Q72 76 78 78" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 50 52 Q60 50 78 48" stroke="#06B6D4" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <circle cx="22" cy="55" r="4" fill="#F0F6FC" opacity="0.8"/>
+          <circle cx="78" cy="20" r="3" fill="#10B981" filter="url(#glow)"/>
+          <circle cx="78" cy="78" r="3" fill="#F59E0B" filter="url(#glow)"/>
+          <circle cx="78" cy="48" r="3" fill="#06B6D4" filter="url(#glow)"/>
+        </svg>
+        <span class="header__title">Flux</span>
+      </div>
+
+      <nav class="header__nav">
+        <button class="header__nav-item header__nav-item--active">Experiments</button>
+        <button class="header__nav-item">Compare</button>
+        <button class="header__nav-item">Data</button>
+        <button class="header__nav-item">Code</button>
+      </nav>
+
+      <div class="header__spacer"></div>
+
+      <div class="header__status">
+        <span class="header__status-dot"></span>
+        <span>2 running</span>
+      </div>
+
+      <span class="header__version">v0.1.0</span>
+    </header>
+
+    <!-- Activity Bar -->
+    <aside class="sidebar">
+      <button class="sidebar__btn sidebar__btn--active" title="Experiments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__divider"></div>
+
+      <button class="sidebar__btn" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__spacer"></div>
+
+      <button class="sidebar__btn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Left Top: Experiments -->
+      <div class="panel panel--experiments">
+        <div class="panel__header">
+          <span class="panel__title">Experiments</span>
+          <span class="panel__badge">4</span>
+          <div class="panel__actions">
+            <button class="panel__action" title="New Experiment">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="panel__content">
+          <div class="experiment-list">
+            <div class="experiment-item experiment-item--active">
+              <div class="experiment-item__header">
+                <div class="experiment-item__status experiment-item__status--running"></div>
+                <span class="experiment-item__name">reward-model-v3.4</span>
+                <span class="experiment-item__time">2h 14m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span><span class="experiment-item__metric-label">loss</span> <span class="experiment-item__metric-value">0.342</span></span>
+                <span><span class="experiment-item__metric-label">reward</span> <span class="experiment-item__metric-value">0.891</span></span>
+              </div>
+            </div>
+
+            <div class="experiment-item">
+              <div class="experiment-item__header">
+                <div class="experiment-item__status experiment-item__status--running"></div>
+                <span class="experiment-item__name">ablation-no-dropout</span>
+                <span class="experiment-item__time">1h 03m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span><span class="experiment-item__metric-label">loss</span> <span class="experiment-item__metric-value">0.418</span></span>
+                <span><span class="experiment-item__metric-label">reward</span> <span class="experiment-item__metric-value">0.823</span></span>
+              </div>
+            </div>
+
+            <div class="experiment-item">
+              <div class="experiment-item__header">
+                <div class="experiment-item__status experiment-item__status--completed"></div>
+                <span class="experiment-item__name">reward-model-v3.3</span>
+                <span class="experiment-item__time">4h 22m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span><span class="experiment-item__metric-label">loss</span> <span class="experiment-item__metric-value">0.287</span></span>
+                <span><span class="experiment-item__metric-label">reward</span> <span class="experiment-item__metric-value">0.912</span></span>
+              </div>
+            </div>
+
+            <div class="experiment-item">
+              <div class="experiment-item__header">
+                <div class="experiment-item__status experiment-item__status--failed"></div>
+                <span class="experiment-item__name">high-lr-test</span>
+                <span class="experiment-item__time">0h 12m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span><span class="experiment-item__metric-label">loss</span> <span class="experiment-item__metric-value" style="color: var(--status-error)">NaN</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left Bottom: Files -->
+      <div class="panel panel--files">
+        <div class="panel__header">
+          <span class="panel__title">Files</span>
+        </div>
+        <!-- Breadcrumb -->
+        <div class="file-breadcrumb">
+          <span class="file-breadcrumb__item">~</span>
+          <span class="file-breadcrumb__sep">/</span>
+          <span class="file-breadcrumb__item">projects</span>
+          <span class="file-breadcrumb__sep">/</span>
+          <span class="file-breadcrumb__item file-breadcrumb__item--current">reward-model-v3</span>
+        </div>
+        <div class="panel__content">
+          <div class="file-tree">
+            <!-- configs folder - open -->
+            <div class="file-item">
+              <svg class="file-item__chevron file-item__chevron--open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+              <svg class="file-item__icon file-item__icon--folder-open" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2H4z" opacity="0.4"/>
+                <path d="M2 9h20v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9z"/>
+              </svg>
+              <span>configs</span>
+            </div>
+            <!-- YAML file -->
+            <div class="file-item file-item--indent-1 file-item--active">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--yaml" viewBox="0 0 32 32">
+                <path fill="#cb171e" d="M2 6h28v20H2z"/>
+                <text x="16" y="20" font-size="10" font-weight="bold" fill="white" text-anchor="middle" font-family="sans-serif">YML</text>
+              </svg>
+              <span>reward_model.yaml</span>
+            </div>
+            <!-- YAML file -->
+            <div class="file-item file-item--indent-1">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--yaml" viewBox="0 0 32 32">
+                <path fill="#cb171e" d="M2 6h28v20H2z"/>
+                <text x="16" y="20" font-size="10" font-weight="bold" fill="white" text-anchor="middle" font-family="sans-serif">YML</text>
+              </svg>
+              <span>training.yaml</span>
+            </div>
+            <!-- src folder - open -->
+            <div class="file-item">
+              <svg class="file-item__chevron file-item__chevron--open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+              <svg class="file-item__icon file-item__icon--folder-open" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2H4z" opacity="0.4"/>
+                <path d="M2 9h20v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9z"/>
+              </svg>
+              <span>src</span>
+            </div>
+            <!-- Python file -->
+            <div class="file-item file-item--indent-1">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--python" viewBox="0 0 128 128">
+                <linearGradient id="python-a" gradientUnits="userSpaceOnUse" x1="70.252" y1="1237.476" x2="170.659" y2="1151.089" gradientTransform="matrix(.563 0 0 -.568 -29.215 707.817)">
+                  <stop offset="0" stop-color="#5A9FD4"/>
+                  <stop offset="1" stop-color="#306998"/>
+                </linearGradient>
+                <path fill="url(#python-a)" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                <linearGradient id="python-b" gradientUnits="userSpaceOnUse" x1="209.474" y1="1098.811" x2="173.62" y2="1149.537" gradientTransform="matrix(.563 0 0 -.568 -29.215 707.817)">
+                  <stop offset="0" stop-color="#FFD43B"/>
+                  <stop offset="1" stop-color="#FFE873"/>
+                </linearGradient>
+                <path fill="url(#python-b)" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+              </svg>
+              <span>train.py</span>
+            </div>
+            <!-- Python file -->
+            <div class="file-item file-item--indent-1">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--python" viewBox="0 0 128 128">
+                <linearGradient id="python-c" gradientUnits="userSpaceOnUse" x1="70.252" y1="1237.476" x2="170.659" y2="1151.089" gradientTransform="matrix(.563 0 0 -.568 -29.215 707.817)">
+                  <stop offset="0" stop-color="#5A9FD4"/>
+                  <stop offset="1" stop-color="#306998"/>
+                </linearGradient>
+                <path fill="url(#python-c)" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                <linearGradient id="python-d" gradientUnits="userSpaceOnUse" x1="209.474" y1="1098.811" x2="173.62" y2="1149.537" gradientTransform="matrix(.563 0 0 -.568 -29.215 707.817)">
+                  <stop offset="0" stop-color="#FFD43B"/>
+                  <stop offset="1" stop-color="#FFE873"/>
+                </linearGradient>
+                <path fill="url(#python-d)" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+              </svg>
+              <span>model.py</span>
+            </div>
+            <!-- data folder - closed -->
+            <div class="file-item">
+              <svg class="file-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+              <svg class="file-item__icon file-item__icon--folder" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-8l-2-2H4z"/>
+              </svg>
+              <span>data</span>
+            </div>
+            <!-- Go file at root -->
+            <div class="file-item">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--go" viewBox="0 0 128 128">
+                <path fill="#00acd7" d="M18.8 69.3c-.2 0-.4-.1-.4-.2l-.2-.6c-.1-.2 0-.4.2-.4h10.5c.2 0 .3.1.4.3l.1.5c0 .2-.2.4-.4.4H18.8zm-5.9 3.4c-.2 0-.3-.1-.4-.3l-.1-.5c-.1-.2.1-.4.3-.4h15c.2 0 .4.2.4.4l-.1.5c0 .2-.2.3-.4.3H12.9zm8.5 3.4c-.2 0-.4-.2-.4-.4l-.1-.5c0-.2.1-.3.3-.3h7.1c.2 0 .4.1.4.3l.1.5c0 .2-.2.4-.4.4H21.4z"/>
+                <path fill="#00acd7" d="M67.3 62.2c-2.4.6-4.1 1.1-6.5 1.7-1.4.3-1.5.4-2.7-1-.4-.4-.6-.7-1.1-1.1-3.2-2.7-6.3-1.9-9 .9-3.3 3.4-4 7.5-2.9 11.9.6 2.2 2.4 4.6 5.4 5.1 2.6.4 4.8-.4 6.5-2.4.4-.5.7-.9 1-1.4h-6.8c-1 0-1.2-.6-1-1.4.5-1.4 1.4-3.7 1.9-4.8.1-.3.5-.6.9-.6h13.8c.1.8.1 1.6 0 2.4-.2 2.5-.9 4.9-2.1 7.1-1.9 3.5-4.8 6-8.7 7-3.3.9-6.5.6-9.4-1.1-2.7-1.6-4.5-4-5.4-7.1-1-3.6-.8-7.2.6-10.6 1.6-3.9 4.2-6.9 8.1-8.6 3.2-1.4 6.4-1.5 9.7-.4 2.2.7 4 2.1 5.4 4.1.3.4.2.6-.3.7z"/>
+                <path fill="#00acd7" d="M88.5 80.9c-3.2-.1-6.1-.9-8.5-3-2.1-1.8-3.3-4.2-3.7-7-.6-4.2.4-8 2.9-11.4 2.7-3.6 6.3-5.4 10.7-5.5 3.5-.1 6.6.8 9.1 3.4 2.1 2.2 3.1 4.8 3.2 7.8.1 4.4-1.1 8.2-4 11.4-2.4 2.6-5.4 4-8.9 4.3-.3 0-.6 0-.8 0zm8.4-13.7c0-.6 0-1-.1-1.5-.5-3.2-2.9-5.3-6.1-5.4-3.2-.1-5.9 1.5-7.2 4.4-1 2.2-1 4.6-.3 6.9.7 2.4 2.6 4 5.1 4.3 2.1.3 4-.3 5.6-1.7 1.8-1.7 2.8-3.9 3-7z"/>
+              </svg>
+              <span>main.go</span>
+            </div>
+            <!-- TypeScript file -->
+            <div class="file-item">
+              <svg class="file-item__chevron file-item__chevron--hidden" viewBox="0 0 24 24"></svg>
+              <svg class="file-item__icon file-item__icon--typescript" viewBox="0 0 128 128">
+                <path fill="#3178c6" d="M2 63.91v62.5h125v-125H2zm100.73-5a15.56 15.56 0 017.82 4.5 20.58 20.58 0 013 4c0 .16-5.4 3.81-8.69 5.85-.12.08-.6-.44-1.13-1.23a6.45 6.45 0 00-5.4-3c-3.48-.22-5.72 1.61-5.72 4.66 0 .9.18 1.49.63 2.19 1 1.48 2.84 2.35 8.76 4.13 10.92 3.28 15.59 5.44 18.5 8.58a18.55 18.55 0 013.65 7.89c.36 1.86.31 6.54-.08 8.49a17.77 17.77 0 01-10.39 13.34c-1.74.86-4.61 1.74-6.31 1.93-1 .12-5.36.24-5.78.13a36.51 36.51 0 01-.08-7.51v-.22l1 .07c2.23.18 5.7-.4 7.48-1.25a8.53 8.53 0 004.8-6.09 9.26 9.26 0 00-.6-5.32c-1.21-2.31-3.5-3.74-10.72-6.67-8.29-3.36-11.92-5.37-14.59-8.1a17.89 17.89 0 01-4.33-9.1 27.42 27.42 0 01.17-8.14 17.78 17.78 0 0114.33-13.54c1.72-.31 6.77-.27 8.51.09zM73.88 65h13.76v37.5H65.14V65H73.88zM65 60.56V53.1l.07-7.49h37.22l.08 7.49v7.46H65z"/>
+              </svg>
+              <span>types.ts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel -->
+      <div class="panel panel--main">
+        <div class="main-header">
+          <div class="main-header__title">
+            <h1>reward-model-v3.4</h1>
+            <span class="main-header__tag main-header__tag--running">
+              <span class="main-header__tag-dot"></span>
+              Running
+            </span>
+            <span class="main-header__tag main-header__tag--alert">⚠ Alert</span>
+          </div>
+          <div class="main-header__actions">
+            <button class="btn btn--secondary">↔ Compare</button>
+            <button class="btn btn--secondary">↓ Export</button>
+            <button class="btn btn--danger">■ Stop</button>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-card__header">
+              <span class="metric-card__label">Loss</span>
+              <span class="metric-card__trend metric-card__trend--positive">▼ 12.3%</span>
+            </div>
+            <div class="metric-card__value">0.342</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-card__header">
+              <span class="metric-card__label">Reward</span>
+              <span class="metric-card__trend metric-card__trend--positive">▲ 8.2%</span>
+            </div>
+            <div class="metric-card__value">0.891</div>
+          </div>
+          <div class="metric-card metric-card--alert">
+            <div class="metric-card__header">
+              <span class="metric-card__label">Length Corr.</span>
+              <span class="metric-card__trend metric-card__trend--warning">⚠ HIGH</span>
+            </div>
+            <div class="metric-card__value metric-card__value--warning">0.73</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-card__header">
+              <span class="metric-card__label">Step</span>
+              <span class="metric-card__trend">~2.1k/hr</span>
+            </div>
+            <div class="metric-card__value">8,420</div>
+          </div>
+        </div>
+
+        <div class="charts-area">
+          <div class="chart-card chart-card--full chart-card--alert">
+            <div class="chart-card__header">
+              <span class="chart-card__title">
+                Reward Components
+                <span class="chart-card__alert-badge">Divergence Detected</span>
+              </span>
+              <div class="chart-card__legend">
+                <span class="chart-card__legend-item">
+                  <span class="chart-card__legend-dot" style="background: var(--chart-2)"></span>
+                  Helpfulness
+                </span>
+                <span class="chart-card__legend-item">
+                  <span class="chart-card__legend-dot" style="background: var(--chart-3)"></span>
+                  Harmlessness
+                </span>
+                <span class="chart-card__legend-item">
+                  <span class="chart-card__legend-dot" style="background: var(--chart-4)"></span>
+                  Honesty
+                </span>
+              </div>
+            </div>
+            <div class="chart-card__body">
+              [Reward Components Chart]
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card__header">
+              <span class="chart-card__title">Loss & Reward</span>
+            </div>
+            <div class="chart-card__body">
+              [Loss/Reward Chart]
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card__header">
+              <span class="chart-card__title">Response Length</span>
+            </div>
+            <div class="chart-card__body">
+              [Length Distribution]
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Top: Inspector -->
+      <div class="panel panel--inspector">
+        <div class="panel__header">
+          <span class="panel__title">Inspector</span>
+          <span class="panel__badge" style="background: rgba(245, 158, 11, 0.12); color: var(--status-warning);">1 Alert</span>
+        </div>
+        <div class="panel__content">
+          <div class="alert-card">
+            <div class="alert-card__header">
+              <div class="alert-card__icon">⚠</div>
+              <div class="alert-card__info">
+                <div class="alert-card__type">LENGTH_GAMING</div>
+                <div class="alert-card__step">Detected at step 6,200</div>
+              </div>
+              <div class="alert-card__confidence">94%</div>
+            </div>
+            <div class="alert-card__message">
+              Strong correlation between reward score and response length. Model may be gaming by producing longer outputs.
+            </div>
+            <div class="alert-card__evidence">
+              <div class="alert-card__evidence-row">
+                <span class="alert-card__evidence-label">Correlation</span>
+                <span class="alert-card__evidence-value alert-card__evidence-value--bad">r = 0.73</span>
+              </div>
+              <div class="alert-card__evidence-row">
+                <span class="alert-card__evidence-label">Baseline length</span>
+                <span class="alert-card__evidence-value">142 tokens</span>
+              </div>
+              <div class="alert-card__evidence-row">
+                <span class="alert-card__evidence-label">Current length</span>
+                <span class="alert-card__evidence-value alert-card__evidence-value--bad">187 tokens (+32%)</span>
+              </div>
+            </div>
+            <div class="alert-card__actions">
+              <button class="alert-card__action alert-card__action--primary">View Examples</button>
+              <button class="alert-card__action alert-card__action--secondary">Ignore</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Bottom: Config -->
+      <div class="panel panel--config">
+        <div class="panel__header">
+          <span class="panel__title">Configuration</span>
+        </div>
+        <div class="panel__content">
+          <div class="config-grid">
+            <div class="config-item">
+              <span class="config-item__key">model</span>
+              <span class="config-item__value config-item__value--link">llama-7b-base</span>
+            </div>
+            <div class="config-item">
+              <span class="config-item__key">learning_rate</span>
+              <span class="config-item__value">5e-5</span>
+            </div>
+            <div class="config-item">
+              <span class="config-item__key">batch_size</span>
+              <span class="config-item__value">32</span>
+            </div>
+            <div class="config-item">
+              <span class="config-item__key">reward_model</span>
+              <span class="config-item__value config-item__value--link">rm-v2.3</span>
+            </div>
+            <div class="config-item">
+              <span class="config-item__key">kl_coef</span>
+              <span class="config-item__value">0.05</span>
+            </div>
+            <div class="config-item">
+              <span class="config-item__key">max_length</span>
+              <span class="config-item__value config-item__value--warning">512 ← review</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel panel--output">
+        <div class="output-tabs">
+          <button class="output-tab output-tab--active">Output</button>
+          <button class="output-tab">Logs</button>
+          <button class="output-tab">Terminal</button>
+          <button class="output-tab output-tab--add" title="New Terminal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+        </div>
+        <div class="output-terminal">
+          <div class="output-line">
+            <span class="output-line__time">14:32:18</span>
+            <span class="output-line__level output-line__level--info">INFO</span>
+            <span class="output-line__msg">Step <span class="output-line__highlight">8420</span> | loss: 0.342 | reward: 0.891 | kl: 0.024</span>
+          </div>
+          <div class="output-line">
+            <span class="output-line__time">14:32:16</span>
+            <span class="output-line__level output-line__level--warn">WARN</span>
+            <span class="output-line__msg">Length correlation threshold exceeded: <span class="output-line__highlight">r=0.73</span></span>
+          </div>
+          <div class="output-line">
+            <span class="output-line__time">14:32:14</span>
+            <span class="output-line__level output-line__level--info">INFO</span>
+            <span class="output-line__msg">Step <span class="output-line__highlight">8419</span> | loss: 0.344 | reward: 0.889 | kl: 0.023</span>
+          </div>
+          <div class="output-line">
+            <span class="output-line__time">14:32:12</span>
+            <span class="output-line__level output-line__level--info">INFO</span>
+            <span class="output-line__msg">Checkpoint saved: <span class="output-line__highlight">checkpoints/step-8400.pt</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

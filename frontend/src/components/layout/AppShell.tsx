@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Header } from './Header'
-import { LeftSidebar } from './LeftSidebar'
-import { MainContent } from './MainContent'
-import { RightInspector } from './RightInspector'
-import { BottomPanel } from './BottomPanel'
+import { ActivityBar } from './ActivityBar'
+import { Content } from './Content'
 import { GetAppInfo } from '../../../wailsjs/go/main/App'
 
 interface AppInfo {
@@ -13,6 +11,7 @@ interface AppInfo {
 
 export function AppShell() {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
+  const [activeView, setActiveView] = useState('experiments')
 
   useEffect(() => {
     GetAppInfo()
@@ -23,10 +22,8 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <Header version={appInfo?.version} />
-      <LeftSidebar />
-      <MainContent />
-      <RightInspector />
-      <BottomPanel />
+      <ActivityBar activeItem={activeView} onItemClick={setActiveView} />
+      <Content />
     </div>
   )
 }

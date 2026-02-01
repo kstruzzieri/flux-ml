@@ -7,13 +7,15 @@
 
 :root {
   /* ========================================
-   * Colors - Backgrounds
+   * Colors - Backgrounds (Island Layout)
+   * Lighter base with dark panels for contrast
    * ======================================== */
-  --color-bg-base: #06090c;
-  --color-bg-surface: #0d1117;
-  --color-bg-elevated: #161b22;
+  --color-bg-base: #161b22;
+  --color-bg-panel: #0d1117;
+  --color-bg-elevated: #0f1419;
+  --color-bg-content: #161b22;
   --color-bg-hover: #1c2128;
-  --color-bg-active: #22272e;
+  --color-bg-active: #21262d;
 
   /* ========================================
    * Colors - Borders
@@ -98,14 +100,16 @@
   --spacing-2xl: 32px;
 
   /* ========================================
-   * Layout - Panel Sizes
+   * Layout - Panel Sizes (Island Layout)
    * ======================================== */
-  --header-height: 44px;
-  --sidebar-width: 280px;
-  --sidebar-width-collapsed: 48px;
-  --inspector-width: 320px;
-  --bottom-panel-height: 180px;
-  --bottom-panel-height-collapsed: 32px;
+  --header-height: 48px;
+  --activity-bar-width: 52px;
+  --panel-left-width: 280px;
+  --panel-right-width: 320px;
+  --panel-bottom-height: 180px;
+  --panel-output-height: 160px;
+  --panel-gap: 6px;
+  --panel-radius: 10px;
 
   /* ========================================
    * Layout - Borders & Radius

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { AppShell } from '@components/layout'
 
 // Mock Wails bindings
@@ -21,23 +21,24 @@ describe('AppShell', () => {
     // Header (banner role)
     expect(screen.getByRole('banner')).toBeInTheDocument()
 
-    // Left sidebar
-    expect(screen.getByRole('complementary', { name: /sidebar/i })).toBeInTheDocument()
+    // Activity bar (navigation role)
+    expect(screen.getByRole('navigation', { name: /activity bar/i })).toBeInTheDocument()
 
-    // Main content
-    expect(screen.getByRole('main')).toBeInTheDocument()
+    // Main navigation
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument()
 
-    // Right inspector
-    expect(screen.getByRole('complementary', { name: /inspector/i })).toBeInTheDocument()
-
-    // Bottom panel (contentinfo role)
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    // Panel titles exist (use getAllByText since some names appear in multiple places)
+    expect(screen.getByText('Files')).toBeInTheDocument()
+    expect(screen.getByText('Inspector')).toBeInTheDocument()
+    expect(screen.getByText('Configuration')).toBeInTheDocument()
   })
 
   it('displays Flux branding in header', async () => {
     render(<AppShell />)
 
-    expect(screen.getByText('Flux')).toBeInTheDocument()
+    // Scope to header to avoid banner text
+    const header = screen.getByRole('banner')
+    expect(within(header).getByText('Flux')).toBeInTheDocument()
 
     // Wait for async state update to complete
     await waitFor(() => {
@@ -45,13 +46,32 @@ describe('AppShell', () => {
     })
   })
 
-  it('displays navigation items', async () => {
+  it('displays navigation items in header', async () => {
     render(<AppShell />)
 
-    expect(screen.getByRole('button', { name: /experiments/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /compare/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /data/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /code/i })).toBeInTheDocument()
+    // Header nav items - scope to main navigation
+    const nav = screen.getByRole('navigation', { name: /main navigation/i })
+    expect(within(nav).getByRole('button', { name: /experiments/i })).toBeInTheDocument()
+    expect(within(nav).getByRole('button', { name: /compare/i })).toBeInTheDocument()
+    expect(within(nav).getByRole('button', { name: /data/i })).toBeInTheDocument()
+    expect(within(nav).getByRole('button', { name: /code/i })).toBeInTheDocument()
+
+    // Wait for async state update to complete
+    await waitFor(() => {
+      expect(screen.getByText('v0.1.0')).toBeInTheDocument()
+    })
+  })
+
+  it('displays activity bar items', async () => {
+    render(<AppShell />)
+
+    // Activity bar has icon buttons - scope to activity bar
+    const activityBar = screen.getByRole('navigation', { name: /activity bar/i })
+    expect(within(activityBar).getByRole('button', { name: /experiments/i })).toBeInTheDocument()
+    expect(within(activityBar).getByRole('button', { name: /compare/i })).toBeInTheDocument()
+    expect(within(activityBar).getByRole('button', { name: /data/i })).toBeInTheDocument()
+    expect(within(activityBar).getByRole('button', { name: /code/i })).toBeInTheDocument()
+    expect(within(activityBar).getByRole('button', { name: /settings/i })).toBeInTheDocument()
 
     // Wait for async state update to complete
     await waitFor(() => {
@@ -67,12 +87,14 @@ describe('AppShell', () => {
     })
   })
 
-  it('displays bottom panel tabs', async () => {
+  it('displays output panel tabs', async () => {
     render(<AppShell />)
 
-    expect(screen.getByRole('tab', { name: /training output/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /terminal/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /problems/i })).toBeInTheDocument()
+    // Output panel tabs
+    expect(screen.getByRole('button', { name: /^output$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^logs$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^terminal$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /new terminal/i })).toBeInTheDocument()
 
     // Wait for async state update to complete
     await waitFor(() => {
