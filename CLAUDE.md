@@ -100,3 +100,13 @@ Project-specific agents in `.claude/agents/`:
 - `architect-reviewer` - Architecture review
 - `accessibility-tester` - WCAG compliance
 - `dx-optimizer` - Developer experience
+
+**Development**
+- Test Driven Development (TDD)
+- GitHub repo: flux-ml
+- Release branch: main
+- Default branch: develop
+- Create all feature branches from develop
+- Branch naming: feature/<issue_#>_<issue_description>
+- Create a test document in docs/tdd for each feature/issue
+- Include the following sections (see existing examples in docs/tdd): issue summary, acceptance criteria, rationale, failing test, expected output, test summary, passing tests results, implementation summary
