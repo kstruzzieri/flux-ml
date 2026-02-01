@@ -3,7 +3,7 @@ node_modules/
 vendor/
 
 # Build outputs
-build/
+build/bin/
 dist/
 bin/
 *.exe
