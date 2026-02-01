@@ -1,13 +1,20 @@
+export type ViewId = 'experiments' | 'compare' | 'data' | 'code'
+
 interface HeaderProps {
   version?: string
+  activeView?: ViewId
+  onViewChange?: (view: ViewId) => void
+  runningCount?: number
+  alertCount?: number
+  onCommandPalette?: () => void
 }
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'experiments', label: 'Experiments' },
   { id: 'compare', label: 'Compare' },
   { id: 'data', label: 'Data' },
   { id: 'code', label: 'Code' },
-] as const
+]
 
 function FluxIcon() {
   return (
@@ -66,7 +73,14 @@ function FluxIcon() {
   )
 }
 
-export function Header({ version }: HeaderProps) {
+export function Header({
+  version,
+  activeView = 'experiments',
+  onViewChange,
+  runningCount = 0,
+  alertCount = 0,
+  onCommandPalette,
+}: HeaderProps) {
   return (
     <header className="header" role="banner">
       <div className="header__brand">
@@ -78,8 +92,9 @@ export function Header({ version }: HeaderProps) {
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
-            className={`header__nav-item ${item.id === 'experiments' ? 'header__nav-item--active' : ''}`}
-            aria-current={item.id === 'experiments' ? 'page' : undefined}
+            className={`header__nav-item ${item.id === activeView ? 'header__nav-item--active' : ''}`}
+            aria-current={item.id === activeView ? 'page' : undefined}
+            onClick={() => onViewChange?.(item.id)}
           >
             {item.label}
           </button>
@@ -88,10 +103,31 @@ export function Header({ version }: HeaderProps) {
 
       <div className="header__spacer" />
 
-      <div className="header__status">
-        <span className="header__status-dot" />
-        <span>Ready</span>
-      </div>
+      {alertCount > 0 && (
+        <div className="header__status header__status--warning">
+          <span className="header__status-dot header__status-dot--warning" />
+          <span>
+            {alertCount} {alertCount === 1 ? 'alert' : 'alerts'}
+          </span>
+        </div>
+      )}
+
+      {runningCount > 0 && (
+        <div className="header__status">
+          <span className="header__status-dot" />
+          <span>
+            {runningCount} {runningCount === 1 ? 'running' : 'running'}
+          </span>
+        </div>
+      )}
+
+      <button
+        className="header__command-palette"
+        onClick={onCommandPalette}
+        aria-label="Open command palette"
+      >
+        <kbd className="header__kbd">⌘K</kbd>
+      </button>
 
       {version && <span className="header__version">v{version}</span>}
     </header>
