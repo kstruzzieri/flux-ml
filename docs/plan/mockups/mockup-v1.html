@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux - The ML Development Environment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Backgrounds - more contrast */
+      --bg-base: #030508;
+      --bg-surface: #0a0e14;
+      --bg-elevated: #12181f;
+      --bg-card: #0f1419;
+      --bg-hover: #1a2230;
+
+      /* Text */
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b9eb0;
+      --text-muted: #4a5d73;
+
+      /* Accent - Cyan */
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.12);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+      --accent-bright: #22d3ee;
+
+      /* Status */
+      --success: #10b981;
+      --success-dim: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-dim: rgba(245, 158, 11, 0.1);
+      --warning-glow: rgba(245, 158, 11, 0.5);
+      --error: #ef4444;
+      --error-dim: rgba(239, 68, 68, 0.15);
+      --error-glow: rgba(239, 68, 68, 0.4);
+
+      /* Borders */
+      --border: #1c2733;
+      --border-light: #2d3d4f;
+
+      /* Chart colors */
+      --chart-1: #06b6d4;
+      --chart-2: #8b5cf6;
+      --chart-3: #f59e0b;
+      --chart-4: #10b981;
+      --chart-5: #ec4899;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-rows: 48px 1fr 140px;
+      grid-template-columns: 300px 1fr 360px;
+      grid-template-areas:
+        "header header header"
+        "sidebar main inspector"
+        "sidebar bottom inspector";
+      height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      grid-area: header;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-icon {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-bright) 100%);
+      border-radius: 6px;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .nav {
+      display: flex;
+      gap: 2px;
+      background: var(--bg-base);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .nav-item {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      background: var(--bg-base);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.warning {
+      background: var(--warning);
+      box-shadow: 0 0 10px var(--warning);
+      animation: pulse-warning 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    @keyframes pulse-warning {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--warning); }
+      50% { opacity: 0.8; box-shadow: 0 0 20px var(--warning-glow); }
+    }
+
+    .kbd {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    /* Left Sidebar */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section.experiments {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .sidebar-section.files {
+      height: 240px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 16px 18px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-header-action {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: var(--bg-base);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+
+    .sidebar-header-action:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .experiment-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 10px 10px;
+    }
+
+    .experiment-item {
+      padding: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      background: var(--bg-card);
+      position: relative;
+    }
+
+    .experiment-item:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border);
+    }
+
+    .experiment-item.active {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 100%);
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+    }
+
+    .experiment-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 10px 0 0 10px;
+    }
+
+    .experiment-item.active .experiment-name {
+      color: var(--accent-bright);
+    }
+
+    .experiment-item.has-alert::after {
+      content: '!';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      background: var(--warning);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--bg-base);
+      box-shadow: 0 0 10px var(--warning-glow);
+      animation: pulse-warning 1.5s infinite;
+    }
+
+    .experiment-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .experiment-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .experiment-status.running {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+      animation: pulse 2s infinite;
+    }
+
+    .experiment-status.completed {
+      background: var(--success);
+    }
+
+    .experiment-status.failed {
+      background: var(--error);
+    }
+
+    .experiment-name {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .experiment-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .experiment-metrics {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 10px;
+    }
+
+    .metric-label { color: var(--text-muted); }
+    .metric-value { color: var(--text-primary); font-weight: 500; }
+
+    .sparkline-container {
+      height: 32px;
+      background: var(--bg-base);
+      border-radius: 6px;
+      padding: 6px 8px;
+      overflow: hidden;
+    }
+
+    .sparkline {
+      width: 100%;
+      height: 100%;
+    }
+
+    .sparkline path {
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    .sparkline .line-1 { stroke: var(--chart-1); }
+    .sparkline .line-2 { stroke: var(--chart-2); opacity: 0.6; }
+
+    /* File tree */
+    .file-tree {
+      padding: 0 10px 10px;
+      font-size: 13px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.1s;
+    }
+
+    .file-item:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .file-item.active {
+      background: var(--accent-dim);
+      color: var(--text-primary);
+    }
+
+    .file-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .file-item.folder .file-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .file-item.indent-1 { padding-left: 30px; }
+    .file-item.indent-2 { padding-left: 50px; }
+
+    .file-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Content */
+    .main {
+      grid-area: main;
+      background: var(--bg-base);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface);
+    }
+
+    .main-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .main-title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .tag {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag.running {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .tag.running .tag-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .tag.alert {
+      background: var(--warning-dim);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .main-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-light);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-base);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    .btn-danger {
+      background: var(--error-dim);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--error);
+      color: white;
+    }
+
+    /* Metrics Grid - ENHANCED CONTRAST */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--bg-surface);
+      flex-shrink: 0;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Colored top accent bar for each card */
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent));
+    }
+
+    .metric-card:nth-child(1) { --card-accent: var(--chart-1); }
+    .metric-card:nth-child(2) { --card-accent: var(--chart-4); }
+    .metric-card:nth-child(3) { --card-accent: var(--warning); }
+    .metric-card:nth-child(4) { --card-accent: var(--chart-2); }
+
+    .metric-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .metric-card.alert {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 50%);
+    }
+
+    .metric-card.alert::before {
+      background: var(--warning);
+      height: 4px;
+      box-shadow: 0 0 15px var(--warning-glow);
+    }
+
+    .metric-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .metric-card-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-card-trend {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .metric-card-trend.positive {
+      color: var(--success);
+      background: var(--success-dim);
+    }
+    .metric-card-trend.negative {
+      color: var(--error);
+      background: var(--error-dim);
+    }
+    .metric-card-trend.warning {
+      color: var(--warning);
+      background: var(--warning-dim);
+    }
+
+    .metric-card-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -1px;
+    }
+
+    .metric-card-value.live::after {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: pulse 1.5s infinite;
+      vertical-align: middle;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    /* Charts Area */
+    .charts-area {
+      flex: 1;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1.4fr 1fr;
+      gap: 14px;
+      min-height: 0;
+      background: var(--bg-base);
+    }
+
+    .chart-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .chart-card:hover {
+      border-color: var(--border-light);
+    }
+
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card.has-anomaly {
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.08), inset 0 0 60px rgba(245, 158, 11, 0.03);
+    }
+
+    .chart-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chart-title .anomaly-badge {
+      background: var(--warning);
+      color: var(--bg-base);
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      animation: glow-warning 2s infinite;
+    }
+
+    @keyframes glow-warning {
+      0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+      50% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 18px;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .legend-item:hover {
+      color: var(--text-primary);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .chart-body {
+      flex: 1;
+      padding: 18px;
+      position: relative;
+      min-height: 0;
+      background: var(--bg-card);
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chart-area {
+      opacity: 0.1;
+    }
+
+    .chart-grid line {
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .chart-axis text {
+      fill: var(--text-muted);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .anomaly-zone {
+      fill: var(--warning);
+      opacity: 0.06;
+    }
+
+    .anomaly-marker {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .anomaly-marker:hover {
+      transform: scale(1.15);
+    }
+
+    .anomaly-marker circle {
+      fill: var(--bg-surface);
+      stroke: var(--warning);
+      stroke-width: 3;
+      filter: drop-shadow(0 0 8px var(--warning-glow));
+    }
+
+    .live-point {
+      animation: live-pulse 1.5s infinite;
+    }
+
+    @keyframes live-pulse {
+      0%, 100% { r: 4; opacity: 1; }
+      50% { r: 6; opacity: 0.7; }
+    }
+
+    /* Right Inspector - ENHANCED CONTRAST */
+    .inspector {
+      grid-area: inspector;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .inspector-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+    }
+
+    .inspector-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .inspector-tab {
+      padding: 5px 10px;
+      font-size: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .inspector-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .inspector-tab.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .inspector-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .inspector-section {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .inspector-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Anomaly Card - HIGHLY VISIBLE */
+    .anomaly-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.02) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .anomaly-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--warning);
+      box-shadow: 0 0 10px var(--warning-glow);
+    }
+
+    .anomaly-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .anomaly-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--warning);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 20px var(--warning-glow);
+      flex-shrink: 0;
+    }
+
+    .anomaly-info {
+      flex: 1;
+    }
+
+    .anomaly-type {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--warning);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 2px;
+    }
+
+    .anomaly-step {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .anomaly-confidence {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--bg-base);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .anomaly-message {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .anomaly-evidence {
+      background: var(--bg-base);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .evidence-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 5px 0;
+      font-family: 'JetBrains Mono', monospace;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .evidence-row:last-child {
+      border-bottom: none;
+    }
+
+    .evidence-label { color: var(--text-muted); }
+    .evidence-value { color: var(--text-primary); font-weight: 500; }
+    .evidence-value.bad { color: var(--warning); font-weight: 600; }
+
+    .anomaly-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .anomaly-action {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .anomaly-action.primary {
+      background: var(--warning);
+      color: var(--bg-base);
+    }
+
+    .anomaly-action.primary:hover {
+      box-shadow: 0 0 20px var(--warning-glow);
+      transform: translateY(-1px);
+    }
+
+    .anomaly-action.secondary {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .anomaly-action.secondary:hover {
+      color: var(--text-primary);
+      border-color: var(--border-light);
+    }
+
+    /* Config Section */
+    .config-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      font-size: 12px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .config-key {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .config-value {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .config-value.clickable {
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .config-value.clickable:hover {
+      text-decoration: underline;
+    }
+
+    .config-value.warning {
+      color: var(--warning);
+    }
+
+    /* Bottom Panel - Only spans the main content area */
+    .bottom-panel {
+      grid-area: bottom;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      border-radius: 0;
+    }
+
+    .bottom-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      gap: 4px;
+      background: var(--bg-card);
+    }
+
+    .bottom-tab {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bottom-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .bottom-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .bottom-tab .badge {
+      background: var(--warning);
+      color: var(--bg-base);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .terminal {
+      flex: 1;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.9;
+      overflow-y: auto;
+      background: var(--bg-base);
+    }
+
+    .terminal-line {
+      display: flex;
+      padding: 3px 0;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+
+    .terminal-line:hover {
+      background: var(--bg-elevated);
+    }
+
+    .terminal-line.highlight {
+      background: var(--warning-dim);
+      border-left: 3px solid var(--warning);
+      padding-left: 10px;
+      margin-left: -10px;
+    }
+
+    .terminal-time {
+      color: var(--text-muted);
+      margin-right: 16px;
+      user-select: none;
+      min-width: 65px;
+      font-size: 10px;
+    }
+
+    .terminal-level {
+      width: 50px;
+      margin-right: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .terminal-level.info { color: var(--accent); }
+    .terminal-level.ok { color: var(--success); }
+    .terminal-level.warn { color: var(--warning); }
+    .terminal-level.step { color: var(--chart-2); }
+    .terminal-level.alert { color: var(--error); }
+
+    .terminal-content {
+      color: var(--text-secondary);
+      flex: 1;
+    }
+
+    .terminal-content .highlight-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .terminal-content .highlight-warn {
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    .terminal-content .highlight-good {
+      color: var(--success);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-light);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <span>Flux</span>
+      </div>
+      <nav class="nav">
+        <div class="nav-item active">Experiments</div>
+        <div class="nav-item">Compare</div>
+        <div class="nav-item">Data</div>
+        <div class="nav-item">Code</div>
+      </nav>
+      <div class="header-spacer"></div>
+      <div class="header-status">
+        <span class="status-dot warning"></span>
+        <span>1 alert</span>
+      </div>
+      <div class="header-status">
+        <span class="status-dot"></span>
+        <span>2 running</span>
+      </div>
+      <div class="header-status">
+        <span class="kbd">⌘K</span>
+      </div>
+    </header>
+
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section experiments">
+        <div class="sidebar-header">
+          <span>Experiments</span>
+          <span class="sidebar-header-action">+</span>
+        </div>
+        <div class="experiment-list">
+          <div class="experiment-item active has-alert">
+            <div class="experiment-header">
+              <div class="experiment-status running"></div>
+              <div class="experiment-name">reward-model-v3.4</div>
+              <div class="experiment-time">2h 14m</div>
+            </div>
+            <div class="experiment-metrics">
+              <span><span class="metric-label">loss</span> <span class="metric-value">0.342</span></span>
+              <span><span class="metric-label">reward</span> <span class="metric-value">0.891</span></span>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline" viewBox="0 0 200 30" preserveAspectRatio="none">
+                <path class="line-1" d="M0,25 L20,24 L40,22 L60,20 L80,18 L100,15 L120,13 L140,12 L160,10 L180,8 L200,6"></path>
+                <path class="line-2" d="M0,28 L20,26 L40,23 L60,18 L80,14 L100,10 L120,8 L140,7 L160,7 L180,8 L200,10"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="experiment-item">
+            <div class="experiment-header">
+              <div class="experiment-status running"></div>
+              <div class="experiment-name">ablation-no-dropout</div>
+              <div class="experiment-time">1h 03m</div>
+            </div>
+            <div class="experiment-metrics">
+              <span><span class="metric-label">loss</span> <span class="metric-value">0.418</span></span>
+              <span><span class="metric-label">reward</span> <span class="metric-value">0.823</span></span>
+            </div>
+          </div>
+
+          <div class="experiment-item">
+            <div class="experiment-header">
+              <div class="experiment-status completed"></div>
+              <div class="experiment-name">reward-model-v3.3</div>
+              <div class="experiment-time">4h 22m</div>
+            </div>
+            <div class="experiment-metrics">
+              <span><span class="metric-label">loss</span> <span class="metric-value">0.287</span></span>
+              <span><span class="metric-label">reward</span> <span class="metric-value">0.912</span></span>
+            </div>
+          </div>
+
+          <div class="experiment-item">
+            <div class="experiment-header">
+              <div class="experiment-status failed"></div>
+              <div class="experiment-name">high-lr-test</div>
+              <div class="experiment-time">0h 12m</div>
+            </div>
+            <div class="experiment-metrics">
+              <span><span class="metric-label">loss</span> <span class="metric-value" style="color: var(--error)">NaN</span></span>
+              <span style="color: var(--error); font-size: 10px;">exploded</span>
+            </div>
+          </div>
+
+          <div class="experiment-item">
+            <div class="experiment-header">
+              <div class="experiment-status completed"></div>
+              <div class="experiment-name">baseline-v3.2</div>
+              <div class="experiment-time">5h 01m</div>
+            </div>
+            <div class="experiment-metrics">
+              <span><span class="metric-label">loss</span> <span class="metric-value">0.312</span></span>
+              <span><span class="metric-label">reward</span> <span class="metric-value">0.887</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section files">
+        <div class="sidebar-header">
+          <span>Files</span>
+        </div>
+        <div class="file-tree">
+          <div class="file-item folder">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#3B82F6">
+                <path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/>
+              </svg>
+            </span>
+            <span class="file-name">configs</span>
+          </div>
+          <div class="file-item indent-1 active">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#CB171E">
+                <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4v2h10V7H7zm0 4v2h7v-2H7zm0 4v2h10v-2H7z"/>
+              </svg>
+            </span>
+            <span class="file-name">reward_model.yaml</span>
+          </div>
+          <div class="file-item indent-1">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#CB171E">
+                <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4v2h10V7H7zm0 4v2h7v-2H7zm0 4v2h10v-2H7z"/>
+              </svg>
+            </span>
+            <span class="file-name">training.yaml</span>
+          </div>
+          <div class="file-item folder">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#3B82F6">
+                <path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/>
+              </svg>
+            </span>
+            <span class="file-name">src</span>
+          </div>
+          <div class="file-item indent-1">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#3776AB">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+            </span>
+            <span class="file-name">train.py</span>
+          </div>
+          <div class="file-item indent-1">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#3776AB">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+            </span>
+            <span class="file-name">model.py</span>
+          </div>
+          <div class="file-item indent-1">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#3776AB">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+            </span>
+            <span class="file-name">utils.py</span>
+          </div>
+          <div class="file-item folder">
+            <span class="file-icon">
+              <svg viewBox="0 0 24 24" fill="#22C55E">
+                <path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/>
+              </svg>
+            </span>
+            <span class="file-name">tests</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <div class="main-header">
+        <div class="main-title">
+          <h1>reward-model-v3.4</h1>
+          <span class="tag running"><span class="tag-dot"></span> Running</span>
+          <span class="tag alert">⚠ Alert</span>
+        </div>
+        <div class="main-actions">
+          <button class="btn btn-secondary">↔ Compare</button>
+          <button class="btn btn-secondary">↓ Export</button>
+          <button class="btn btn-danger">■ Stop</button>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-label">Loss</span>
+            <span class="metric-card-trend positive">▼ 12.3%</span>
+          </div>
+          <div class="metric-card-value live">0.342</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-label">Reward</span>
+            <span class="metric-card-trend positive">▲ 8.2%</span>
+          </div>
+          <div class="metric-card-value live">0.891</div>
+        </div>
+        <div class="metric-card alert">
+          <div class="metric-card-header">
+            <span class="metric-card-label">Length Corr.</span>
+            <span class="metric-card-trend warning">⚠ HIGH</span>
+          </div>
+          <div class="metric-card-value" style="color: var(--warning)">0.73</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-label">Step</span>
+            <span class="metric-card-trend">~2.1k/hr</span>
+          </div>
+          <div class="metric-card-value live">8,420</div>
+        </div>
+      </div>
+
+      <div class="charts-area">
+        <div class="chart-card full-width has-anomaly">
+          <div class="chart-header">
+            <span class="chart-title">
+              Reward Components
+              <span class="anomaly-badge">Divergence Detected</span>
+            </span>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--chart-4)"></div>
+                <span>Helpfulness</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--chart-3)"></div>
+                <span>Harmlessness</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--chart-2)"></div>
+                <span>Honesty</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 800 180" preserveAspectRatio="none">
+              <g class="chart-grid">
+                <line x1="0" y1="45" x2="800" y2="45" />
+                <line x1="0" y1="90" x2="800" y2="90" />
+                <line x1="0" y1="135" x2="800" y2="135" />
+              </g>
+
+              <rect class="anomaly-zone" x="520" y="0" width="280" height="180" />
+
+              <path class="chart-area" d="M0,130 C100,125 200,115 300,100 C400,85 500,70 520,60 C560,45 600,30 650,20 C700,15 750,12 800,10 L800,180 L0,180 Z" fill="var(--chart-4)" />
+              <path class="chart-line" d="M0,130 C100,125 200,115 300,100 C400,85 500,70 520,60 C560,45 600,30 650,20 C700,15 750,12 800,10" stroke="var(--chart-4)" />
+
+              <path class="chart-area" d="M0,120 C100,118 200,115 300,112 C400,108 500,105 520,105 C560,108 600,115 650,125 C700,132 750,138 800,145 L800,180 L0,180 Z" fill="var(--chart-3)" />
+              <path class="chart-line" d="M0,120 C100,118 200,115 300,112 C400,108 500,105 520,105 C560,108 600,115 650,125 C700,132 750,138 800,145" stroke="var(--chart-3)" />
+
+              <path class="chart-area" d="M0,110 C100,108 200,105 300,100 C400,95 500,90 520,88 C560,85 600,82 650,80 C700,78 750,76 800,75 L800,180 L0,180 Z" fill="var(--chart-2)" />
+              <path class="chart-line" d="M0,110 C100,108 200,105 300,100 C400,95 500,90 520,88 C560,85 600,82 650,80 C700,78 750,76 800,75" stroke="var(--chart-2)" />
+
+              <g class="anomaly-marker" transform="translate(520, 60)">
+                <circle r="12" />
+                <text x="18" y="5" font-size="11" fill="var(--warning)" font-weight="600">Step 6.2k</text>
+              </g>
+
+              <circle class="live-point" cx="800" cy="10" r="4" fill="var(--chart-4)" />
+              <circle class="live-point" cx="800" cy="145" r="4" fill="var(--chart-3)" />
+              <circle class="live-point" cx="800" cy="75" r="4" fill="var(--chart-2)" />
+
+              <g class="chart-axis">
+                <text x="0" y="175">0</text>
+                <text x="200" y="175">2k</text>
+                <text x="400" y="175">4k</text>
+                <text x="520" y="175" fill="var(--warning)" font-weight="600">6.2k</text>
+                <text x="700" y="175">8k</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Loss & Reward</span>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 300 140" preserveAspectRatio="none">
+              <g class="chart-grid">
+                <line x1="0" y1="35" x2="300" y2="35" />
+                <line x1="0" y1="70" x2="300" y2="70" />
+                <line x1="0" y1="105" x2="300" y2="105" />
+              </g>
+              <path class="chart-line" d="M0,20 C50,25 100,40 150,60 C200,80 250,95 300,105" stroke="var(--chart-1)" />
+              <path class="chart-line" d="M0,120 C50,110 100,90 150,70 C200,50 250,35 300,25" stroke="var(--chart-2)" />
+              <circle class="live-point" cx="300" cy="105" r="3" fill="var(--chart-1)" />
+              <circle class="live-point" cx="300" cy="25" r="3" fill="var(--chart-2)" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Response Length</span>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 300 140" preserveAspectRatio="none">
+              <rect x="40" y="110" width="18" height="15" fill="var(--chart-1)" opacity="0.4" />
+              <rect x="65" y="95" width="18" height="30" fill="var(--chart-1)" opacity="0.4" />
+              <rect x="90" y="70" width="18" height="55" fill="var(--chart-1)" opacity="0.5" />
+              <rect x="115" y="45" width="18" height="80" fill="var(--chart-1)" opacity="0.6" />
+              <rect x="140" y="25" width="18" height="100" fill="var(--chart-1)" />
+              <rect x="165" y="15" width="18" height="110" fill="var(--warning)" />
+              <rect x="190" y="30" width="18" height="95" fill="var(--warning)" opacity="0.8" />
+              <rect x="215" y="55" width="18" height="70" fill="var(--warning)" opacity="0.6" />
+              <rect x="240" y="85" width="18" height="40" fill="var(--warning)" opacity="0.4" />
+
+              <line x1="140" y1="10" x2="140" y2="130" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4,4" />
+              <text x="140" y="138" fill="var(--text-muted)" font-size="9" text-anchor="middle" font-family="JetBrains Mono">baseline</text>
+
+              <line x1="185" y1="10" x2="185" y2="130" stroke="var(--warning)" stroke-width="2" stroke-dasharray="4,4" />
+              <text x="185" y="138" fill="var(--warning)" font-size="9" text-anchor="middle" font-family="JetBrains Mono" font-weight="600">+32%</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Inspector -->
+    <aside class="inspector">
+      <div class="inspector-header">
+        <span>Inspector</span>
+        <div class="inspector-tabs">
+          <span class="inspector-tab active">Alerts</span>
+          <span class="inspector-tab">Config</span>
+        </div>
+      </div>
+      <div class="inspector-content">
+        <div class="inspector-section">
+          <div class="anomaly-card">
+            <div class="anomaly-card-header">
+              <div class="anomaly-icon">⚠</div>
+              <div class="anomaly-info">
+                <div class="anomaly-type">LENGTH_GAMING</div>
+                <div class="anomaly-step">Detected at step 6,200</div>
+              </div>
+              <div class="anomaly-confidence">94%</div>
+            </div>
+            <div class="anomaly-message">
+              Strong correlation between reward score and response length. Model may be gaming by producing longer outputs.
+            </div>
+            <div class="anomaly-evidence">
+              <div class="evidence-row">
+                <span class="evidence-label">Correlation</span>
+                <span class="evidence-value bad">r = 0.73</span>
+              </div>
+              <div class="evidence-row">
+                <span class="evidence-label">Baseline length</span>
+                <span class="evidence-value">142 tokens</span>
+              </div>
+              <div class="evidence-row">
+                <span class="evidence-label">Current length</span>
+                <span class="evidence-value bad">187 tokens (+32%)</span>
+              </div>
+              <div class="evidence-row">
+                <span class="evidence-label">Reward w/o length</span>
+                <span class="evidence-value">0.71 (−20%)</span>
+              </div>
+            </div>
+            <div class="anomaly-actions">
+              <div class="anomaly-action primary">View Examples</div>
+              <div class="anomaly-action secondary">Ignore</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">Configuration</div>
+          <div class="config-grid">
+            <div class="config-item">
+              <span class="config-key">model</span>
+              <span class="config-value clickable">llama-7b-base</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">learning_rate</span>
+              <span class="config-value">5e-5</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">batch_size</span>
+              <span class="config-value">32</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">reward_model</span>
+              <span class="config-value clickable">rm-v2.3</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">kl_coef</span>
+              <span class="config-value">0.05</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">max_length</span>
+              <span class="config-value warning">512 ← review</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">System</div>
+          <div class="config-grid">
+            <div class="config-item">
+              <span class="config-key">GPU</span>
+              <span class="config-value">A100 × 4</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">VRAM</span>
+              <span class="config-value">62%</span>
+            </div>
+            <div class="config-item">
+              <span class="config-key">Throughput</span>
+              <span class="config-value">2.1k/hr</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Bottom Panel -->
+    <div class="bottom-panel">
+      <div class="bottom-tabs">
+        <div class="bottom-tab active">
+          Training Output
+          <span class="badge">1</span>
+        </div>
+        <div class="bottom-tab">Terminal</div>
+        <div class="bottom-tab">Problems</div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-line">
+          <span class="terminal-time">14:23:01</span>
+          <span class="terminal-level info">INFO</span>
+          <span class="terminal-content">Starting training run: <span class="highlight-value">reward-model-v3.4</span></span>
+        </div>
+        <div class="terminal-line">
+          <span class="terminal-time">14:23:15</span>
+          <span class="terminal-level ok">OK</span>
+          <span class="terminal-content">Model loaded: <span class="highlight-good">llama-7b-base</span> (7B params)</span>
+        </div>
+        <div class="terminal-line">
+          <span class="terminal-time">14:52:33</span>
+          <span class="terminal-level step">STEP</span>
+          <span class="terminal-content">5000 → loss=<span class="highlight-value">0.521</span> reward=<span class="highlight-value">0.672</span> kl=0.045 len=148</span>
+        </div>
+        <div class="terminal-line highlight">
+          <span class="terminal-time">15:41:18</span>
+          <span class="terminal-level alert">ALERT</span>
+          <span class="terminal-content"><span class="highlight-warn">LENGTH_GAMING</span> correlation=<span class="highlight-warn">0.68</span> step=6200</span>
+        </div>
+        <div class="terminal-line">
+          <span class="terminal-time">15:41:18</span>
+          <span class="terminal-level warn">WARN</span>
+          <span class="terminal-content">Response length <span class="highlight-warn">+28%</span> since step 4000</span>
+        </div>
+        <div class="terminal-line">
+          <span class="terminal-time">16:37:12</span>
+          <span class="terminal-level step">STEP</span>
+          <span class="terminal-content">8420 → loss=<span class="highlight-value">0.342</span> reward=<span class="highlight-value">0.891</span> kl=0.087 len=<span class="highlight-warn">187</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

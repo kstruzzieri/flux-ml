@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+build/
+dist/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Wails
+frontend/dist/
+
+# Go
+*.test
+*.out
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# FewWord scratch files
+.fewword/
