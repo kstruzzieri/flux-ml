@@ -25,3 +25,17 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
+
+// AppInfo contains application metadata
+type AppInfo struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+// GetAppInfo returns application metadata for the frontend
+func (a *App) GetAppInfo() AppInfo {
+	return AppInfo{
+		Name:    "Flux",
+		Version: "0.1.0",
+	}
+}
