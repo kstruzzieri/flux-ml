@@ -32,7 +32,7 @@
   align-items: center;
   gap: var(--spacing-lg);
   padding: 0 var(--spacing-lg);
-  background-color: var(--color-bg-panel);
+  background-color: var(--color-bg-chrome);
   border-bottom: 1px solid var(--color-border-muted);
   z-index: var(--z-sticky);
 }
@@ -187,7 +187,7 @@
   align-items: center;
   padding: var(--spacing-sm) 0;
   gap: var(--spacing-xs);
-  background-color: var(--color-bg-panel);
+  background-color: var(--color-bg-chrome);
   border-right: 1px solid var(--color-border-muted);
 }
 
@@ -207,7 +207,7 @@
 }
 
 .activity-bar__btn:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-chrome-hover);
   color: var(--color-text-secondary);
 }
 
@@ -251,14 +251,29 @@
   grid-area: content;
   display: grid;
   grid-template-columns: var(--panel-left-width) 1fr var(--panel-right-width);
-  grid-template-rows: 1fr var(--panel-bottom-height) var(--panel-output-height);
+  grid-template-rows: 1fr var(--panel-output-height);
   grid-template-areas:
-    'left-top main right-top'
-    'left-bottom main right-bottom'
-    'left-bottom output right-bottom';
+    'left main right'
+    'left output right';
   gap: var(--panel-gap);
   padding: var(--panel-gap);
   background: var(--color-bg-base);
+  position: relative;
+}
+
+/* Column containers for independent row heights */
+.content__left-column {
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
+}
+
+.content__right-column {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
 }
 
 /* ========================================
@@ -290,6 +305,8 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
+  cursor: default;
+  user-select: none;
 }
 
 .panel__badge {
@@ -352,24 +369,30 @@
  * Panel Grid Positions
  * ======================================== */
 
+/* Panels in left column use flex sizing */
 .panel--experiments {
-  grid-area: left-top;
+  height: var(--panel-left-top-height);
+  flex-shrink: 0;
 }
 
 .panel--files {
-  grid-area: left-bottom;
+  flex: 1;
+  min-height: 0;
 }
 
 .panel--main {
   grid-area: main;
 }
 
+/* Panels in right column use flex sizing */
 .panel--inspector {
-  grid-area: right-top;
+  height: var(--panel-right-top-height);
+  flex-shrink: 0;
 }
 
 .panel--config {
-  grid-area: right-bottom;
+  flex: 1;
+  min-height: 0;
 }
 
 .panel--output {
@@ -625,4 +648,83 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-default);
+}
+
+/* ========================================
+ * Resize Handles
+ * ======================================== */
+
+.resize-handle {
+  z-index: var(--z-sticky);
+  background: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background: var(--color-accent-dim);
+}
+
+.resize-handle--vertical {
+  width: var(--panel-gap);
+  cursor: col-resize;
+}
+
+.resize-handle--horizontal {
+  height: var(--panel-gap);
+  cursor: row-resize;
+}
+
+/* Left column handle: between left column and main content */
+.resize-handle--left {
+  grid-row: 1 / -1;
+  grid-column: 2 / 3;
+  justify-self: start;
+  width: var(--panel-gap);
+  margin-left: calc(-1 * var(--panel-gap));
+}
+
+/* Right column handle: between main content and right column */
+.resize-handle--right {
+  grid-row: 1 / -1;
+  grid-column: 3 / 4;
+  justify-self: start;
+  width: var(--panel-gap);
+  margin-left: calc(-1 * var(--panel-gap));
+}
+
+/* Output handle: horizontal, above output panel in the center column */
+.resize-handle--output {
+  grid-row: 2 / 3;
+  grid-column: 2 / 3;
+  align-self: start;
+  height: var(--panel-gap);
+  margin-top: calc(-1 * var(--panel-gap));
+}
+
+/* Row handles inside flex column containers - overlap the gap completely */
+.resize-handle--left-row,
+.resize-handle--right-row {
+  flex-shrink: 0;
+  margin-top: calc(-1 * var(--panel-gap));
+  margin-bottom: calc(-1 * var(--panel-gap));
+}
+
+/* Body classes for cursor during drag */
+body.resizing-col {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.resizing-col * {
+  cursor: col-resize !important;
+}
+
+body.resizing-row {
+  cursor: row-resize !important;
+  user-select: none;
+}
+
+body.resizing-row * {
+  cursor: row-resize !important;
 }
