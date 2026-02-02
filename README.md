@@ -5,6 +5,8 @@
 **The ML development environment.**
 *Write code. Watch it learn.*
 
+![Flux Screenshot](docs/screenshots/007-resizable-panel-system.png)
+
 ---
 
 ## Overview

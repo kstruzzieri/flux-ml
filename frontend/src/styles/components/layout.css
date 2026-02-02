@@ -728,3 +728,100 @@ body.resizing-row {
 body.resizing-row * {
   cursor: row-resize !important;
 }
+
+/* ========================================
+ * Panel Collapse/Expand
+ * ======================================== */
+
+/* Collapse button base styles */
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: absolute;
+}
+
+.collapse-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-default);
+}
+
+.collapse-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Left column collapse button - positioned at right edge */
+.collapse-btn--collapse-left {
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-sticky);
+}
+
+/* Left column expand button - centered when collapsed */
+.collapse-btn--expand-left {
+  position: relative;
+  margin: auto;
+}
+
+/* Right column collapse button - positioned at left edge */
+.collapse-btn--collapse-right {
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-sticky);
+}
+
+/* Right column expand button - centered when collapsed */
+.collapse-btn--expand-right {
+  position: relative;
+  margin: auto;
+}
+
+/* Collapsed column states */
+.content__left-column--collapsed {
+  width: 24px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-panel);
+  border-radius: var(--panel-radius);
+}
+
+.content__right-column--collapsed {
+  width: 24px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-panel);
+  border-radius: var(--panel-radius);
+}
+
+/* Output panel collapse button in tabs */
+.output-tab--collapse {
+  margin-left: auto;
+  padding: var(--spacing-sm) 10px;
+  border-bottom: none;
+}
+
+.output-tab--collapse svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Collapsed output panel */
+.panel--collapsed .output-terminal {
+  display: none;
+}

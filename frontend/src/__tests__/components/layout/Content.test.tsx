@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Content } from '@components/layout/Content'
 
 describe('Content', () => {
@@ -157,5 +158,76 @@ describe('Content', () => {
 
     // Check that CSS variable was updated (default is 200px + 150px drag)
     expect(content.style.getPropertyValue('--panel-right-top-height')).toBe('350px')
+  })
+
+  // ========================================
+  // Panel Collapse/Expand Tests (Issue #8)
+  // ========================================
+
+  // Users need a visible control to collapse the left panel.
+  // The button should be accessible in the column area.
+  it('renders collapse button for left column', () => {
+    render(<Content />)
+
+    expect(screen.getByTestId('collapse-left')).toBeInTheDocument()
+  })
+
+  // When collapsed, the experiments and files panels should be hidden,
+  // leaving only the activity bar visible for navigation.
+  it('collapses left column when collapse button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Content />)
+
+    await user.click(screen.getByTestId('collapse-left'))
+
+    expect(screen.getByTestId('left-column')).toHaveClass('content__left-column--collapsed')
+  })
+
+  // When collapsed, users need a way to restore the panels.
+  // An expand button should appear in place of the collapse button.
+  it('shows expand button when left column is collapsed', async () => {
+    const user = userEvent.setup()
+    render(<Content />)
+
+    await user.click(screen.getByTestId('collapse-left'))
+
+    expect(screen.getByTestId('expand-left')).toBeInTheDocument()
+  })
+
+  // The right column (Inspector/Config) should collapse to just a thin
+  // handle on the edge, maximizing space for main content.
+  it('collapses right column when collapse button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Content />)
+
+    await user.click(screen.getByTestId('collapse-right'))
+
+    expect(screen.getByTestId('right-column')).toHaveClass('content__right-column--collapsed')
+  })
+
+  // The output panel should show only its tab bar when collapsed,
+  // preserving tab access while hiding the terminal content.
+  it('collapses bottom panel to tabs only', async () => {
+    const user = userEvent.setup()
+    render(<Content />)
+
+    await user.click(screen.getByTestId('collapse-output'))
+
+    expect(screen.getByTestId('output-panel')).toHaveClass('panel--collapsed')
+  })
+
+  // Users should be able to toggle between collapsed and expanded states
+  // with repeated clicks on the collapse/expand buttons.
+  it('expands left column when expand button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Content />)
+
+    // Collapse
+    await user.click(screen.getByTestId('collapse-left'))
+    expect(screen.getByTestId('left-column')).toHaveClass('content__left-column--collapsed')
+
+    // Expand
+    await user.click(screen.getByTestId('expand-left'))
+    expect(screen.getByTestId('left-column')).not.toHaveClass('content__left-column--collapsed')
   })
 })
