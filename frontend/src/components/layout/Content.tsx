@@ -23,7 +23,7 @@ const MAX_RIGHT_WIDTH = 500
 const MAX_OUTPUT_HEIGHT = 400
 const MAX_ROW_HEIGHT = 500
 
-function CollapseIcon() {
+function ChevronLeftIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="15 18 9 12 15 6" />
@@ -31,10 +31,26 @@ function CollapseIcon() {
   )
 }
 
-function ExpandIcon() {
+function ChevronRightIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="9 18 15 12 9 6" />
+    </svg>
+  )
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  )
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="6 9 12 15 18 9" />
     </svg>
   )
 }
@@ -80,8 +96,8 @@ export function Content() {
   })
 
   const contentStyle = {
-    '--panel-left-width': leftCollapsed ? '0px' : `${leftResize.size}px`,
-    '--panel-right-width': rightCollapsed ? '0px' : `${rightResize.size}px`,
+    '--panel-left-width': leftCollapsed ? '24px' : `${leftResize.size}px`,
+    '--panel-right-width': rightCollapsed ? '24px' : `${rightResize.size}px`,
     '--panel-output-height': outputCollapsed ? '36px' : `${outputResize.size}px`,
     '--panel-left-top-height': `${leftRowResize.size}px`,
     '--panel-right-top-height': `${rightRowResize.size}px`,
@@ -95,7 +111,16 @@ export function Content() {
     <div className="content" data-testid="content" style={contentStyle}>
       {/* Left column */}
       <div className={leftColumnClasses} data-testid="left-column">
-        {!leftCollapsed && (
+        {leftCollapsed ? (
+          <button
+            className="collapse-btn collapse-btn--edge"
+            data-testid="expand-left"
+            onClick={() => setLeftCollapsed(false)}
+            aria-label="Expand left panel"
+          >
+            <ChevronRightIcon />
+          </button>
+        ) : (
           <>
             <ExperimentsPanel />
 
@@ -107,28 +132,17 @@ export function Content() {
             />
 
             <FilesPanel />
-          </>
-        )}
 
-        {/* Collapse/Expand button for left column */}
-        {leftCollapsed ? (
-          <button
-            className="collapse-btn collapse-btn--expand-left"
-            data-testid="expand-left"
-            onClick={() => setLeftCollapsed(false)}
-            aria-label="Expand left panel"
-          >
-            <ExpandIcon />
-          </button>
-        ) : (
-          <button
-            className="collapse-btn collapse-btn--collapse-left"
-            data-testid="collapse-left"
-            onClick={() => setLeftCollapsed(true)}
-            aria-label="Collapse left panel"
-          >
-            <CollapseIcon />
-          </button>
+            {/* Collapse button on inner edge */}
+            <button
+              className="collapse-btn collapse-btn--left-edge"
+              data-testid="collapse-left"
+              onClick={() => setLeftCollapsed(true)}
+              aria-label="Collapse left panel"
+            >
+              <ChevronLeftIcon />
+            </button>
+          </>
         )}
       </div>
 
@@ -152,11 +166,18 @@ export function Content() {
         />
       )}
 
-      <OutputPanel
-        collapsed={outputCollapsed}
-        onToggleCollapse={() => setOutputCollapsed(!outputCollapsed)}
-        className={outputPanelClasses}
-      />
+      {/* Output panel wrapper for collapse button positioning */}
+      <div className="content__output-wrapper">
+        <button
+          className="collapse-btn collapse-btn--output-edge"
+          data-testid="collapse-output"
+          onClick={() => setOutputCollapsed(!outputCollapsed)}
+          aria-label={outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
+        >
+          {outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        </button>
+        <OutputPanel collapsed={outputCollapsed} className={outputPanelClasses} />
+      </div>
 
       {/* Right column resize handle */}
       {!rightCollapsed && (
@@ -169,7 +190,16 @@ export function Content() {
 
       {/* Right column */}
       <div className={rightColumnClasses} data-testid="right-column">
-        {!rightCollapsed && (
+        {rightCollapsed ? (
+          <button
+            className="collapse-btn collapse-btn--edge"
+            data-testid="expand-right"
+            onClick={() => setRightCollapsed(false)}
+            aria-label="Expand right panel"
+          >
+            <ChevronLeftIcon />
+          </button>
+        ) : (
           <>
             <InspectorPanel />
 
@@ -181,28 +211,17 @@ export function Content() {
             />
 
             <ConfigPanel />
-          </>
-        )}
 
-        {/* Collapse/Expand button for right column */}
-        {rightCollapsed ? (
-          <button
-            className="collapse-btn collapse-btn--expand-right"
-            data-testid="expand-right"
-            onClick={() => setRightCollapsed(false)}
-            aria-label="Expand right panel"
-          >
-            <CollapseIcon />
-          </button>
-        ) : (
-          <button
-            className="collapse-btn collapse-btn--collapse-right"
-            data-testid="collapse-right"
-            onClick={() => setRightCollapsed(true)}
-            aria-label="Collapse right panel"
-          >
-            <ExpandIcon />
-          </button>
+            {/* Collapse button on inner edge */}
+            <button
+              className="collapse-btn collapse-btn--right-edge"
+              data-testid="collapse-right"
+              onClick={() => setRightCollapsed(true)}
+              aria-label="Collapse right panel"
+            >
+              <ChevronRightIcon />
+            </button>
+          </>
         )}
       </div>
     </div>

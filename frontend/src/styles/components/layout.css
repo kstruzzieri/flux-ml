@@ -35,6 +35,23 @@
   background-color: var(--color-bg-chrome);
   border-bottom: 1px solid var(--color-border-muted);
   z-index: var(--z-sticky);
+  position: relative;
+}
+
+/* Center glow - emanating from logo area */
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 350px;
+  background: radial-gradient(
+    ellipse at 90px center,
+    rgba(255, 255, 255, 0.07) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
 .header__brand {
@@ -57,24 +74,35 @@
 
 .header__nav {
   display: flex;
-  gap: var(--spacing-xs);
-  margin-left: var(--spacing-sm);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  border-left: 1px solid var(--color-border-muted);
+  border-right: 1px solid var(--color-border-muted);
 }
 
 .header__nav-item {
-  padding: 6px 12px;
+  width: 115px; /* Fixed width to match longest label (Experiments) */
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   background: transparent;
   border: none;
-  border-radius: var(--radius-md);
+  border-right: 1px solid var(--color-border-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.header__nav-item:last-child {
+  border-right: none;
 }
 
 .header__nav-item:hover {
-  background-color: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
 
@@ -396,7 +424,15 @@
 }
 
 .panel--output {
+  flex: 1;
+}
+
+/* Output panel wrapper for collapse button positioning */
+.content__output-wrapper {
   grid-area: output;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ========================================
@@ -468,7 +504,6 @@
 .output-tab--add {
   padding: var(--spacing-sm) 10px;
   border-bottom: none;
-  margin-left: auto;
 }
 
 .output-tab--add svg {
@@ -746,7 +781,7 @@ body.resizing-row * {
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
-  position: absolute;
+  flex-shrink: 0;
 }
 
 .collapse-btn:hover {
@@ -760,65 +795,51 @@ body.resizing-row * {
   height: 14px;
 }
 
-/* Left column collapse button - positioned at right edge */
-.collapse-btn--collapse-left {
+/* Edge-positioned collapse buttons (on inner edge of columns) */
+.collapse-btn--left-edge {
+  position: absolute;
   right: -10px;
   top: 50%;
   transform: translateY(-50%);
   z-index: var(--z-sticky);
 }
 
-/* Left column expand button - centered when collapsed */
-.collapse-btn--expand-left {
-  position: relative;
-  margin: auto;
-}
-
-/* Right column collapse button - positioned at left edge */
-.collapse-btn--collapse-right {
+.collapse-btn--right-edge {
+  position: absolute;
   left: -10px;
   top: 50%;
   transform: translateY(-50%);
   z-index: var(--z-sticky);
 }
 
-/* Right column expand button - centered when collapsed */
-.collapse-btn--expand-right {
-  position: relative;
+.collapse-btn--output-edge {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-sticky);
+}
+
+/* Expand button centered in collapsed bar */
+.collapse-btn--edge {
   margin: auto;
 }
 
+/* Column containers need relative positioning for absolute buttons */
+.content__left-column,
+.content__right-column {
+  position: relative;
+}
+
 /* Collapsed column states */
-.content__left-column--collapsed {
-  width: 24px;
-  min-width: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-panel);
-  border-radius: var(--panel-radius);
-}
-
+.content__left-column--collapsed,
 .content__right-column--collapsed {
-  width: 24px;
-  min-width: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-bg-panel);
   border-radius: var(--panel-radius);
-}
-
-/* Output panel collapse button in tabs */
-.output-tab--collapse {
-  margin-left: auto;
-  padding: var(--spacing-sm) 10px;
-  border-bottom: none;
-}
-
-.output-tab--collapse svg {
-  width: 14px;
-  height: 14px;
+  border: 1px solid var(--color-border-muted);
 }
 
 /* Collapsed output panel */
