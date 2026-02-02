@@ -3,11 +3,18 @@ import { useState } from 'react'
 const TABS = ['Output', 'Logs', 'Terminal'] as const
 type TabId = (typeof TABS)[number]
 
-export function OutputPanel() {
+interface OutputPanelProps {
+  collapsed?: boolean
+  className?: string
+}
+
+export function OutputPanel({ collapsed = false, className = '' }: OutputPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('Output')
 
+  const panelClasses = `panel panel--output ${className}`.trim()
+
   return (
-    <div className="panel panel--output">
+    <div className={panelClasses} data-testid="output-panel">
       <div className="output-tabs">
         {TABS.map((tab) => (
           <button
@@ -28,9 +35,11 @@ export function OutputPanel() {
           </svg>
         </button>
       </div>
-      <div className="output-terminal">
-        <div className="panel__placeholder">No output</div>
-      </div>
+      {!collapsed && (
+        <div className="output-terminal">
+          <div className="panel__placeholder">No output</div>
+        </div>
+      )}
     </div>
   )
 }
