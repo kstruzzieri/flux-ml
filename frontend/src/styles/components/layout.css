@@ -83,7 +83,7 @@
 }
 
 .header__nav-item {
-  width: 115px; /* Fixed width to match longest label (Experiments) */
+  width: 130px;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
@@ -95,6 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-xs);
   height: 100%;
 }
 
@@ -109,6 +110,20 @@
 .header__nav-item--active {
   background-color: var(--color-accent-dim);
   color: var(--color-accent);
+  box-shadow: inset 0 0 0 0.75px var(--color-accent);
+}
+
+.header__nav-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header__nav-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .header__spacer {
@@ -753,6 +768,7 @@ body.resizing-col {
 
 body.resizing-col * {
   cursor: col-resize !important;
+  transition: none !important;
 }
 
 body.resizing-row {
@@ -762,6 +778,7 @@ body.resizing-row {
 
 body.resizing-row * {
   cursor: row-resize !important;
+  transition: none !important;
 }
 
 /* ========================================

@@ -7,7 +7,7 @@ interface UseResizeOptions {
   initialSize: number
   minSize: number
   maxSize?: number
-  onResize?: (size: number) => void
+  onResizeEnd?: (size: number) => void
 }
 
 interface UseResizeReturn {
@@ -21,12 +21,23 @@ export function useResize({
   initialSize,
   minSize,
   maxSize = Infinity,
-  onResize,
+  onResizeEnd,
 }: UseResizeOptions): UseResizeReturn {
   const [size, setSize] = useState(initialSize)
   const [isResizing, setIsResizing] = useState(false)
   const startPosRef = useRef(0)
   const startSizeRef = useRef(0)
+  const currentSizeRef = useRef(size)
+  const onResizeEndRef = useRef(onResizeEnd)
+
+  // Keep callback ref updated without causing effect re-runs
+  onResizeEndRef.current = onResizeEnd
+
+  // Sync size when initialSize changes (e.g., after async layout load)
+  useEffect(() => {
+    setSize(initialSize)
+    currentSizeRef.current = initialSize
+  }, [initialSize])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -49,13 +60,14 @@ export function useResize({
       const delta = currentPos - startPosRef.current
       const newSize = Math.max(minSize, Math.min(maxSize, startSizeRef.current + delta))
 
+      currentSizeRef.current = newSize
       setSize(newSize)
-      onResize?.(newSize)
     }
 
     const handleMouseUp = () => {
       setIsResizing(false)
       document.body.classList.remove('resizing-col', 'resizing-row')
+      onResizeEndRef.current?.(currentSizeRef.current)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -65,7 +77,7 @@ export function useResize({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, direction, minSize, maxSize, onResize])
+  }, [isResizing, direction, minSize, maxSize])
 
   return { size, handleMouseDown, isResizing }
 }
@@ -76,12 +88,22 @@ export function useResizeInverted({
   initialSize,
   minSize,
   maxSize = Infinity,
-  onResize,
+  onResizeEnd,
 }: UseResizeOptions): UseResizeReturn {
   const [size, setSize] = useState(initialSize)
   const [isResizing, setIsResizing] = useState(false)
   const startPosRef = useRef(0)
   const startSizeRef = useRef(0)
+  const currentSizeRef = useRef(size)
+  const onResizeEndRef = useRef(onResizeEnd)
+
+  onResizeEndRef.current = onResizeEnd
+
+  // Sync size when initialSize changes (e.g., after async layout load)
+  useEffect(() => {
+    setSize(initialSize)
+    currentSizeRef.current = initialSize
+  }, [initialSize])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -104,13 +126,14 @@ export function useResizeInverted({
       const delta = startPosRef.current - currentPos
       const newSize = Math.max(minSize, Math.min(maxSize, startSizeRef.current + delta))
 
+      currentSizeRef.current = newSize
       setSize(newSize)
-      onResize?.(newSize)
     }
 
     const handleMouseUp = () => {
       setIsResizing(false)
       document.body.classList.remove('resizing-col', 'resizing-row')
+      onResizeEndRef.current?.(currentSizeRef.current)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -120,7 +143,7 @@ export function useResizeInverted({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, direction, minSize, maxSize, onResize])
+  }, [isResizing, direction, minSize, maxSize])
 
   return { size, handleMouseDown, isResizing }
 }
@@ -130,12 +153,22 @@ export function useResizeVerticalInverted({
   initialSize,
   minSize,
   maxSize = Infinity,
-  onResize,
+  onResizeEnd,
 }: Omit<UseResizeOptions, 'direction'>): UseResizeReturn {
   const [size, setSize] = useState(initialSize)
   const [isResizing, setIsResizing] = useState(false)
   const startPosRef = useRef(0)
   const startSizeRef = useRef(0)
+  const currentSizeRef = useRef(size)
+  const onResizeEndRef = useRef(onResizeEnd)
+
+  onResizeEndRef.current = onResizeEnd
+
+  // Sync size when initialSize changes (e.g., after async layout load)
+  useEffect(() => {
+    setSize(initialSize)
+    currentSizeRef.current = initialSize
+  }, [initialSize])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -157,13 +190,14 @@ export function useResizeVerticalInverted({
       const delta = startPosRef.current - e.clientY
       const newSize = Math.max(minSize, Math.min(maxSize, startSizeRef.current + delta))
 
+      currentSizeRef.current = newSize
       setSize(newSize)
-      onResize?.(newSize)
     }
 
     const handleMouseUp = () => {
       setIsResizing(false)
       document.body.classList.remove('resizing-row')
+      onResizeEndRef.current?.(currentSizeRef.current)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -173,7 +207,7 @@ export function useResizeVerticalInverted({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, minSize, maxSize, onResize])
+  }, [isResizing, minSize, maxSize])
 
   return { size, handleMouseDown, isResizing }
 }

@@ -3,6 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { Content } from '@components/layout/Content'
 
 describe('Content', () => {
+  beforeEach(() => {
+    // Clear localStorage to reset layout state between tests
+    localStorage.clear()
+  })
+
   // Drag handles provide the visual affordance and interaction target for resizing.
   // Without visible handles, users wouldn't know panels are resizable.
   it('renders drag handles between resizable panels', () => {
@@ -45,13 +50,13 @@ describe('Content', () => {
     const handle = screen.getByTestId('resize-handle-left')
     const content = screen.getByTestId('content')
 
-    // Try to drag below minimum (200px)
+    // Try to drag below minimum (100px)
     fireEvent.mouseDown(handle, { clientX: 280 })
-    fireEvent.mouseMove(document, { clientX: 100 })
+    fireEvent.mouseMove(document, { clientX: 50 })
     fireEvent.mouseUp(document)
 
     // Should clamp to minimum
-    expect(content.style.getPropertyValue('--panel-left-width')).toBe('200px')
+    expect(content.style.getPropertyValue('--panel-left-width')).toBe('100px')
   })
 
   // Cursor feedback indicates the drag operation is active and shows the

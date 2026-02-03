@@ -5,7 +5,7 @@
 **The ML development environment.**
 *Write code. Watch it learn.*
 
-![Flux Screenshot](docs/screenshots/008-panel-collapse-expand.png)
+![Flux Screenshot](docs/screenshots/009-layout-state-persistence.png)
 
 ---
 
