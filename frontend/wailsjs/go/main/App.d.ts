@@ -4,4 +4,8 @@ import {main} from '../models';
 
 export function GetAppInfo():Promise<main.AppInfo>;
 
+export function GetLayout():Promise<main.LayoutState>;
+
 export function Greet(arg1:string):Promise<string>;
+
+export function SaveLayout(arg1:main.LayoutState):Promise<void>;

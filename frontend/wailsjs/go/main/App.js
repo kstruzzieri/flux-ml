@@ -6,6 +6,14 @@ export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
 
+export function GetLayout() {
+  return window['go']['main']['App']['GetLayout']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function SaveLayout(arg1) {
+  return window['go']['main']['App']['SaveLayout'](arg1);
 }
