@@ -6,6 +6,48 @@ describe('Design Tokens', () => {
   const layoutPath = path.resolve(__dirname, '../styles/components/layout.css')
 
   describe('Token definitions', () => {
+    it('defines all required typography tokens', () => {
+      const cssContent = fs.readFileSync(tokensPath, 'utf-8')
+
+      const requiredTokens = [
+        // Font families
+        '--font-ui',
+        '--font-mono',
+        // Font sizes
+        '--font-size-xs',
+        '--font-size-sm',
+        '--font-size-md',
+        '--font-size-lg',
+        '--font-size-xl',
+        '--font-size-2xl',
+        // Font weights
+        '--font-weight-normal',
+        '--font-weight-medium',
+        '--font-weight-semibold',
+        '--font-weight-bold',
+        // Line heights
+        '--line-height-tight',
+        '--line-height-normal',
+        '--line-height-relaxed',
+        // Letter spacing
+        '--letter-spacing-wide',
+      ]
+
+      requiredTokens.forEach((token) => {
+        expect(cssContent).toContain(token)
+      })
+    })
+
+    it('font-ui references Inter as primary font', () => {
+      const cssContent = fs.readFileSync(tokensPath, 'utf-8')
+      expect(cssContent).toMatch(/--font-ui:.*'Inter'/)
+    })
+
+    it('font-mono references JetBrains Mono as primary font', () => {
+      const cssContent = fs.readFileSync(tokensPath, 'utf-8')
+      expect(cssContent).toMatch(/--font-mono:.*'JetBrains Mono'/)
+    })
+
     it('defines all required color tokens', () => {
       const cssContent = fs.readFileSync(tokensPath, 'utf-8')
 
