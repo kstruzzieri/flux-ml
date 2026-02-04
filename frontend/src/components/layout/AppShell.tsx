@@ -3,6 +3,7 @@ import { Header, ViewId } from './Header'
 import { ActivityBar } from './ActivityBar'
 import { Content } from './Content'
 import { GetAppInfo } from '../../../wailsjs/go/main/App'
+import { useKeyboardShortcuts, useLayoutPersistence } from '../../hooks'
 
 interface AppInfo {
   name: string
@@ -12,6 +13,7 @@ interface AppInfo {
 export function AppShell() {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [activeView, setActiveView] = useState<ViewId>('experiments')
+  const layout = useLayoutPersistence()
 
   // TODO: These will be driven by actual experiment state
   const [runningCount] = useState(0)
@@ -32,6 +34,11 @@ export function AppShell() {
     console.log('Command palette triggered')
   }, [])
 
+  useKeyboardShortcuts({
+    onViewChange: handleViewChange,
+    onCommandPalette: handleCommandPalette,
+  })
+
   return (
     <div className="app-shell">
       <Header
@@ -43,7 +50,7 @@ export function AppShell() {
         onCommandPalette={handleCommandPalette}
       />
       <ActivityBar activeItem={activeView} onItemClick={handleViewChange} />
-      <Content />
+      <Content activeView={activeView} layout={layout} />
     </div>
   )
 }

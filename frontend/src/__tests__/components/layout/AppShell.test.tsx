@@ -7,6 +7,17 @@ jest.mock('../../../../wailsjs/go/main/App', () => ({
     name: 'Flux',
     version: '0.1.0',
   }),
+  GetLayout: jest.fn().mockResolvedValue({
+    leftWidth: 280,
+    rightWidth: 320,
+    outputHeight: 180,
+    leftTopHeight: 200,
+    rightTopHeight: 200,
+    leftCollapsed: false,
+    rightCollapsed: false,
+    outputCollapsed: false,
+  }),
+  SaveLayout: jest.fn().mockResolvedValue(undefined),
 }))
 
 describe('AppShell', () => {

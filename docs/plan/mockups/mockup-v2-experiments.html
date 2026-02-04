@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux ML — Experiments View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Surface Hierarchy */
+      --surface-base: #161b22;
+      --surface-panel: #0d1117;
+      --surface-elevated: #0f1419;
+      --surface-content: #161b22;
+      --surface-hover: #1c2128;
+      --surface-active: #21262d;
+
+      /* Borders */
+      --border-subtle: #1b2028;
+      --border-default: #30363d;
+      --border-accent: rgba(6, 182, 212, 0.3);
+
+      /* Text */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b9eb0;
+      --text-muted: #4a5d73;
+
+      /* Accent - Cyan */
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.12);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+
+      /* Status */
+      --status-success: #10b981;
+      --status-warning: #f59e0b;
+      --status-error: #ef4444;
+      --status-running: #06b6d4;
+
+      /* Charts */
+      --chart-1: #06b6d4;
+      --chart-2: #10b981;
+      --chart-3: #f59e0b;
+      --chart-4: #8b5cf6;
+      --chart-5: #ec4899;
+
+      /* Layout */
+      --header-height: 48px;
+      --sidebar-width: 52px;
+      --panel-gap: 6px;
+      --panel-radius: 10px;
+      --panel-left-width: 280px;
+      --panel-right-width: 320px;
+      --panel-output-height: 180px;
+
+      /* Typography */
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Misc */
+      --transition: 150ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Reset
+    ═══════════════════════════════════════════════════════════════ */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      background: var(--surface-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar content";
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Header
+    ═══════════════════════════════════════════════════════════════ */
+
+    .header {
+      grid-area: header;
+      background: var(--surface-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+    }
+
+    .header__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header__title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .header__nav-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header__nav-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .header__nav-item--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .header__nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+    }
+
+    .header__nav-item--active .header__nav-icon {
+      opacity: 1;
+    }
+
+    .header__spacer { flex: 1; }
+
+    .header__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header__status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-running);
+      box-shadow: 0 0 8px var(--status-running);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .header__version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Activity Bar (Icon Sidebar)
+    ═══════════════════════════════════════════════════════════════ */
+
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--surface-panel);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .sidebar__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+
+    .sidebar__btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .sidebar__btn--active {
+      color: var(--accent);
+    }
+
+    .sidebar__btn--active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .sidebar__btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sidebar__spacer { flex: 1; }
+
+    .sidebar__divider {
+      width: 24px;
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    .sidebar__badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      background: var(--status-error);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Content Area - Experiments View Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .content {
+      grid-area: content;
+      display: grid;
+      grid-template-columns: var(--panel-left-width) 1fr var(--panel-right-width);
+      grid-template-rows: 1fr var(--panel-output-height);
+      grid-template-areas:
+        "left main right"
+        "left output right";
+      gap: var(--panel-gap);
+      padding: var(--panel-gap);
+      background: var(--surface-base);
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Panel Base Styles
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel {
+      background: var(--surface-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel__header {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      gap: 8px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .panel__actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .panel__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .panel__action:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .panel__action svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .panel__content {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Left Panel - Experiments List
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--left {
+      grid-area: left;
+    }
+
+    .experiment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .experiment-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .experiment-item:hover {
+      border-color: var(--border-default);
+      background: var(--surface-hover);
+    }
+
+    .experiment-item--active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .experiment-item__row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .experiment-item__status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .experiment-item__status--running {
+      background: var(--status-running);
+      box-shadow: 0 0 6px var(--status-running);
+      animation: pulse 2s infinite;
+    }
+
+    .experiment-item__status--completed {
+      background: var(--status-success);
+    }
+
+    .experiment-item__status--failed {
+      background: var(--status-error);
+    }
+
+    .experiment-item__name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .experiment-item__duration {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .experiment-item__metrics {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+    }
+
+    .experiment-item__metric {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+    }
+
+    .experiment-item__metric-label {
+      color: var(--text-muted);
+    }
+
+    .experiment-item__metric-value {
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    .experiment-item__sparkline {
+      height: 24px;
+      margin-top: 4px;
+    }
+
+    .experiment-item__alert {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 4px;
+      font-size: 10px;
+      color: var(--status-error);
+      margin-top: 4px;
+    }
+
+    .experiment-item__alert svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Panel - Experiment Dashboard
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--main {
+      grid-area: main;
+      min-height: 0;
+    }
+
+    .dashboard {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    /* Experiment Header */
+    .experiment-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .experiment-header__status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--status-running);
+      box-shadow: 0 0 8px var(--status-running);
+      animation: pulse 2s infinite;
+    }
+
+    .experiment-header__info {
+      flex: 1;
+    }
+
+    .experiment-header__name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .experiment-header__meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .experiment-header__meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .experiment-header__meta-item svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
+    .experiment-header__actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .btn--primary {
+      background: var(--accent);
+      border: none;
+      color: white;
+    }
+
+    .btn--primary:hover {
+      background: #0891b2;
+    }
+
+    .btn--secondary {
+      background: transparent;
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+    }
+
+    .btn--secondary:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .btn--danger {
+      background: transparent;
+      border: 1px solid var(--status-error);
+      color: var(--status-error);
+    }
+
+    .btn--danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .metric-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .metric-card__label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+    }
+
+    .metric-card__trend {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .metric-card__trend--up {
+      color: var(--status-success);
+    }
+
+    .metric-card__trend--down {
+      color: var(--status-error);
+    }
+
+    .metric-card__trend svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .metric-card__value {
+      font-size: 24px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .metric-card__subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .metric-card__sparkline {
+      height: 32px;
+      margin-top: 10px;
+    }
+
+    /* Charts */
+    .chart-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .chart-primary {
+      flex: 1;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 0;
+    }
+
+    .chart-primary__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .chart-primary__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .chart-primary__legend {
+      display: flex;
+      gap: 16px;
+    }
+
+    .chart-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .chart-legend-item__color {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    .chart-primary__canvas {
+      height: calc(100% - 40px);
+      position: relative;
+    }
+
+    /* SVG Chart placeholder */
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-grid-line {
+      stroke: var(--border-subtle);
+      stroke-width: 1;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chart-line--1 { stroke: var(--chart-1); }
+    .chart-line--2 { stroke: var(--chart-2); }
+    .chart-line--3 { stroke: var(--chart-3); }
+
+    .chart-area {
+      opacity: 0.1;
+    }
+
+    .chart-area--1 { fill: var(--chart-1); }
+    .chart-area--2 { fill: var(--chart-2); }
+
+    .chart-secondary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .chart-secondary {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 100px;
+      flex-shrink: 0;
+    }
+
+    .chart-secondary__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .chart-secondary__title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .chart-secondary__value {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .chart-secondary__canvas {
+      height: calc(100% - 28px);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Right Panel - Inspector
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--right {
+      grid-area: right;
+    }
+
+    .inspector {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 12px;
+    }
+
+    /* Alerts Section */
+    .alerts-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alerts-section__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .alerts-section__badge {
+      background: var(--status-error);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .alert-card {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .alert-card__header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .alert-card__icon {
+      width: 18px;
+      height: 18px;
+      color: var(--status-error);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .alert-card__content {
+      flex: 1;
+    }
+
+    .alert-card__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--status-error);
+    }
+
+    .alert-card__description {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .alert-card__evidence {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .alert-card__actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .alert-card__action {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .alert-card__action:hover {
+      text-decoration: underline;
+    }
+
+    /* Config Section */
+    .config-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .config-section__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .config-list {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .config-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .config-item:last-child {
+      border-bottom: none;
+    }
+
+    .config-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .config-item__key {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .config-item__value {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--accent);
+    }
+
+    /* System Stats Section */
+    .stats-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stats-section__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .stat-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat-card__label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+    }
+
+    .stat-card__value {
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      margin-top: 4px;
+    }
+
+    .stat-card__bar {
+      height: 4px;
+      background: var(--surface-active);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .stat-card__bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .stat-card__bar-fill--gpu {
+      background: var(--chart-4);
+      width: 87%;
+    }
+
+    .stat-card__bar-fill--mem {
+      background: var(--chart-2);
+      width: 62%;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Output Panel
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--output {
+      grid-area: output;
+    }
+
+    .output-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .output-tab {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .output-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .output-tab--active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-tab__badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-error);
+    }
+
+    .output-content {
+      flex: 1;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      overflow: auto;
+      line-height: 1.6;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 12px;
+      padding: 2px 0;
+    }
+
+    .log-line__time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-line__level {
+      flex-shrink: 0;
+      width: 50px;
+    }
+
+    .log-line__level--info {
+      color: var(--accent);
+    }
+
+    .log-line__level--warn {
+      color: var(--status-warning);
+    }
+
+    .log-line__level--error {
+      color: var(--status-error);
+    }
+
+    .log-line__message {
+      color: var(--text-secondary);
+    }
+
+    .log-line--highlight {
+      background: rgba(245, 158, 11, 0.1);
+      margin: 0 -14px;
+      padding: 2px 14px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Scrollbar
+    ═══════════════════════════════════════════════════════════════ */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-default);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__brand">
+        <svg class="header__logo" viewBox="0 0 100 100">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14"/>
+          <path d="M22 55 Q35 55 45 50 Q55 45 65 30 Q72 22 78 20" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 45 58 Q55 62 65 70 Q72 76 78 78" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 50 52 Q60 50 78 48" stroke="#06B6D4" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <circle cx="22" cy="55" r="4" fill="#F0F6FC" opacity="0.8"/>
+          <circle cx="78" cy="20" r="3" fill="#10B981" filter="url(#glow)"/>
+          <circle cx="78" cy="78" r="3" fill="#F59E0B" filter="url(#glow)"/>
+          <circle cx="78" cy="48" r="3" fill="#06B6D4" filter="url(#glow)"/>
+        </svg>
+        <span class="header__title">Flux</span>
+      </div>
+
+      <nav class="header__nav">
+        <button class="header__nav-item header__nav-item--active">
+          <svg class="header__nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18"/>
+            <path d="M18 17V9"/>
+            <path d="M13 17V5"/>
+            <path d="M8 17v-3"/>
+          </svg>
+          Experiments
+        </button>
+        <button class="header__nav-item">
+          <svg class="header__nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="12" y1="3" x2="12" y2="21"/>
+          </svg>
+          Compare
+        </button>
+        <button class="header__nav-item">
+          <svg class="header__nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+          Data
+        </button>
+        <button class="header__nav-item">
+          <svg class="header__nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Code
+        </button>
+      </nav>
+
+      <div class="header__spacer"></div>
+
+      <div class="header__status">
+        <span class="header__status-dot"></span>
+        <span>2 running</span>
+      </div>
+
+      <span class="header__version">v0.1.0</span>
+    </header>
+
+    <!-- Activity Bar -->
+    <aside class="sidebar">
+      <button class="sidebar__btn sidebar__btn--active" title="Experiments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__divider"></div>
+
+      <button class="sidebar__btn" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span class="sidebar__badge">2</span>
+      </button>
+
+      <div class="sidebar__spacer"></div>
+
+      <button class="sidebar__btn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Left Panel: Experiments List -->
+      <div class="panel panel--left">
+        <div class="panel__header">
+          <span class="panel__title">Experiments</span>
+          <div class="panel__actions">
+            <button class="panel__action" title="New Experiment">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <button class="panel__action" title="Filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="panel__content">
+          <div class="experiment-list">
+            <!-- Active/Selected Experiment -->
+            <div class="experiment-item experiment-item--active">
+              <div class="experiment-item__row">
+                <span class="experiment-item__status experiment-item__status--running"></span>
+                <span class="experiment-item__name">reward-model-v2-run-47</span>
+                <span class="experiment-item__duration">2h 34m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Loss</span>
+                  <span class="experiment-item__metric-value">0.342</span>
+                </span>
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Reward</span>
+                  <span class="experiment-item__metric-value">0.78</span>
+                </span>
+              </div>
+              <svg class="experiment-item__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                <polyline points="0,20 10,18 20,15 30,16 40,12 50,10 60,8 70,9 80,6 90,5 100,4" fill="none" stroke="var(--chart-1)" stroke-width="1.5"/>
+              </svg>
+              <div class="experiment-item__alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Length gaming detected
+              </div>
+            </div>
+
+            <!-- Running Experiment -->
+            <div class="experiment-item">
+              <div class="experiment-item__row">
+                <span class="experiment-item__status experiment-item__status--running"></span>
+                <span class="experiment-item__name">reward-model-v2-run-48</span>
+                <span class="experiment-item__duration">45m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Loss</span>
+                  <span class="experiment-item__metric-value">0.521</span>
+                </span>
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Reward</span>
+                  <span class="experiment-item__metric-value">0.54</span>
+                </span>
+              </div>
+              <svg class="experiment-item__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                <polyline points="0,22 20,19 40,16 60,14 80,12 100,10" fill="none" stroke="var(--chart-1)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <!-- Completed Experiment -->
+            <div class="experiment-item">
+              <div class="experiment-item__row">
+                <span class="experiment-item__status experiment-item__status--completed"></span>
+                <span class="experiment-item__name">reward-model-v2-run-46</span>
+                <span class="experiment-item__duration">4h 12m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Loss</span>
+                  <span class="experiment-item__metric-value">0.289</span>
+                </span>
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Reward</span>
+                  <span class="experiment-item__metric-value">0.82</span>
+                </span>
+              </div>
+              <svg class="experiment-item__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                <polyline points="0,22 15,18 30,14 45,11 60,8 75,6 90,5 100,4" fill="none" stroke="var(--chart-2)" stroke-width="1.5"/>
+              </svg>
+            </div>
+
+            <!-- Failed Experiment -->
+            <div class="experiment-item">
+              <div class="experiment-item__row">
+                <span class="experiment-item__status experiment-item__status--failed"></span>
+                <span class="experiment-item__name">reward-model-v2-run-45</span>
+                <span class="experiment-item__duration">12m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Loss</span>
+                  <span class="experiment-item__metric-value">NaN</span>
+                </span>
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Reward</span>
+                  <span class="experiment-item__metric-value">—</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- More completed experiments -->
+            <div class="experiment-item">
+              <div class="experiment-item__row">
+                <span class="experiment-item__status experiment-item__status--completed"></span>
+                <span class="experiment-item__name">reward-model-v2-run-44</span>
+                <span class="experiment-item__duration">3h 58m</span>
+              </div>
+              <div class="experiment-item__metrics">
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Loss</span>
+                  <span class="experiment-item__metric-value">0.312</span>
+                </span>
+                <span class="experiment-item__metric">
+                  <span class="experiment-item__metric-label">Reward</span>
+                  <span class="experiment-item__metric-value">0.76</span>
+                </span>
+              </div>
+              <svg class="experiment-item__sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                <polyline points="0,20 20,16 40,12 60,9 80,7 100,5" fill="none" stroke="var(--chart-2)" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel: Experiment Dashboard -->
+      <div class="panel panel--main">
+        <div class="dashboard">
+          <!-- Experiment Header -->
+          <div class="experiment-header">
+            <span class="experiment-header__status"></span>
+            <div class="experiment-header__info">
+              <h1 class="experiment-header__name">reward-model-v2-run-47</h1>
+              <div class="experiment-header__meta">
+                <span class="experiment-header__meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Started 2h 34m ago
+                </span>
+                <span class="experiment-header__meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                  Step 12,450 / 20,000
+                </span>
+                <span class="experiment-header__meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
+                  2× RTX 4090
+                </span>
+              </div>
+            </div>
+            <div class="experiment-header__actions">
+              <button class="btn btn--secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <line x1="12" y1="3" x2="12" y2="21"/>
+                </svg>
+                Compare
+              </button>
+              <button class="btn btn--danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="4" width="12" height="16" rx="1"/>
+                </svg>
+                Stop
+              </button>
+            </div>
+          </div>
+
+          <!-- Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-card__header">
+                <span class="metric-card__label">Loss</span>
+                <span class="metric-card__trend metric-card__trend--down">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                  </svg>
+                  -12.4%
+                </span>
+              </div>
+              <div class="metric-card__value">0.342</div>
+              <div class="metric-card__subtitle">from 0.391 at start</div>
+              <svg class="metric-card__sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+                <path d="M0,28 Q25,26 40,20 T60,16 T80,10 T100,6" fill="none" stroke="var(--chart-1)" stroke-width="2"/>
+              </svg>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__header">
+                <span class="metric-card__label">Reward</span>
+                <span class="metric-card__trend metric-card__trend--up">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  </svg>
+                  +18.2%
+                </span>
+              </div>
+              <div class="metric-card__value">0.78</div>
+              <div class="metric-card__subtitle">from 0.66 at start</div>
+              <svg class="metric-card__sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+                <path d="M0,26 Q25,22 40,18 T60,14 T80,8 T100,4" fill="none" stroke="var(--chart-2)" stroke-width="2"/>
+              </svg>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__header">
+                <span class="metric-card__label">KL Divergence</span>
+                <span class="metric-card__trend metric-card__trend--up">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  </svg>
+                  +2.1%
+                </span>
+              </div>
+              <div class="metric-card__value">0.045</div>
+              <div class="metric-card__subtitle">target &lt; 0.1</div>
+              <svg class="metric-card__sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+                <path d="M0,20 Q25,18 40,16 T60,14 T80,10 T100,8" fill="none" stroke="var(--chart-3)" stroke-width="2"/>
+              </svg>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__header">
+                <span class="metric-card__label">Throughput</span>
+                <span class="metric-card__trend" style="color: var(--text-muted);">
+                  ~
+                </span>
+              </div>
+              <div class="metric-card__value">847</div>
+              <div class="metric-card__subtitle">samples/sec</div>
+              <svg class="metric-card__sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+                <path d="M0,16 Q10,14 20,18 T40,15 T60,17 T80,14 T100,16" fill="none" stroke="var(--chart-4)" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="chart-section">
+            <!-- Primary Chart -->
+            <div class="chart-primary">
+              <div class="chart-primary__header">
+                <span class="chart-primary__title">Training Metrics</span>
+                <div class="chart-primary__legend">
+                  <span class="chart-legend-item">
+                    <span class="chart-legend-item__color" style="background: var(--chart-1);"></span>
+                    Loss
+                  </span>
+                  <span class="chart-legend-item">
+                    <span class="chart-legend-item__color" style="background: var(--chart-2);"></span>
+                    Reward
+                  </span>
+                  <span class="chart-legend-item">
+                    <span class="chart-legend-item__color" style="background: var(--chart-3);"></span>
+                    KL Div
+                  </span>
+                </div>
+              </div>
+              <div class="chart-primary__canvas">
+                <svg class="chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+                  <!-- Grid lines -->
+                  <line class="chart-grid-line" x1="0" y1="50" x2="600" y2="50"/>
+                  <line class="chart-grid-line" x1="0" y1="100" x2="600" y2="100"/>
+                  <line class="chart-grid-line" x1="0" y1="150" x2="600" y2="150"/>
+
+                  <!-- Area fills -->
+                  <path class="chart-area chart-area--1" d="M0,180 Q100,170 200,140 T350,100 T500,60 T600,40 L600,200 L0,200 Z"/>
+
+                  <!-- Lines -->
+                  <path class="chart-line chart-line--1" d="M0,180 Q100,170 200,140 T350,100 T500,60 T600,40"/>
+                  <path class="chart-line chart-line--2" d="M0,160 Q100,145 200,120 T350,80 T500,50 T600,30"/>
+                  <path class="chart-line chart-line--3" d="M0,140 Q100,138 200,135 T350,125 T500,115 T600,110"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Secondary Charts Grid -->
+            <div class="chart-secondary-grid">
+              <div class="chart-secondary">
+                <div class="chart-secondary__header">
+                  <span class="chart-secondary__title">Helpfulness</span>
+                  <span class="chart-secondary__value">0.82</span>
+                </div>
+                <div class="chart-secondary__canvas">
+                  <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+                    <path d="M0,60 Q40,55 80,45 T140,30 T200,20" fill="none" stroke="var(--chart-2)" stroke-width="2"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="chart-secondary">
+                <div class="chart-secondary__header">
+                  <span class="chart-secondary__title">Harmlessness</span>
+                  <span class="chart-secondary__value">0.91</span>
+                </div>
+                <div class="chart-secondary__canvas">
+                  <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+                    <path d="M0,50 Q40,45 80,40 T140,25 T200,15" fill="none" stroke="var(--chart-4)" stroke-width="2"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="chart-secondary">
+                <div class="chart-secondary__header">
+                  <span class="chart-secondary__title">Honesty</span>
+                  <span class="chart-secondary__value">0.74</span>
+                </div>
+                <div class="chart-secondary__canvas">
+                  <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+                    <path d="M0,55 Q40,52 80,48 T140,40 T200,32" fill="none" stroke="var(--chart-5)" stroke-width="2"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Inspector -->
+      <div class="panel panel--right">
+        <div class="panel__header">
+          <span class="panel__title">Inspector</span>
+        </div>
+        <div class="panel__content">
+          <div class="inspector">
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+              <div class="alerts-section__title">
+                Alerts
+                <span class="alerts-section__badge">2</span>
+              </div>
+
+              <div class="alert-card">
+                <div class="alert-card__header">
+                  <svg class="alert-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <div class="alert-card__content">
+                    <div class="alert-card__title">Length Gaming Detected</div>
+                    <div class="alert-card__description">
+                      Strong correlation between response length and reward score (r=0.73). Model may be gaming the reward by producing longer outputs.
+                    </div>
+                    <div class="alert-card__evidence">
+                      correlation: 0.73 | avg_length: +42% | since step 8,200
+                    </div>
+                    <div class="alert-card__actions">
+                      <button class="alert-card__action">View examples</button>
+                      <button class="alert-card__action">Adjust config</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert-card" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2);">
+                <div class="alert-card__header">
+                  <svg class="alert-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--status-warning);">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <div class="alert-card__content">
+                    <div class="alert-card__title" style="color: var(--status-warning);">KL Drift Warning</div>
+                    <div class="alert-card__description">
+                      KL divergence trending upward. Consider reducing learning rate if it exceeds 0.1.
+                    </div>
+                    <div class="alert-card__evidence">
+                      current: 0.045 | trend: +0.008/1k steps
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Config Section -->
+            <div class="config-section">
+              <div class="config-section__title">Configuration</div>
+              <div class="config-list">
+                <div class="config-item">
+                  <span class="config-item__key">learning_rate</span>
+                  <span class="config-item__value">1e-5</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-item__key">batch_size</span>
+                  <span class="config-item__value">32</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-item__key">kl_coef</span>
+                  <span class="config-item__value">0.1</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-item__key">model</span>
+                  <span class="config-item__value">llama-7b</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Stats -->
+            <div class="stats-section">
+              <div class="stats-section__title">System</div>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-card__label">GPU Util</div>
+                  <div class="stat-card__value">87%</div>
+                  <div class="stat-card__bar">
+                    <div class="stat-card__bar-fill stat-card__bar-fill--gpu"></div>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-card__label">VRAM</div>
+                  <div class="stat-card__value">19.2G</div>
+                  <div class="stat-card__bar">
+                    <div class="stat-card__bar-fill stat-card__bar-fill--mem"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel panel--output">
+        <div class="output-tabs">
+          <button class="output-tab output-tab--active">
+            Training Output
+          </button>
+          <button class="output-tab">Terminal</button>
+          <button class="output-tab">
+            Problems
+            <span class="output-tab__badge">1</span>
+          </button>
+        </div>
+        <div class="output-content">
+          <div class="log-line">
+            <span class="log-line__time">14:23:45</span>
+            <span class="log-line__level log-line__level--info">INFO</span>
+            <span class="log-line__message">Step 12,450 | Loss: 0.342 | Reward: 0.78 | KL: 0.045</span>
+          </div>
+          <div class="log-line">
+            <span class="log-line__time">14:23:42</span>
+            <span class="log-line__level log-line__level--info">INFO</span>
+            <span class="log-line__message">Step 12,440 | Loss: 0.344 | Reward: 0.77 | KL: 0.044</span>
+          </div>
+          <div class="log-line log-line--highlight">
+            <span class="log-line__time">14:23:38</span>
+            <span class="log-line__level log-line__level--warn">WARN</span>
+            <span class="log-line__message">Length-reward correlation detected: r=0.73 (threshold: 0.5)</span>
+          </div>
+          <div class="log-line">
+            <span class="log-line__time">14:23:35</span>
+            <span class="log-line__level log-line__level--info">INFO</span>
+            <span class="log-line__message">Step 12,430 | Loss: 0.346 | Reward: 0.76 | KL: 0.043</span>
+          </div>
+          <div class="log-line">
+            <span class="log-line__time">14:23:32</span>
+            <span class="log-line__level log-line__level--info">INFO</span>
+            <span class="log-line__message">Step 12,420 | Loss: 0.348 | Reward: 0.75 | KL: 0.042</span>
+          </div>
+          <div class="log-line">
+            <span class="log-line__time">14:23:28</span>
+            <span class="log-line__level log-line__level--info">INFO</span>
+            <span class="log-line__message">Checkpoint saved: checkpoints/step_12400.pt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

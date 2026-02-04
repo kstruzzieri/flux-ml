@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const TABS = ['Output', 'Logs', 'Terminal'] as const
+const TABS = ['Output', 'Logs', 'Terminal', 'Notes'] as const
 type TabId = (typeof TABS)[number]
 
 interface OutputPanelProps {

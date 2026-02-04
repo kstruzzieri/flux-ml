@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux ML — Data View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Surface Hierarchy */
+      --surface-base: #161b22;
+      --surface-panel: #0d1117;
+      --surface-elevated: #0f1419;
+      --surface-content: #161b22;
+      --surface-hover: #1c2128;
+      --surface-active: #21262d;
+
+      /* Borders */
+      --border-subtle: #1b2028;
+      --border-default: #30363d;
+      --border-accent: rgba(6, 182, 212, 0.3);
+
+      /* Text */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b9eb0;
+      --text-muted: #4a5d73;
+
+      /* Accent - Cyan */
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.12);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+
+      /* Status */
+      --status-success: #10b981;
+      --status-warning: #f59e0b;
+      --status-error: #ef4444;
+      --status-running: #06b6d4;
+
+      /* Charts */
+      --chart-1: #06b6d4;
+      --chart-2: #10b981;
+      --chart-3: #f59e0b;
+      --chart-4: #8b5cf6;
+
+      /* Layout */
+      --header-height: 48px;
+      --sidebar-width: 52px;
+      --panel-gap: 6px;
+      --panel-radius: 10px;
+      --panel-left-width: 260px;
+      --panel-right-width: 340px;
+      --panel-output-height: 180px;
+
+      /* Typography */
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Misc */
+      --transition: 150ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Reset
+    ═══════════════════════════════════════════════════════════════ */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      background: var(--surface-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar content";
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Header
+    ═══════════════════════════════════════════════════════════════ */
+
+    .header {
+      grid-area: header;
+      background: var(--surface-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+    }
+
+    .header__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header__title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .header__nav-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .header__nav-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .header__nav-item--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .header__spacer { flex: 1; }
+
+    .header__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header__status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-success);
+      box-shadow: 0 0 8px var(--status-success);
+    }
+
+    .header__version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Activity Bar (Icon Sidebar)
+    ═══════════════════════════════════════════════════════════════ */
+
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--surface-panel);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .sidebar__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+
+    .sidebar__btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .sidebar__btn--active {
+      color: var(--accent);
+    }
+
+    .sidebar__btn--active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .sidebar__btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sidebar__spacer { flex: 1; }
+
+    .sidebar__divider {
+      width: 24px;
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Content Area - Island Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .content {
+      grid-area: content;
+      display: grid;
+      grid-template-columns: var(--panel-left-width) 1fr var(--panel-right-width);
+      grid-template-rows: 1fr var(--panel-output-height);
+      grid-template-areas:
+        "left main right"
+        "left output right";
+      gap: var(--panel-gap);
+      padding: var(--panel-gap);
+      background: var(--surface-base);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Panel Base Styles
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel {
+      background: var(--surface-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel__header {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      gap: 8px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .panel__badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 4px;
+    }
+
+    .panel__actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .panel__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .panel__action:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .panel__action svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .panel__content {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Left Panel - Dataset List + Quality
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--left {
+      grid-area: left;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left-section--datasets {
+      flex: 1;
+      min-height: 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .left-section--datasets .panel__content {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .left-section--quality {
+      flex-shrink: 0;
+      min-height: 320px;
+    }
+
+    .left-section--quality .quality-content {
+      padding: 10px;
+    }
+
+    .left-section--quality .quality-stats {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .left-section--quality .quality-stat {
+      padding: 8px 6px;
+    }
+
+    .left-section--quality .quality-stat__value {
+      font-size: 14px;
+    }
+
+    .left-section--quality .quality-distribution {
+      margin-bottom: 10px;
+    }
+
+    .left-section--quality .quality-distribution__chart {
+      height: 48px;
+    }
+
+    .left-section--quality .quality-issues {
+      gap: 4px;
+    }
+
+    .left-section--quality .quality-issue {
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .dataset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dataset-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      background: var(--surface-content);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .dataset-item:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-subtle);
+    }
+
+    .dataset-item--active {
+      background: var(--accent-dim);
+      border-color: var(--border-accent);
+    }
+
+    .dataset-item__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dataset-item__icon {
+      width: 18px;
+      height: 18px;
+      color: var(--chart-3);
+      flex-shrink: 0;
+    }
+
+    .dataset-item__name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dataset-item__meta {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      padding-left: 26px;
+    }
+
+    .dataset-item__experiments {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--text-muted);
+      padding-left: 26px;
+      margin-top: 4px;
+    }
+
+    .dataset-item__experiment-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .import-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      background: transparent;
+      border: 1px dashed var(--border-default);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-top: 8px;
+    }
+
+    .import-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .import-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Panel - Data Browser Table
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--main {
+      grid-area: main;
+    }
+
+    .data-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .data-header__title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .data-header__count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .data-header__spacer { flex: 1; }
+
+    .data-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      width: 240px;
+    }
+
+    .data-search__icon {
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .data-search__input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .data-search__input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .data-filters {
+      display: flex;
+      gap: 8px;
+    }
+
+    .data-filter {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .data-filter:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-default);
+    }
+
+    .data-filter svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Data Table */
+    .data-table-wrapper {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .data-table th:first-child {
+      width: 60px;
+      text-align: center;
+    }
+
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .data-table tr {
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .data-table tr:hover {
+      background: var(--surface-hover);
+    }
+
+    .data-table tr.data-table__row--selected {
+      background: var(--accent-dim);
+    }
+
+    .data-table__id {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .data-table__prompt {
+      max-width: 400px;
+    }
+
+    .data-table__prompt-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.5;
+    }
+
+    .data-table__response {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .data-table__response-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .data-table__response-icon--chosen {
+      color: var(--status-success);
+    }
+
+    .data-table__response-icon--rejected {
+      color: var(--status-error);
+    }
+
+    .data-table__tokens {
+      color: var(--text-secondary);
+    }
+
+    .data-table__delta {
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    .data-table__delta--positive {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--status-success);
+    }
+
+    .data-table__delta--negative {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--status-error);
+    }
+
+    .data-table__tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .data-table__tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+      border-radius: 4px;
+    }
+
+    .data-table__issue {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--status-warning);
+    }
+
+    /* Row with issues highlight */
+    .data-table tr.data-table__row--has-issue {
+      background: rgba(245, 158, 11, 0.04);
+    }
+
+    .data-table tr.data-table__row--has-issue:hover {
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    /* Ambiguous margin indicator in table */
+    .data-table__margin-warning {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 9px;
+      color: var(--status-warning);
+      background: rgba(245, 158, 11, 0.12);
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    /* Pagination */
+    .data-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface-elevated);
+      border-top: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .data-pagination__info {
+      font-family: var(--font-mono);
+    }
+
+    .data-pagination__controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .data-pagination__btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .data-pagination__btn:hover {
+      background: var(--surface-hover);
+    }
+
+    .data-pagination__btn--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: var(--border-accent);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Right Panel - Inspector & Quality
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--right {
+      grid-area: right;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sample Inspector (full right panel) */
+    .inspector-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .inspector-content {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .inspector-field {
+      margin-bottom: 16px;
+    }
+
+    .inspector-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .inspector-field__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .inspector-field__content {
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 120px;
+      overflow: auto;
+    }
+
+    /* Response Card with Header Bar */
+    .inspector-response-card {
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .inspector-response-card--chosen {
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
+    }
+
+    .inspector-response-card--rejected {
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+    }
+
+    .inspector-response-card__header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .inspector-response-card__header--chosen {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--status-success);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .inspector-response-card__header--rejected {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--status-error);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .inspector-response-card__icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .inspector-response-card__label {
+      flex: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .inspector-response-card__score {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .inspector-response-card__tokens {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.7;
+    }
+
+    .inspector-response-card__body {
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      background: var(--surface-content);
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    /* Annotation Actions */
+    .inspector-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface-elevated);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .inspector-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .inspector-action-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+
+    .inspector-action-btn--active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--status-warning);
+    }
+
+    .inspector-action-btn--active:hover {
+      background: rgba(245, 158, 11, 0.2);
+    }
+
+    .inspector-action-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .inspector-actions__spacer {
+      flex: 1;
+    }
+
+    /* Inline Note Area */
+    .inspector-note {
+      padding: 12px;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--surface-elevated);
+    }
+
+    .inspector-note__label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .inspector-note__title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .inspector-note__timestamp {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .inspector-note__textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 10px;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      resize: vertical;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .inspector-note__textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .inspector-note__textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Tags Popover */
+    .inspector-tags-popover {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 6px;
+      padding: 10px;
+      background: var(--surface-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-width: 200px;
+      z-index: 10;
+    }
+
+    .inspector-tags-popover__title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .inspector-tags-popover__list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .inspector-tags-popover__tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .inspector-tags-popover__tag:hover {
+      background: var(--surface-active);
+      border-color: var(--border-default);
+    }
+
+    .inspector-tags-popover__tag--active {
+      background: var(--accent-dim);
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .inspector-tags-popover__input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: var(--text-primary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .inspector-tags-popover__input:focus {
+      border-color: var(--accent);
+    }
+
+    .inspector-tags-popover__input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .inspector-field__meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .inspector-metadata {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .inspector-metadata__item {
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .inspector-metadata__label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .inspector-metadata__value {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    /* Score Comparison - Visual Bar */
+    .inspector-score-comparison {
+      padding: 10px;
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .inspector-score-comparison__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .inspector-score-comparison__title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .inspector-score-comparison__delta {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .inspector-score-comparison__delta--good {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--status-success);
+    }
+
+    .inspector-score-comparison__delta--ambiguous {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--status-warning);
+    }
+
+    /* Score Bar Track */
+    .inspector-score-bar {
+      position: relative;
+      height: 24px;
+      background: var(--surface-elevated);
+      border-radius: 5px;
+      overflow: visible;
+    }
+
+    /* Scale markers */
+    .inspector-score-bar__scale {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+      pointer-events: none;
+    }
+
+    .inspector-score-bar__tick {
+      width: 1px;
+      height: 100%;
+      background: var(--border-subtle);
+      opacity: 0.5;
+    }
+
+    /* Delta region (the gap between scores) */
+    .inspector-score-bar__delta-region {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      background: linear-gradient(90deg,
+        rgba(239, 68, 68, 0.15) 0%,
+        rgba(16, 185, 129, 0.15) 100%
+      );
+      border-radius: 4px;
+    }
+
+    .inspector-score-bar__delta-region--ambiguous {
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    /* Score markers */
+    .inspector-score-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .inspector-score-marker__dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--surface-content);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .inspector-score-marker__dot--chosen {
+      background: var(--status-success);
+    }
+
+    .inspector-score-marker__dot--rejected {
+      background: var(--status-error);
+    }
+
+    .inspector-score-marker__label {
+      position: absolute;
+      top: 100%;
+      margin-top: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      padding: 2px 4px;
+      border-radius: 3px;
+      background: var(--surface-elevated);
+    }
+
+    .inspector-score-marker__label--chosen {
+      color: var(--status-success);
+    }
+
+    .inspector-score-marker__label--rejected {
+      color: var(--status-error);
+    }
+
+    /* Scale labels */
+    .inspector-score-bar__labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Sample Alert Banner */
+    .inspector-alert {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .inspector-alert__icon {
+      width: 16px;
+      height: 16px;
+      color: var(--status-warning);
+      flex-shrink: 0;
+    }
+
+    .inspector-alert__content {
+      flex: 1;
+    }
+
+    .inspector-alert__title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--status-warning);
+      margin-bottom: 2px;
+    }
+
+    .inspector-alert__description {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .quality-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quality-content {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .quality-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .quality-stat {
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      position: relative;
+    }
+
+    .quality-stat--warning {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .quality-stat--warning .quality-stat__value {
+      color: var(--status-warning);
+    }
+
+    .quality-stat__value {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .quality-stat__label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .quality-stat__indicator {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-warning);
+    }
+
+    .quality-stat__expected {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Distribution mini chart */
+    .quality-distribution {
+      margin-bottom: 12px;
+    }
+
+    .quality-distribution__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .quality-distribution__chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 56px;
+      padding: 10px;
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+    }
+
+    .quality-distribution__bar {
+      flex: 1;
+      background: var(--chart-1);
+      border-radius: 2px 2px 0 0;
+      min-height: 4px;
+      position: relative;
+    }
+
+    .quality-distribution__bar--outlier {
+      background: var(--status-warning);
+    }
+
+    .quality-distribution__bar--outlier::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 5px solid var(--status-warning);
+    }
+
+    /* Issues list */
+    .quality-issues {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .quality-issue {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .quality-issue__icon {
+      color: var(--status-warning);
+      flex-shrink: 0;
+    }
+
+    .quality-issue__text {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+
+    .quality-issue__count {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--status-warning);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Output Panel
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--output {
+      grid-area: output;
+    }
+
+    .output-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .output-tab {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .output-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .output-tab--active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-content {
+      flex: 1;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      overflow: auto;
+      line-height: 1.6;
+    }
+
+    .output-line {
+      display: flex;
+      gap: 10px;
+    }
+
+    .output-line__time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .output-line__level {
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .output-line__level--info { color: var(--accent); }
+    .output-line__level--success { color: var(--status-success); }
+
+    /* Notes in Output Panel */
+    .output-content--notes {
+      padding: 0;
+    }
+
+    .output-notes {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 10px 14px;
+    }
+
+    .output-notes__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .output-notes__sample {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .output-notes__timestamp {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .output-notes__textarea {
+      flex: 1;
+      width: 100%;
+      padding: 10px;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--surface-content);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      resize: none;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .output-notes__textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .output-notes__textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Scrollbar
+    ═══════════════════════════════════════════════════════════════ */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-default);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__brand">
+        <svg class="header__logo" viewBox="0 0 100 100">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14"/>
+          <path d="M22 55 Q35 55 45 50 Q55 45 65 30 Q72 22 78 20" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 45 58 Q55 62 65 70 Q72 76 78 78" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 50 52 Q60 50 78 48" stroke="#06B6D4" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <circle cx="22" cy="55" r="4" fill="#F0F6FC" opacity="0.8"/>
+          <circle cx="78" cy="20" r="3" fill="#10B981" filter="url(#glow)"/>
+          <circle cx="78" cy="78" r="3" fill="#F59E0B" filter="url(#glow)"/>
+          <circle cx="78" cy="48" r="3" fill="#06B6D4" filter="url(#glow)"/>
+        </svg>
+        <span class="header__title">Flux</span>
+      </div>
+
+      <nav class="header__nav">
+        <button class="header__nav-item">Experiments</button>
+        <button class="header__nav-item">Compare</button>
+        <button class="header__nav-item header__nav-item--active">Data</button>
+        <button class="header__nav-item">Code</button>
+      </nav>
+
+      <div class="header__spacer"></div>
+
+      <div class="header__status">
+        <span class="header__status-dot"></span>
+        <span>2 running</span>
+      </div>
+
+      <span class="header__version">v0.1.0</span>
+    </header>
+
+    <!-- Activity Bar -->
+    <aside class="sidebar">
+      <button class="sidebar__btn" title="Experiments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn sidebar__btn--active" title="Data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__divider"></div>
+
+      <button class="sidebar__btn" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__spacer"></div>
+
+      <button class="sidebar__btn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Left Panel: Dataset List + Quality -->
+      <div class="panel panel--left">
+        <!-- Dataset List Section -->
+        <div class="left-section left-section--datasets">
+          <div class="panel__header">
+            <span class="panel__title">Datasets</span>
+            <span class="panel__badge">3</span>
+          </div>
+          <div class="panel__content">
+            <div class="dataset-list">
+              <div class="dataset-item dataset-item--active">
+                <div class="dataset-item__header">
+                  <svg class="dataset-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                  <span class="dataset-item__name">preference-data-v2</span>
+                </div>
+                <div class="dataset-item__meta">
+                  <span>45,231 samples</span>
+                  <span>12.4 MB</span>
+                </div>
+                <div class="dataset-item__experiments">
+                  Used by:
+                  <span class="dataset-item__experiment-dot" style="background: var(--chart-1)"></span>
+                  <span class="dataset-item__experiment-dot" style="background: var(--chart-2)"></span>
+                </div>
+              </div>
+
+              <div class="dataset-item">
+                <div class="dataset-item__header">
+                  <svg class="dataset-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                  <span class="dataset-item__name">preference-data-v1</span>
+                </div>
+                <div class="dataset-item__meta">
+                  <span>38,102 samples</span>
+                  <span>9.1 MB</span>
+                </div>
+              </div>
+
+              <div class="dataset-item">
+                <div class="dataset-item__header">
+                  <svg class="dataset-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                  <span class="dataset-item__name">helpfulness-eval</span>
+                </div>
+                <div class="dataset-item__meta">
+                  <span>2,500 samples</span>
+                  <span>892 KB</span>
+                </div>
+              </div>
+            </div>
+
+            <button class="import-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Import Dataset
+            </button>
+          </div>
+        </div>
+
+        <!-- Quality Section -->
+        <div class="left-section left-section--quality">
+          <div class="panel__header">
+            <span class="panel__title">Dataset Quality</span>
+            <span class="panel__badge">249</span>
+          </div>
+          <div class="quality-content">
+            <div class="quality-stats">
+              <div class="quality-stat">
+                <div class="quality-stat__value">45,231</div>
+                <div class="quality-stat__label">Samples</div>
+              </div>
+              <div class="quality-stat quality-stat--warning">
+                <div class="quality-stat__indicator"></div>
+                <div class="quality-stat__value">127</div>
+                <div class="quality-stat__label">Avg Prompt</div>
+                <div class="quality-stat__expected">exp: 80-120</div>
+              </div>
+              <div class="quality-stat">
+                <div class="quality-stat__value">384</div>
+                <div class="quality-stat__label">Avg Resp</div>
+              </div>
+            </div>
+
+            <div class="quality-distribution">
+              <div class="quality-distribution__label">Length Distribution</div>
+              <div class="quality-distribution__chart">
+                <div class="quality-distribution__bar" style="height: 25%"></div>
+                <div class="quality-distribution__bar" style="height: 45%"></div>
+                <div class="quality-distribution__bar" style="height: 80%"></div>
+                <div class="quality-distribution__bar" style="height: 100%"></div>
+                <div class="quality-distribution__bar" style="height: 85%"></div>
+                <div class="quality-distribution__bar" style="height: 60%"></div>
+                <div class="quality-distribution__bar" style="height: 40%"></div>
+                <div class="quality-distribution__bar" style="height: 25%"></div>
+                <div class="quality-distribution__bar" style="height: 15%"></div>
+                <div class="quality-distribution__bar quality-distribution__bar--outlier" style="height: 8%" title="234 samples exceed 2048 tokens"></div>
+              </div>
+            </div>
+
+            <div class="quality-issues">
+              <div class="quality-issue">
+                <span class="quality-issue__icon">⚠</span>
+                <span class="quality-issue__text">Exceeding 2048 tokens</span>
+                <span class="quality-issue__count">234</span>
+              </div>
+              <div class="quality-issue">
+                <span class="quality-issue__icon">⚠</span>
+                <span class="quality-issue__text">Duplicate prompts</span>
+                <span class="quality-issue__count">12</span>
+              </div>
+              <div class="quality-issue">
+                <span class="quality-issue__icon">⚠</span>
+                <span class="quality-issue__text">Very short responses</span>
+                <span class="quality-issue__count">3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel: Data Browser -->
+      <div class="panel panel--main">
+        <div class="data-header">
+          <div class="data-header__title">
+            preference-data-v2
+            <span class="data-header__count">45,231 samples</span>
+          </div>
+          <div class="data-header__spacer"></div>
+          <div class="data-search">
+            <svg class="data-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="data-search__input" type="text" placeholder="Search prompts...">
+          </div>
+          <div class="data-filters">
+            <button class="data-filter">
+              Category
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <button class="data-filter">
+              Length
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <button class="data-filter">
+              Issues
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Prompt</th>
+                <th>Chosen</th>
+                <th>Rejected</th>
+                <th>Tags</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="data-table__row--selected">
+                <td class="data-table__id">1,847</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">Explain quantum computing to a 10 year old in simple terms that they would understand.</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">847 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">623 tok</span>
+                    <span class="data-table__delta data-table__delta--positive">+36%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">science</span>
+                    <span class="data-table__tag">eli5</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="data-table__id">1,848</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">Write a short poem about the feeling of rain on a summer afternoon.</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">234 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">189 tok</span>
+                    <span class="data-table__delta data-table__delta--positive">+24%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">creative</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="data-table__id">1,849</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">Help me debug this Python code that's throwing a KeyError when accessing a dictionary.</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">512 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">445 tok</span>
+                    <span class="data-table__delta data-table__delta--positive">+15%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">coding</span>
+                    <span class="data-table__tag">python</span>
+                  </div>
+                </td>
+              </tr>
+              <tr class="data-table__row--has-issue">
+                <td class="data-table__id">1,850</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">What are the main differences between classical and operant conditioning in psychology?</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">678 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">723 tok</span>
+                    <span class="data-table__delta data-table__delta--negative">-6%</span>
+                    <span class="data-table__margin-warning">⚠ Δ&lt;0.1</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">science</span>
+                    <span class="data-table__tag">psychology</span>
+                  </div>
+                  <div class="data-table__issue">
+                    <span>⚠</span> Ambiguous margin
+                  </div>
+                </td>
+              </tr>
+              <tr class="data-table__row--has-issue">
+                <td class="data-table__id">1,851</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">I completely agree with everything you're saying and think you're absolutely right about this topic.</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">156 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">892 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">sycophancy</span>
+                  </div>
+                  <div class="data-table__issue">
+                    <span>⚠</span> Sycophancy test
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="data-table__id">1,852</td>
+                <td class="data-table__prompt">
+                  <div class="data-table__prompt-text">Summarize the key points of the French Revolution and its impact on European politics.</div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--chosen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span class="data-table__tokens">1,247 tok</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__response">
+                    <svg class="data-table__response-icon data-table__response-icon--rejected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span class="data-table__tokens">834 tok</span>
+                    <span class="data-table__delta data-table__delta--positive">+50%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-table__tags">
+                    <span class="data-table__tag">history</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="data-pagination">
+          <span class="data-pagination__info">Showing 1,847 - 1,852 of 45,231</span>
+          <div class="data-pagination__controls">
+            <button class="data-pagination__btn">← Prev</button>
+            <button class="data-pagination__btn">1</button>
+            <button class="data-pagination__btn">...</button>
+            <button class="data-pagination__btn data-pagination__btn--active">308</button>
+            <button class="data-pagination__btn">309</button>
+            <button class="data-pagination__btn">...</button>
+            <button class="data-pagination__btn">7,539</button>
+            <button class="data-pagination__btn">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Inspector & Quality -->
+      <!--
+        ENHANCEMENT FEATURES (Issue #10):
+        1. Score Comparison: Shows chosen/rejected scores with delta, highlights ambiguous margins (<0.1)
+        2. Sample Alert Banner: Appears when sample has issues (sycophancy, ambiguous margin, etc.)
+        3. Quality Stat Alerts: Stats outside expected ranges get highlighted (e.g., avg prompt > expected)
+        4. Histogram Outliers: Bins representing outliers get special highlighting with arrow markers
+
+        When selecting sample #1,850 (ambiguous margin) or #1,851 (sycophancy), the alert banner would appear:
+        <div class="inspector-alert">
+          <svg class="inspector-alert__icon">...</svg>
+          <div class="inspector-alert__content">
+            <div class="inspector-alert__title">Ambiguous Margin Detected</div>
+            <div class="inspector-alert__description">Score delta of 0.08 is below threshold (0.1). Consider reviewing annotation.</div>
+          </div>
+        </div>
+      -->
+      <div class="panel panel--right">
+        <!-- Sample Inspector -->
+        <div class="inspector-section">
+          <div class="panel__header">
+            <span class="panel__title">Sample Inspector</span>
+            <span class="panel__badge">#1,847</span>
+          </div>
+          <div class="inspector-content">
+            <!-- Score Comparison - Visual Bar -->
+            <div class="inspector-score-comparison">
+              <div class="inspector-score-comparison__header">
+                <span class="inspector-score-comparison__title">Score Comparison</span>
+                <span class="inspector-score-comparison__delta inspector-score-comparison__delta--good">Δ +0.27</span>
+              </div>
+              <div class="inspector-score-bar">
+                <!-- Scale tick marks (0, 0.25, 0.5, 0.75, 1.0) -->
+                <div class="inspector-score-bar__scale">
+                  <div class="inspector-score-bar__tick"></div>
+                  <div class="inspector-score-bar__tick"></div>
+                  <div class="inspector-score-bar__tick"></div>
+                  <div class="inspector-score-bar__tick"></div>
+                  <div class="inspector-score-bar__tick"></div>
+                </div>
+                <!-- Delta region between the two scores (67% to 94%) -->
+                <div class="inspector-score-bar__delta-region" style="left: 67%; right: 6%;"></div>
+                <!-- Rejected marker at 67% -->
+                <div class="inspector-score-marker" style="left: 67%;">
+                  <div class="inspector-score-marker__dot inspector-score-marker__dot--rejected"></div>
+                  <span class="inspector-score-marker__label inspector-score-marker__label--rejected">0.67</span>
+                </div>
+                <!-- Chosen marker at 94% -->
+                <div class="inspector-score-marker" style="left: 94%;">
+                  <div class="inspector-score-marker__dot inspector-score-marker__dot--chosen"></div>
+                  <span class="inspector-score-marker__label inspector-score-marker__label--chosen">0.94</span>
+                </div>
+              </div>
+              <div class="inspector-score-bar__labels">
+                <span>0</span>
+                <span>0.5</span>
+                <span>1.0</span>
+              </div>
+            </div>
+
+            <div class="inspector-field">
+              <div class="inspector-field__label">Prompt</div>
+              <div class="inspector-field__content">
+                Explain quantum computing to a 10 year old in simple terms that they would understand.
+              </div>
+            </div>
+
+            <!-- Chosen Response Card -->
+            <div class="inspector-response-card inspector-response-card--chosen">
+              <div class="inspector-response-card__header inspector-response-card__header--chosen">
+                <svg class="inspector-response-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span class="inspector-response-card__label">Chosen</span>
+                <span class="inspector-response-card__tokens">847 tok</span>
+                <span class="inspector-response-card__score">0.94</span>
+              </div>
+              <div class="inspector-response-card__body">
+                Imagine you have a magic coin that can be heads AND tails at the same time! Regular computers use bits that are like normal coins - they can only be heads (1) or tails (0). But quantum computers use "qubits" that are like magic coins...
+              </div>
+            </div>
+
+            <!-- Rejected Response Card -->
+            <div class="inspector-response-card inspector-response-card--rejected">
+              <div class="inspector-response-card__header inspector-response-card__header--rejected">
+                <svg class="inspector-response-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                <span class="inspector-response-card__label">Rejected</span>
+                <span class="inspector-response-card__tokens">623 tok</span>
+                <span class="inspector-response-card__score">0.67</span>
+              </div>
+              <div class="inspector-response-card__body">
+                Quantum computing is a type of computation that harnesses quantum mechanical phenomena such as superposition and entanglement. Unlike classical computers that use bits, quantum computers use quantum bits or qubits...
+              </div>
+            </div>
+
+            <div class="inspector-field">
+              <div class="inspector-field__label">Metadata</div>
+              <div class="inspector-metadata">
+                <div class="inspector-metadata__item">
+                  <div class="inspector-metadata__label">Source</div>
+                  <div class="inspector-metadata__value">human-eval-batch-3</div>
+                </div>
+                <div class="inspector-metadata__item">
+                  <div class="inspector-metadata__label">Annotator</div>
+                  <div class="inspector-metadata__value">reviewer_12</div>
+                </div>
+                <div class="inspector-metadata__item">
+                  <div class="inspector-metadata__label">Confidence</div>
+                  <div class="inspector-metadata__value">0.92</div>
+                </div>
+                <div class="inspector-metadata__item">
+                  <div class="inspector-metadata__label">Created</div>
+                  <div class="inspector-metadata__value">Jan 15, 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annotation Actions -->
+          <div class="inspector-actions">
+            <button class="inspector-action-btn inspector-action-btn--active" title="Flagged for review">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                <line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+              Flagged
+            </button>
+            <div class="inspector-actions__spacer"></div>
+            <button class="inspector-action-btn" title="Manage tags" style="position: relative;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              Tags
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel panel--output">
+        <div class="output-tabs">
+          <button class="output-tab">Data Log</button>
+          <button class="output-tab">Terminal</button>
+          <button class="output-tab output-tab--active">Notes</button>
+        </div>
+        <div class="output-content output-content--notes">
+          <div class="output-notes">
+            <div class="output-notes__header">
+              <span class="output-notes__sample">Sample #1,847</span>
+              <span class="output-notes__timestamp">edited Jan 20, 2026</span>
+            </div>
+            <textarea class="output-notes__textarea" placeholder="Add a note about this sample...">Chosen response uses good analogy for explaining quantum concepts to children. Rejected uses too much jargon. Clear preference.</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
