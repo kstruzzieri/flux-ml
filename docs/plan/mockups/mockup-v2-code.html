@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux ML — Code View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Surface Hierarchy */
+      --surface-base: #161b22;
+      --surface-panel: #0d1117;
+      --surface-elevated: #0f1419;
+      --surface-content: #161b22;
+      --surface-hover: #1c2128;
+      --surface-active: #21262d;
+
+      /* Borders */
+      --border-subtle: #1b2028;
+      --border-default: #30363d;
+      --border-accent: rgba(6, 182, 212, 0.3);
+
+      /* Text */
+      --text-primary: #e6edf3;
+      --text-secondary: #8b9eb0;
+      --text-muted: #4a5d73;
+
+      /* Accent - Cyan */
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.12);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+
+      /* Status */
+      --status-success: #10b981;
+      --status-warning: #f59e0b;
+      --status-error: #ef4444;
+      --status-running: #06b6d4;
+
+      /* Syntax Highlighting */
+      --syntax-keyword: #ff7b72;
+      --syntax-string: #a5d6ff;
+      --syntax-number: #79c0ff;
+      --syntax-comment: #8b949e;
+      --syntax-function: #d2a8ff;
+      --syntax-variable: #ffa657;
+      --syntax-type: #7ee787;
+
+      /* Layout */
+      --header-height: 48px;
+      --sidebar-width: 52px;
+      --panel-gap: 6px;
+      --panel-radius: 10px;
+      --panel-left-width: 260px;
+      --panel-output-height: 180px;
+
+      /* Typography */
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Misc */
+      --transition: 150ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Reset
+    ═══════════════════════════════════════════════════════════════ */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      background: var(--surface-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar content";
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Header
+    ═══════════════════════════════════════════════════════════════ */
+
+    .header {
+      grid-area: header;
+      background: var(--surface-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+    }
+
+    .header__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header__title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .header__nav-item {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .header__nav-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .header__nav-item--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .header__spacer { flex: 1; }
+
+    .header__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header__status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-success);
+      box-shadow: 0 0 8px var(--status-success);
+    }
+
+    .header__version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Activity Bar (Icon Sidebar)
+    ═══════════════════════════════════════════════════════════════ */
+
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--surface-panel);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .sidebar__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+
+    .sidebar__btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .sidebar__btn--active {
+      color: var(--accent);
+    }
+
+    .sidebar__btn--active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .sidebar__btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sidebar__spacer { flex: 1; }
+
+    .sidebar__divider {
+      width: 24px;
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Content Area - Code View Layout
+    ═══════════════════════════════════════════════════════════════ */
+
+    .content {
+      grid-area: content;
+      display: grid;
+      grid-template-columns: var(--panel-left-width) 1fr;
+      grid-template-rows: 1fr var(--panel-output-height);
+      grid-template-areas:
+        "left main"
+        "left output";
+      gap: var(--panel-gap);
+      padding: var(--panel-gap);
+      background: var(--surface-base);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Panel Base Styles
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel {
+      background: var(--surface-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel__header {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      gap: 8px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .panel__actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .panel__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .panel__action:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .panel__action svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .panel__content {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Left Panel - File Tree
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--left {
+      grid-area: left;
+    }
+
+    .file-tree {
+      font-size: 12px;
+    }
+
+    .file-tree__item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background var(--transition);
+      color: var(--text-secondary);
+    }
+
+    .file-tree__item:hover {
+      background: var(--surface-hover);
+    }
+
+    .file-tree__item--active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .file-tree__item--folder {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .file-tree__icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .file-tree__icon--folder-closed {
+      color: var(--status-warning);
+    }
+
+    .file-tree__icon--folder-open {
+      color: var(--status-warning);
+    }
+
+    .file-tree__icon--python {
+      /* Devicon Python blue/yellow gradient approximation */
+    }
+
+    .file-tree__icon--python .python-blue {
+      fill: #3776AB;
+    }
+
+    .file-tree__icon--python .python-yellow {
+      fill: #FFD43B;
+    }
+
+    .file-tree__icon--yaml {
+      color: #cb171e;
+    }
+
+    .file-tree__icon--json {
+      color: var(--status-warning);
+    }
+
+    .file-tree__icon--md {
+      color: #519aba;
+    }
+
+    .file-tree__icon--txt {
+      color: var(--text-muted);
+    }
+
+    .file-tree__name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-tree__children {
+      padding-left: 16px;
+    }
+
+    .file-tree__chevron {
+      width: 12px;
+      height: 12px;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+
+    .file-tree__chevron--expanded {
+      transform: rotate(90deg);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Main Panel - Code Editor
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--main {
+      grid-area: main;
+    }
+
+    /* Editor Tabs */
+    .editor-tabs {
+      display: flex;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      overflow-x: auto;
+    }
+
+    .editor-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .editor-tab:hover {
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+    }
+
+    .editor-tab--active {
+      background: var(--surface-panel);
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: -1px;
+    }
+
+    .editor-tab__icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .editor-tab__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: all var(--transition);
+    }
+
+    .editor-tab:hover .editor-tab__close,
+    .editor-tab--active .editor-tab__close {
+      opacity: 1;
+    }
+
+    .editor-tab__close:hover {
+      background: var(--surface-active);
+      color: var(--text-primary);
+    }
+
+    .editor-tab__modified {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Editor Content */
+    .editor {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .editor__gutter {
+      padding: 12px 8px;
+      background: var(--surface-elevated);
+      border-right: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      text-align: right;
+      user-select: none;
+      min-width: 50px;
+    }
+
+    .editor__gutter-line {
+      height: 19.2px;
+    }
+
+    .editor__gutter-line--active {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+      margin: 0 -8px;
+      padding: 0 8px;
+    }
+
+    .editor__code {
+      flex: 1;
+      padding: 12px 16px;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .editor__line {
+      height: 19.2px;
+      white-space: pre;
+    }
+
+    .editor__line--active {
+      background: var(--surface-hover);
+      margin: 0 -16px;
+      padding: 0 16px;
+    }
+
+    /* Syntax Highlighting */
+    .syn-keyword { color: var(--syntax-keyword); }
+    .syn-string { color: var(--syntax-string); }
+    .syn-number { color: var(--syntax-number); }
+    .syn-comment { color: var(--syntax-comment); font-style: italic; }
+    .syn-function { color: var(--syntax-function); }
+    .syn-variable { color: var(--syntax-variable); }
+    .syn-type { color: var(--syntax-type); }
+    .syn-operator { color: var(--text-primary); }
+    .syn-punctuation { color: var(--text-secondary); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Output Panel
+    ═══════════════════════════════════════════════════════════════ */
+
+    .panel--output {
+      grid-area: output;
+    }
+
+    .output-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .output-tab {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .output-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .output-tab--active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-tab__badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-error);
+    }
+
+    .output-content {
+      flex: 1;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      overflow: auto;
+      line-height: 1.6;
+    }
+
+    /* Problems List */
+    .problems-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .problem-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .problem-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .problem-item__icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .problem-item__icon--error {
+      color: var(--status-error);
+    }
+
+    .problem-item__icon--warning {
+      color: var(--status-warning);
+    }
+
+    .problem-item__content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .problem-item__message {
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .problem-item__location {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    /* Terminal Content */
+    .terminal-content {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .terminal-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .terminal-prompt {
+      color: var(--status-success);
+      flex-shrink: 0;
+    }
+
+    .terminal-command {
+      color: var(--text-primary);
+    }
+
+    .terminal-output {
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       Scrollbar
+    ═══════════════════════════════════════════════════════════════ */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-default);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__brand">
+        <svg class="header__logo" viewBox="0 0 100 100">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14"/>
+          <path d="M22 55 Q35 55 45 50 Q55 45 65 30 Q72 22 78 20" stroke="#10B981" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 45 58 Q55 62 65 70 Q72 76 78 78" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <path d="M22 55 Q35 55 50 52 Q60 50 78 48" stroke="#06B6D4" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+          <circle cx="22" cy="55" r="4" fill="#F0F6FC" opacity="0.8"/>
+          <circle cx="78" cy="20" r="3" fill="#10B981" filter="url(#glow)"/>
+          <circle cx="78" cy="78" r="3" fill="#F59E0B" filter="url(#glow)"/>
+          <circle cx="78" cy="48" r="3" fill="#06B6D4" filter="url(#glow)"/>
+        </svg>
+        <span class="header__title">Flux</span>
+      </div>
+
+      <nav class="header__nav">
+        <button class="header__nav-item">Experiments</button>
+        <button class="header__nav-item">Compare</button>
+        <button class="header__nav-item">Data</button>
+        <button class="header__nav-item header__nav-item--active">Code</button>
+      </nav>
+
+      <div class="header__spacer"></div>
+
+      <div class="header__status">
+        <span class="header__status-dot"></span>
+        <span>2 running</span>
+      </div>
+
+      <span class="header__version">v0.1.0</span>
+    </header>
+
+    <!-- Activity Bar -->
+    <aside class="sidebar">
+      <button class="sidebar__btn" title="Experiments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn" title="Data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </button>
+      <button class="sidebar__btn sidebar__btn--active" title="Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__divider"></div>
+
+      <button class="sidebar__btn" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </button>
+
+      <div class="sidebar__spacer"></div>
+
+      <button class="sidebar__btn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Left Panel: File Tree -->
+      <div class="panel panel--left">
+        <div class="panel__header">
+          <span class="panel__title">Files</span>
+          <div class="panel__actions">
+            <button class="panel__action" title="New File">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </button>
+            <button class="panel__action" title="New Folder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                <line x1="12" y1="11" x2="12" y2="17"/>
+                <line x1="9" y1="14" x2="15" y2="14"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="panel__content">
+          <div class="file-tree">
+            <!-- Project Root -->
+            <div class="file-tree__item file-tree__item--folder">
+              <svg class="file-tree__chevron file-tree__chevron--expanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <!-- Open folder icon -->
+              <svg class="file-tree__icon file-tree__icon--folder-open" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1M5 10h14l2.5 8H7.5L5 10z"/>
+              </svg>
+              <span class="file-tree__name">reward-model-v2</span>
+            </div>
+
+            <div class="file-tree__children">
+              <!-- configs folder -->
+              <div class="file-tree__item file-tree__item--folder">
+                <svg class="file-tree__chevron file-tree__chevron--expanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                <!-- Open folder icon -->
+                <svg class="file-tree__icon file-tree__icon--folder-open" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1M5 10h14l2.5 8H7.5L5 10z"/>
+                </svg>
+                <span class="file-tree__name">configs</span>
+              </div>
+
+              <div class="file-tree__children">
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- YAML devicon-style -->
+                  <svg class="file-tree__icon file-tree__icon--yaml" viewBox="0 0 128 128">
+                    <path fill="#cb171e" d="M82.43 49.15h-25.27l-5.14 12.41H40.84l23.66-55.8h11.44l22.7 55.8H86.68l-4.25-12.41zm-4.2-11.14l-7.74-20.48-8.64 20.48h16.38zM30 73.09l15.9-18.3L30 36.49h13.72l9.2 10.95 9.13-10.95h13.52L59.6 54.79l16.12 18.3H61.86l-9.4-11.23-9.46 11.23H30zm68-36.6v36.6H85.55V36.49H98zm-12.45 55.8l15.9-18.3-15.9-18.3h13.72l9.2 10.95 9.13-10.95h13.51l-15.97 18.3 16.12 18.3h-13.86l-9.4-11.23-9.45 11.23h-13z"/>
+                  </svg>
+                  <span class="file-tree__name">train_config.yaml</span>
+                </div>
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- YAML devicon-style -->
+                  <svg class="file-tree__icon file-tree__icon--yaml" viewBox="0 0 128 128">
+                    <path fill="#cb171e" d="M82.43 49.15h-25.27l-5.14 12.41H40.84l23.66-55.8h11.44l22.7 55.8H86.68l-4.25-12.41zm-4.2-11.14l-7.74-20.48-8.64 20.48h16.38zM30 73.09l15.9-18.3L30 36.49h13.72l9.2 10.95 9.13-10.95h13.52L59.6 54.79l16.12 18.3H61.86l-9.4-11.23-9.46 11.23H30zm68-36.6v36.6H85.55V36.49H98zm-12.45 55.8l15.9-18.3-15.9-18.3h13.72l9.2 10.95 9.13-10.95h13.51l-15.97 18.3 16.12 18.3h-13.86l-9.4-11.23-9.45 11.23h-13z"/>
+                  </svg>
+                  <span class="file-tree__name">model_config.yaml</span>
+                </div>
+              </div>
+
+              <!-- src folder -->
+              <div class="file-tree__item file-tree__item--folder">
+                <svg class="file-tree__chevron file-tree__chevron--expanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                <!-- Open folder icon -->
+                <svg class="file-tree__icon file-tree__icon--folder-open" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1M5 10h14l2.5 8H7.5L5 10z"/>
+                </svg>
+                <span class="file-tree__name">src</span>
+              </div>
+
+              <div class="file-tree__children">
+                <div class="file-tree__item file-tree__item--active">
+                  <span style="width: 12px;"></span>
+                  <!-- Python devicon -->
+                  <svg class="file-tree__icon file-tree__icon--python" viewBox="0 0 128 128">
+                    <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                    <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+                  </svg>
+                  <span class="file-tree__name">train.py</span>
+                </div>
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- Python devicon -->
+                  <svg class="file-tree__icon file-tree__icon--python" viewBox="0 0 128 128">
+                    <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                    <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+                  </svg>
+                  <span class="file-tree__name">model.py</span>
+                </div>
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- Python devicon -->
+                  <svg class="file-tree__icon file-tree__icon--python" viewBox="0 0 128 128">
+                    <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                    <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+                  </svg>
+                  <span class="file-tree__name">reward.py</span>
+                </div>
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- Python devicon -->
+                  <svg class="file-tree__icon file-tree__icon--python" viewBox="0 0 128 128">
+                    <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                    <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+                  </svg>
+                  <span class="file-tree__name">data_loader.py</span>
+                </div>
+                <div class="file-tree__item">
+                  <span style="width: 12px;"></span>
+                  <!-- Python devicon -->
+                  <svg class="file-tree__icon file-tree__icon--python" viewBox="0 0 128 128">
+                    <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+                    <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+                  </svg>
+                  <span class="file-tree__name">utils.py</span>
+                </div>
+              </div>
+
+              <!-- Root files -->
+              <div class="file-tree__item">
+                <span style="width: 12px;"></span>
+                <!-- Markdown devicon -->
+                <svg class="file-tree__icon file-tree__icon--md" viewBox="0 0 128 128">
+                  <path fill="#519aba" d="M11.95 24.35c-5.84 0-10.62 4.87-10.62 10.68v57.94c0 5.81 4.78 10.68 10.62 10.68h104.1c5.84 0 10.62-4.87 10.62-10.68V35.03c0-5.81-4.78-10.68-10.62-10.68H11.95zm-.01 9.54h104.11c.62 0 1.08.42 1.08 1.14v57.94c0 .72-.45 1.14-1.08 1.14H11.95c-.62 0-1.08-.42-1.08-1.14V35.03c0-.72.45-1.14 1.07-1.14z"/>
+                  <path fill="#519aba" d="M20.72 84.1V43.9h11.7l11.7 14.78L55.81 43.9h11.7v40.2h-11.7V61.04l-11.69 14.78-11.7-14.78V84.1H20.72zm73.1 0L76.28 64.59h11.7V43.9h11.7v20.69h11.7L93.82 84.1z"/>
+                </svg>
+                <span class="file-tree__name">README.md</span>
+              </div>
+              <div class="file-tree__item">
+                <span style="width: 12px;"></span>
+                <!-- Text file icon -->
+                <svg class="file-tree__icon file-tree__icon--txt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span class="file-tree__name">requirements.txt</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel: Code Editor -->
+      <div class="panel panel--main">
+        <div class="editor-tabs">
+          <button class="editor-tab editor-tab--active">
+            <!-- Python devicon -->
+            <svg class="editor-tab__icon file-tree__icon--python" viewBox="0 0 128 128">
+              <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+              <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+            </svg>
+            <span>train.py</span>
+            <span class="editor-tab__modified"></span>
+            <span class="editor-tab__close">×</span>
+          </button>
+          <button class="editor-tab">
+            <!-- Python devicon -->
+            <svg class="editor-tab__icon file-tree__icon--python" viewBox="0 0 128 128">
+              <path class="python-blue" d="M63.391 1.988c-4.222.02-8.252.379-11.8 1.007-10.45 1.846-12.346 5.71-12.346 12.837v9.411h24.693v3.137H29.977c-7.176 0-13.46 4.313-15.426 12.521-2.268 9.405-2.368 15.275 0 25.096 1.755 7.311 5.947 12.519 13.124 12.519h8.491V67.234c0-8.151 7.051-15.34 15.426-15.34h24.665c6.866 0 12.346-5.654 12.346-12.548V15.833c0-6.693-5.646-11.72-12.346-12.837-4.244-.706-8.645-1.027-12.866-1.008zM50.037 9.557c2.55 0 4.634 2.117 4.634 4.721 0 2.593-2.083 4.69-4.634 4.69-2.56 0-4.633-2.097-4.633-4.69-.001-2.604 2.073-4.721 4.633-4.721z"/>
+              <path class="python-yellow" d="M91.682 28.38v10.966c0 8.5-7.208 15.655-15.426 15.655H51.591c-6.756 0-12.346 5.783-12.346 12.549v23.515c0 6.691 5.818 10.628 12.346 12.547 7.816 2.297 15.312 2.713 24.665 0 6.216-1.801 12.346-5.423 12.346-12.547v-9.412H63.938v-3.138h37.012c7.176 0 9.852-5.005 12.348-12.519 2.578-7.735 2.467-15.174 0-25.096-1.774-7.145-5.161-12.521-12.348-12.521h-9.268zM77.809 87.927c2.561 0 4.634 2.097 4.634 4.692 0 2.602-2.074 4.719-4.634 4.719-2.55 0-4.633-2.117-4.633-4.719 0-2.595 2.083-4.692 4.633-4.692z"/>
+            </svg>
+            <span>model.py</span>
+            <span class="editor-tab__close">×</span>
+          </button>
+          <button class="editor-tab">
+            <!-- YAML devicon-style -->
+            <svg class="editor-tab__icon file-tree__icon--yaml" viewBox="0 0 128 128">
+              <path fill="#cb171e" d="M82.43 49.15h-25.27l-5.14 12.41H40.84l23.66-55.8h11.44l22.7 55.8H86.68l-4.25-12.41zm-4.2-11.14l-7.74-20.48-8.64 20.48h16.38zM30 73.09l15.9-18.3L30 36.49h13.72l9.2 10.95 9.13-10.95h13.52L59.6 54.79l16.12 18.3H61.86l-9.4-11.23-9.46 11.23H30zm68-36.6v36.6H85.55V36.49H98zm-12.45 55.8l15.9-18.3-15.9-18.3h13.72l9.2 10.95 9.13-10.95h13.51l-15.97 18.3 16.12 18.3h-13.86l-9.4-11.23-9.45 11.23h-13z"/>
+            </svg>
+            <span>train_config.yaml</span>
+            <span class="editor-tab__close">×</span>
+          </button>
+        </div>
+
+        <div class="editor">
+          <div class="editor__gutter">
+            <div class="editor__gutter-line">1</div>
+            <div class="editor__gutter-line">2</div>
+            <div class="editor__gutter-line">3</div>
+            <div class="editor__gutter-line">4</div>
+            <div class="editor__gutter-line">5</div>
+            <div class="editor__gutter-line">6</div>
+            <div class="editor__gutter-line">7</div>
+            <div class="editor__gutter-line">8</div>
+            <div class="editor__gutter-line">9</div>
+            <div class="editor__gutter-line">10</div>
+            <div class="editor__gutter-line">11</div>
+            <div class="editor__gutter-line">12</div>
+            <div class="editor__gutter-line">13</div>
+            <div class="editor__gutter-line">14</div>
+            <div class="editor__gutter-line">15</div>
+            <div class="editor__gutter-line editor__gutter-line--active">16</div>
+            <div class="editor__gutter-line">17</div>
+            <div class="editor__gutter-line">18</div>
+            <div class="editor__gutter-line">19</div>
+            <div class="editor__gutter-line">20</div>
+            <div class="editor__gutter-line">21</div>
+            <div class="editor__gutter-line">22</div>
+            <div class="editor__gutter-line">23</div>
+            <div class="editor__gutter-line">24</div>
+            <div class="editor__gutter-line">25</div>
+            <div class="editor__gutter-line">26</div>
+            <div class="editor__gutter-line">27</div>
+            <div class="editor__gutter-line">28</div>
+            <div class="editor__gutter-line">29</div>
+            <div class="editor__gutter-line">30</div>
+          </div>
+          <div class="editor__code">
+            <div class="editor__line"><span class="syn-comment">#!/usr/bin/env python3</span></div>
+            <div class="editor__line"><span class="syn-comment">"""Training script for reward model."""</span></div>
+            <div class="editor__line"></div>
+            <div class="editor__line"><span class="syn-keyword">import</span> torch</div>
+            <div class="editor__line"><span class="syn-keyword">import</span> yaml</div>
+            <div class="editor__line"><span class="syn-keyword">from</span> pathlib <span class="syn-keyword">import</span> Path</div>
+            <div class="editor__line"><span class="syn-keyword">from</span> tqdm <span class="syn-keyword">import</span> tqdm</div>
+            <div class="editor__line"></div>
+            <div class="editor__line"><span class="syn-keyword">from</span> model <span class="syn-keyword">import</span> RewardModel</div>
+            <div class="editor__line"><span class="syn-keyword">from</span> data_loader <span class="syn-keyword">import</span> PreferenceDataset</div>
+            <div class="editor__line"></div>
+            <div class="editor__line"></div>
+            <div class="editor__line"><span class="syn-keyword">def</span> <span class="syn-function">train</span><span class="syn-punctuation">(</span>config_path<span class="syn-punctuation">:</span> <span class="syn-type">str</span><span class="syn-punctuation">)</span> <span class="syn-punctuation">-></span> <span class="syn-type">None</span><span class="syn-punctuation">:</span></div>
+            <div class="editor__line">    <span class="syn-comment"># Load configuration</span></div>
+            <div class="editor__line">    <span class="syn-keyword">with</span> <span class="syn-function">open</span><span class="syn-punctuation">(</span>config_path<span class="syn-punctuation">)</span> <span class="syn-keyword">as</span> f<span class="syn-punctuation">:</span></div>
+            <div class="editor__line editor__line--active">        config <span class="syn-operator">=</span> yaml<span class="syn-punctuation">.</span><span class="syn-function">safe_load</span><span class="syn-punctuation">(</span>f<span class="syn-punctuation">)</span></div>
+            <div class="editor__line"></div>
+            <div class="editor__line">    <span class="syn-comment"># Initialize model</span></div>
+            <div class="editor__line">    model <span class="syn-operator">=</span> <span class="syn-function">RewardModel</span><span class="syn-punctuation">(</span></div>
+            <div class="editor__line">        base_model<span class="syn-operator">=</span>config<span class="syn-punctuation">[</span><span class="syn-string">"model"</span><span class="syn-punctuation">][</span><span class="syn-string">"name"</span><span class="syn-punctuation">]</span><span class="syn-punctuation">,</span></div>
+            <div class="editor__line">        hidden_size<span class="syn-operator">=</span>config<span class="syn-punctuation">[</span><span class="syn-string">"model"</span><span class="syn-punctuation">][</span><span class="syn-string">"hidden_size"</span><span class="syn-punctuation">]</span><span class="syn-punctuation">,</span></div>
+            <div class="editor__line">    <span class="syn-punctuation">)</span></div>
+            <div class="editor__line"></div>
+            <div class="editor__line">    <span class="syn-comment"># Load dataset</span></div>
+            <div class="editor__line">    dataset <span class="syn-operator">=</span> <span class="syn-function">PreferenceDataset</span><span class="syn-punctuation">(</span></div>
+            <div class="editor__line">        path<span class="syn-operator">=</span>config<span class="syn-punctuation">[</span><span class="syn-string">"data"</span><span class="syn-punctuation">][</span><span class="syn-string">"train_path"</span><span class="syn-punctuation">]</span><span class="syn-punctuation">,</span></div>
+            <div class="editor__line">        max_length<span class="syn-operator">=</span>config<span class="syn-punctuation">[</span><span class="syn-string">"data"</span><span class="syn-punctuation">][</span><span class="syn-string">"max_length"</span><span class="syn-punctuation">]</span><span class="syn-punctuation">,</span></div>
+            <div class="editor__line">    <span class="syn-punctuation">)</span></div>
+            <div class="editor__line"></div>
+            <div class="editor__line">    <span class="syn-comment"># Training loop</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel panel--output">
+        <div class="output-tabs">
+          <button class="output-tab output-tab--active">
+            Problems
+            <span class="output-tab__badge">2</span>
+          </button>
+          <button class="output-tab">Terminal</button>
+          <button class="output-tab">Output</button>
+        </div>
+        <div class="output-content">
+          <div class="problems-list">
+            <div class="problem-item">
+              <svg class="problem-item__icon problem-item__icon--error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              <div class="problem-item__content">
+                <div class="problem-item__message">Undefined name 'optimizer'</div>
+                <div class="problem-item__location">train.py:45:5 - Pyright</div>
+              </div>
+            </div>
+            <div class="problem-item">
+              <svg class="problem-item__icon problem-item__icon--warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div class="problem-item__content">
+                <div class="problem-item__message">Variable 'config' is not accessed</div>
+                <div class="problem-item__location">train.py:16:9 - Pyright</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

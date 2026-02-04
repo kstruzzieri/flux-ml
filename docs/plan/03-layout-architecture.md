@@ -58,14 +58,20 @@ Changes based on navigation:
 - Charts: full-width primary chart, secondary charts grid
 
 **Compare View:**
-- Side-by-side experiment cards
-- Overlaid metric trajectories
-- Config diff highlighting
+- Header: experiment chips with color coding, add/remove, baseline indicator
+- Tabbed chart area: Loss, Reward, KL Divergence, Response Length, Reward Components
+- Metrics comparison table with: values, delta, 95% CI, statistical significance
+- Left panel: experiment selection with checkboxes, temporal alignment control (Step/Final/Time)
+- Right panel: Reward hack warnings, Winner recommendation with reasoning, Causal attribution, Config diff
+- Bottom panel: Output, Terminal, Notes (with comparison metadata and sharable snapshots)
 
 **Data View:**
-- Dataset browser
-- Sample inspector
-- Quality metrics
+- Header: dataset name, sample count, search bar, filters (category, length, issues)
+- Main: scrollable table with columns (ID, Prompt, Chosen tokens, Rejected tokens, Tags)
+- Left panel: dataset list with sample counts, file sizes, experiment associations, import button
+- Right panel (top): Sample inspector showing full prompt, chosen/rejected responses with scores, metadata
+- Right panel (bottom): Dataset quality metrics (totals, averages), length distribution histogram, issues list
+- Bottom panel: Data Log (import/scan activity), Terminal
 
 **Code View:**
 - Full editor with tabs

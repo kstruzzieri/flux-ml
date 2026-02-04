@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { GetLayout, SaveLayout } from '../../wailsjs/go/main/App'
 
-interface LayoutState {
+export interface LayoutState {
   leftWidth: number
   rightWidth: number
   outputHeight: number
@@ -12,7 +12,7 @@ interface LayoutState {
   outputCollapsed: boolean
 }
 
-const DEFAULT_LAYOUT: LayoutState = {
+export const DEFAULT_LAYOUT: LayoutState = {
   leftWidth: 280,
   rightWidth: 320,
   outputHeight: 180,
@@ -22,6 +22,8 @@ const DEFAULT_LAYOUT: LayoutState = {
   rightCollapsed: false,
   outputCollapsed: false,
 }
+
+export type LayoutPersistence = ReturnType<typeof useLayoutPersistence>
 
 export function useLayoutPersistence() {
   const [layout, setLayout] = useState<LayoutState>(DEFAULT_LAYOUT)

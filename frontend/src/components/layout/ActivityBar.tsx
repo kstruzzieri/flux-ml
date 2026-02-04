@@ -127,6 +127,7 @@ export function ActivityBar({ activeItem = 'experiments', onItemClick }: Activit
           title={item.label}
           aria-label={item.label}
           aria-current={item.id === activeItem ? 'page' : undefined}
+          data-testid={`activity-${item.id}`}
           onClick={() => onItemClick?.(item.id)}
         >
           {item.icon}

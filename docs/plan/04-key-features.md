@@ -29,14 +29,44 @@ Built-in pattern detection for common reward model pathologies.
 - Alerts with evidence (correlation values, examples)
 - Suggested actions (adjust config, review examples)
 
-### 3. Experiment Comparison
-Side-by-side comparison of multiple experiments.
+### 3. Experiment Comparison (Intelligent)
+Beyond basic side-by-side comparison — Flux provides actionable insights that existing tools don't.
 
-**Features:**
+**Core Features:**
 - Overlaid metric trajectories on same axes
 - Automatic config diff highlighting
-- Statistical significance indicators
 - One-click "set as baseline"
+- Temporal alignment (compare at same step, final, or wall time)
+
+**Statistical Significance (Industry Gap):**
+- Automatic significance testing (paired t-test, McNemar's)
+- Confidence intervals on all metrics (95% CI)
+- P-values displayed inline ("p<0.05", "n.s.")
+- "Is this difference real?" — not just "is A > B"
+
+**Reward Hack Comparison:**
+- Flag experiments showing hacking patterns (length gaming, sycophancy)
+- Compare hack metrics across experiments (length-reward correlation)
+- Winner recommendation factors in hack risk
+- Visual indicators on experiments with detected issues
+
+**Causal Attribution (Unique):**
+- "Which config change likely caused this metric difference?"
+- Correlation analysis between config diff and metric delta
+- Impact ranking: "learning_rate (85%), warmup_steps (42%)"
+- Helps researchers understand *why*, not just *what*
+
+**Integrated Notes:**
+- Comparison notes attached to the comparison itself
+- Auto-captured metadata (date, step alignment, snapshot ID)
+- Shareable comparison snapshots
+- No more external docs/Notion for comparison conclusions
+
+**Recommended Winner:**
+- Automated recommendation with reasoning
+- Factors: statistical significance, reward hack risk, practical significance
+- Confidence level displayed
+- Actionable next steps suggested
 
 ### 4. Click-to-Source Navigation
 Every value links back to its source.

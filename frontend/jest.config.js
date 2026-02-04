@@ -24,10 +24,10 @@ export default {
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@assets/(.*)$': '<rootDir>/src/assets/$1',
-    // Mock Wails bindings for tests
-    '^\\.\\./\\.\\./wailsjs/go/main/App$':
+    // Mock Wails bindings for tests (any relative path)
+    '^(\\.\\./)+wailsjs/go/main/App$':
       '<rootDir>/src/__mocks__/wailsjs/go/main/App.ts',
-    '^\\.\\./\\.\\./wailsjs/go/models$':
+    '^(\\.\\./)+wailsjs/go/models$':
       '<rootDir>/src/__mocks__/wailsjs/go/models.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/__mocks__/fileMock.js',
