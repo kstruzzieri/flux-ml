@@ -1,0 +1,40 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  line-height: var(--line-height-tight);
+}
+
+/* Default variant - cyan accent */
+.badge--default {
+  background: var(--color-accent-dim);
+  color: var(--color-accent-bright);
+}
+
+/* Success variant - green */
+.badge--success {
+  background: var(--color-success-dim);
+  color: var(--color-success);
+}
+
+/* Warning variant - amber */
+.badge--warning {
+  background: var(--color-warning-dim);
+  color: var(--color-warning);
+}
+
+/* Error variant - red */
+.badge--error {
+  background: var(--color-error-dim);
+  color: var(--color-error);
+}
+
+/* Muted variant - subtle gray */
+.badge--muted {
+  background: var(--color-bg-active);
+  color: var(--color-text-secondary);
+}

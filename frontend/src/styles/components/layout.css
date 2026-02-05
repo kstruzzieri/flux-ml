@@ -837,9 +837,21 @@ body.resizing-row * {
   z-index: var(--z-sticky);
 }
 
-/* Expand button centered in collapsed bar */
-.collapse-btn--edge {
-  margin: auto;
+/* Expand button positioned at edge when panel is fully collapsed */
+.collapse-btn--expand-left {
+  position: absolute;
+  left: var(--panel-gap);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-sticky);
+}
+
+.collapse-btn--expand-right {
+  position: absolute;
+  right: var(--panel-gap);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-sticky);
 }
 
 /* Column containers need relative positioning for absolute buttons */
@@ -848,15 +860,10 @@ body.resizing-row * {
   position: relative;
 }
 
-/* Collapsed column states */
+/* Collapsed column states - fully hidden */
 .content__left-column--collapsed,
 .content__right-column--collapsed {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-panel);
-  border-radius: var(--panel-radius);
-  border: 1px solid var(--color-border-muted);
+  display: none;
 }
 
 /* Collapsed output panel */
@@ -951,7 +958,8 @@ body.resizing-row * {
   border-color: var(--color-border-muted);
 }
 
-.experiment-item--selected {
+.experiment-item--selected,
+.experiment-item--selected:hover {
   background: var(--color-accent-dim);
   border-color: var(--color-accent-muted);
 }
@@ -1714,7 +1722,8 @@ body.resizing-row * {
   border-color: var(--color-border-muted);
 }
 
-.dataset-item--active {
+.dataset-item--active,
+.dataset-item--active:hover {
   background: var(--color-accent-dim);
   border-color: var(--color-accent-glow);
 }
@@ -2621,7 +2630,8 @@ body.resizing-row * {
   background: var(--color-bg-hover);
 }
 
-.file-tree-item--selected {
+.file-tree-item--selected,
+.file-tree-item--selected:hover {
   background: var(--color-accent-dim);
   color: var(--color-text-primary);
 }

@@ -85,8 +85,8 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
   })
 
   const contentStyle = {
-    '--panel-left-width': layout.leftCollapsed ? '24px' : `${leftResize.size}px`,
-    '--panel-right-width': layout.rightCollapsed ? '24px' : `${rightResize.size}px`,
+    '--panel-left-width': layout.leftCollapsed ? '0px' : `${leftResize.size}px`,
+    '--panel-right-width': layout.rightCollapsed ? '0px' : `${rightResize.size}px`,
     '--panel-output-height': layout.outputCollapsed ? '36px' : `${outputResize.size}px`,
     '--panel-left-top-height': `${leftRowResize.size}px`,
     '--panel-right-top-height': `${rightRowResize.size}px`,
@@ -98,39 +98,38 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
 
   return (
     <div className="content" data-testid="experiments-view" style={contentStyle}>
+      {/* Expand button when left is collapsed */}
+      {layout.leftCollapsed && (
+        <button
+          className="collapse-btn collapse-btn--expand-left"
+          data-testid="expand-left"
+          onClick={() => layout.setLeftCollapsed(false)}
+          aria-label="Expand left panel"
+        >
+          <ChevronRightIcon />
+        </button>
+      )}
+
       {/* Left column */}
       <div className={leftColumnClasses} data-testid="left-column">
-        {layout.leftCollapsed ? (
-          <button
-            className="collapse-btn collapse-btn--edge"
-            data-testid="expand-left"
-            onClick={() => layout.setLeftCollapsed(false)}
-            aria-label="Expand left panel"
-          >
-            <ChevronRightIcon />
-          </button>
-        ) : (
-          <>
-            <ExperimentsPanel />
+        <ExperimentsPanel />
 
-            <div
-              className="resize-handle resize-handle--horizontal resize-handle--left-row"
-              data-testid="resize-handle-left-row"
-              onMouseDown={leftRowResize.handleMouseDown}
-            />
+        <div
+          className="resize-handle resize-handle--horizontal resize-handle--left-row"
+          data-testid="resize-handle-left-row"
+          onMouseDown={leftRowResize.handleMouseDown}
+        />
 
-            <FilesPanel />
+        <FilesPanel />
 
-            <button
-              className="collapse-btn collapse-btn--left-edge"
-              data-testid="collapse-left"
-              onClick={() => layout.setLeftCollapsed(true)}
-              aria-label="Collapse left panel"
-            >
-              <ChevronLeftIcon />
-            </button>
-          </>
-        )}
+        <button
+          className="collapse-btn collapse-btn--left-edge"
+          data-testid="collapse-left"
+          onClick={() => layout.setLeftCollapsed(true)}
+          aria-label="Collapse left panel"
+        >
+          <ChevronLeftIcon />
+        </button>
       </div>
 
       {!layout.leftCollapsed && (
@@ -171,39 +170,38 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         />
       )}
 
+      {/* Expand button when right is collapsed */}
+      {layout.rightCollapsed && (
+        <button
+          className="collapse-btn collapse-btn--expand-right"
+          data-testid="expand-right"
+          onClick={() => layout.setRightCollapsed(false)}
+          aria-label="Expand right panel"
+        >
+          <ChevronLeftIcon />
+        </button>
+      )}
+
       {/* Right column */}
       <div className={rightColumnClasses} data-testid="right-column">
-        {layout.rightCollapsed ? (
-          <button
-            className="collapse-btn collapse-btn--edge"
-            data-testid="expand-right"
-            onClick={() => layout.setRightCollapsed(false)}
-            aria-label="Expand right panel"
-          >
-            <ChevronLeftIcon />
-          </button>
-        ) : (
-          <>
-            <InspectorPanel />
+        <InspectorPanel />
 
-            <div
-              className="resize-handle resize-handle--horizontal resize-handle--right-row"
-              data-testid="resize-handle-right-row"
-              onMouseDown={rightRowResize.handleMouseDown}
-            />
+        <div
+          className="resize-handle resize-handle--horizontal resize-handle--right-row"
+          data-testid="resize-handle-right-row"
+          onMouseDown={rightRowResize.handleMouseDown}
+        />
 
-            <ConfigPanel />
+        <ConfigPanel />
 
-            <button
-              className="collapse-btn collapse-btn--right-edge"
-              data-testid="collapse-right"
-              onClick={() => layout.setRightCollapsed(true)}
-              aria-label="Collapse right panel"
-            >
-              <ChevronRightIcon />
-            </button>
-          </>
-        )}
+        <button
+          className="collapse-btn collapse-btn--right-edge"
+          data-testid="collapse-right"
+          onClick={() => layout.setRightCollapsed(true)}
+          aria-label="Collapse right panel"
+        >
+          <ChevronRightIcon />
+        </button>
       </div>
     </div>
   )

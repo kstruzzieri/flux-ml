@@ -57,7 +57,7 @@ export function CodeView({ layout }: CodeViewProps) {
 
   // Code view has no right column, so we use a 2-column layout
   const contentStyle = {
-    '--panel-left-width': layout.leftCollapsed ? '24px' : `${leftResize.size}px`,
+    '--panel-left-width': layout.leftCollapsed ? '0px' : `${leftResize.size}px`,
     '--panel-right-width': '0px',
     '--panel-output-height': layout.outputCollapsed ? '36px' : `${outputResize.size}px`,
   } as CSSProperties
@@ -67,31 +67,30 @@ export function CodeView({ layout }: CodeViewProps) {
 
   return (
     <div className="content content--code" data-testid="code-view" style={contentStyle}>
+      {/* Expand button when left is collapsed */}
+      {layout.leftCollapsed && (
+        <button
+          className="collapse-btn collapse-btn--expand-left"
+          data-testid="expand-left"
+          onClick={() => layout.setLeftCollapsed(false)}
+          aria-label="Expand left panel"
+        >
+          <ChevronRightIcon />
+        </button>
+      )}
+
       {/* Left column - File tree */}
       <div className={leftColumnClasses} data-testid="left-column">
-        {layout.leftCollapsed ? (
-          <button
-            className="collapse-btn collapse-btn--edge"
-            data-testid="expand-left"
-            onClick={() => layout.setLeftCollapsed(false)}
-            aria-label="Expand left panel"
-          >
-            <ChevronRightIcon />
-          </button>
-        ) : (
-          <>
-            <FileTreePanel />
+        <FileTreePanel />
 
-            <button
-              className="collapse-btn collapse-btn--left-edge"
-              data-testid="collapse-left"
-              onClick={() => layout.setLeftCollapsed(true)}
-              aria-label="Collapse left panel"
-            >
-              <ChevronLeftIcon />
-            </button>
-          </>
-        )}
+        <button
+          className="collapse-btn collapse-btn--left-edge"
+          data-testid="collapse-left"
+          onClick={() => layout.setLeftCollapsed(true)}
+          aria-label="Collapse left panel"
+        >
+          <ChevronLeftIcon />
+        </button>
       </div>
 
       {!layout.leftCollapsed && (
