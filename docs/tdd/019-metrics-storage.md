@@ -16,7 +16,7 @@ Implement metrics storage for experiment data. A single `metrics.Store` in `inte
 
 The `metrics` and `reward_signals` tables already exist (migration 001, cascade in 003). This issue adds the Go domain layer: a `Store` wrapping `*database.DB` with batch insert and filtered query methods, following the same patterns as `internal/experiment/` and `internal/event/`.
 
-## Test Plan (14 tests)
+## Test Plan (15 tests)
 
 ### RecordMetrics (4)
 1. `TestRecordMetrics` — Batch insert 3 metrics, verify all queryable
@@ -39,6 +39,9 @@ The `metrics` and `reward_signals` tables already exist (migration 001, cascade 
 12. `TestQueryRewardSignals_All` — Returns all signals for experiment, ASC by step
 13. `TestQueryRewardSignals_FilterByComponent` — Returns only matching component
 14. `TestQueryRewardSignals_FilterByStepRange` — Returns only signals in step range
+
+### Cascade Delete (1)
+15. `TestCascadeDelete` — Deleting experiment cascades to both metrics and reward_signals
 
 ## Failing Tests
 
@@ -65,11 +68,12 @@ All 14 tests failed during RED phase with stubs returning nil/no-op:
 === RUN   TestQueryRewardSignals_All                 --- PASS
 === RUN   TestQueryRewardSignals_FilterByComponent   --- PASS
 === RUN   TestQueryRewardSignals_FilterByStepRange   --- PASS
+=== RUN   TestCascadeDelete                          --- PASS
 PASS
-ok  github.com/kstruzzieri/flux-ml/internal/metrics  0.327s
+ok  github.com/kstruzzieri/flux-ml/internal/metrics  0.271s
 ```
 
-Full suite: 56 tests across 4 packages, all passing. Race detector clean.
+Full suite: 57 tests across 4 packages, all passing. Race detector clean.
 
 ## Implementation Summary
 
