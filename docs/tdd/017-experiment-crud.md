@@ -4,18 +4,18 @@
 Implement Create, Read, Update, Delete operations for experiments in the `internal/experiment` package. This is the first domain-specific data layer, building on the SQLite database foundation from issue #16. It establishes the Store pattern that will be reused for metrics (#18), events (#19), and alerts (#20).
 
 ## Acceptance Criteria
-- [ ] Create experiment with config
-- [ ] List all experiments
-- [ ] Get experiment by ID
-- [ ] Update experiment status
-- [ ] Delete experiment
-- [ ] Wails bindings expose operations to frontend
+- [x] Create experiment with config
+- [x] List all experiments
+- [x] Get experiment by ID
+- [x] Update experiment status
+- [x] Delete experiment
+- [x] Wails bindings expose operations to frontend
 
 ## Rationale
 This is the first domain data layer building on the SQLite foundation (#16). It establishes the Store pattern for metrics/events/alerts (#18-20). The design choices are:
 1. **Store pattern** - A single `Store` struct wraps the database connection, providing a clean API for experiment operations. This pattern will be replicated for metrics, events, and alerts stores.
 2. **UUID primary keys** - Experiments use UUID v4 identifiers rather than auto-incrementing integers, enabling offline creation and merge-safe identifiers across distributed workflows.
-3. **Status validation** - Valid statuses are enforced at the application layer (pending, running, completed, failed, cancelled), preventing invalid state transitions from reaching the database.
+3. **Status validation** - Valid statuses are enforced at the application layer (pending, running, completed, failed), preventing invalid state transitions from reaching the database.
 4. **Unix timestamps** - `created_at` and `updated_at` stored as Unix epoch integers for simplicity and timezone-neutral comparisons.
 5. **Empty slice guarantee** - `List()` returns an empty slice (not nil) when no experiments exist, preventing nil-pointer issues in frontend serialization.
 
@@ -297,7 +297,51 @@ Tests:    0 passed, 11 failed, 11 total
 ## Test Summary
 
 ### Passing Test Results
-_To be filled in after implementation._
+```
+=== RUN   TestCreate_Success
+--- PASS: TestCreate_Success (0.01s)
+=== RUN   TestCreate_EmptyName
+--- PASS: TestCreate_EmptyName (0.01s)
+=== RUN   TestList_ReturnsAll
+--- PASS: TestList_ReturnsAll (0.01s)
+=== RUN   TestList_Empty
+--- PASS: TestList_Empty (0.01s)
+=== RUN   TestGetByID_Found
+--- PASS: TestGetByID_Found (0.01s)
+=== RUN   TestGetByID_NotFound
+--- PASS: TestGetByID_NotFound (0.01s)
+=== RUN   TestUpdateStatus_Valid
+--- PASS: TestUpdateStatus_Valid (0.01s)
+=== RUN   TestUpdateStatus_InvalidStatus
+--- PASS: TestUpdateStatus_InvalidStatus (0.01s)
+=== RUN   TestUpdateStatus_NotFound
+--- PASS: TestUpdateStatus_NotFound (0.01s)
+=== RUN   TestDelete_Success
+--- PASS: TestDelete_Success (0.01s)
+=== RUN   TestDelete_NotFound
+--- PASS: TestDelete_NotFound (0.01s)
+PASS
+ok  	github.com/kstruzzieri/flux-ml/internal/experiment	0.170s
+
+Tests:    11 passed, 0 failed, 11 total
+```
 
 ## Implementation Summary
-_To be filled in after implementation._
+
+### Files Created
+- `internal/experiment/store.go` — Experiment type, Store struct, CRUD methods (Create, List, GetByID, UpdateStatus, Delete)
+- `internal/experiment/store_test.go` — 11 tests covering all operations and edge cases
+- `experiment_api.go` — Wails-bound API methods on App struct (thin pass-throughs to Store)
+
+### Files Modified
+- `app.go` — Added `db` and `experiments` fields to App struct, database initialization in startup(), shutdown() method for cleanup
+- `main.go` — Added OnShutdown wiring to Wails options
+
+### Design Decisions
+1. **Store pattern** — `experiment.Store` wraps `*database.DB`, providing domain-specific CRUD. This pattern will be reused for metrics, events, and alerts stores.
+2. **UUID v4 primary keys** — Generated via `github.com/google/uuid`, 36-char format with hyphens. Collision-safe, no coordination needed.
+3. **Status validation** — `validStatuses` map enforces only `pending`, `running`, `completed`, `failed` at the application layer before reaching the database.
+4. **sql.NullString for parent_id** — Handles nullable foreign key column cleanly in Go's type system.
+5. **RowsAffected() for not-found detection** — UpdateStatus and Delete check affected row count instead of querying first, reducing round-trips.
+6. **Empty slice guarantee** — `List()` initializes with `[]Experiment{}` (not nil) ensuring clean JSON serialization to `[]` instead of `null`.
+7. **Nil-safe API methods** — All Wails-bound methods check `a.experiments == nil` to handle the case where database initialization failed during startup.
