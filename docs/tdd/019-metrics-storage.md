@@ -6,11 +6,11 @@ Implement metrics storage for experiment data. A single `metrics.Store` in `inte
 
 ## Acceptance Criteria
 
-- [ ] Metrics stored efficiently (batch insert in transaction)
-- [ ] Queries perform well with indexes
-- [ ] Reward components tracked separately
-- [ ] Wails API bindings expose all four operations
-- [ ] All tests pass with race detector clean
+- [x] Metrics stored efficiently (batch insert in transaction)
+- [x] Queries perform well with indexes
+- [x] Reward components tracked separately
+- [x] Wails API bindings expose all four operations
+- [x] All tests pass with race detector clean
 
 ## Rationale
 
@@ -42,12 +42,48 @@ The `metrics` and `reward_signals` tables already exist (migration 001, cascade 
 
 ## Failing Tests
 
-> Tests written before implementation — see below for results.
+All 14 tests failed during RED phase with stubs returning nil/no-op:
+- RecordMetrics tests: stubs returned nil (no error), queries returned 0 results
+- QueryMetrics tests: stubs returned nil slices
+- RecordRewardSignals tests: same pattern
+- QueryRewardSignals tests: same pattern
 
 ## Test Results
 
-> Pending implementation.
+```
+=== RUN   TestRecordMetrics                          --- PASS
+=== RUN   TestRecordMetrics_EmptyExperimentID        --- PASS
+=== RUN   TestRecordMetrics_EmptySlice               --- PASS
+=== RUN   TestRecordMetrics_ForeignKeyViolation      --- PASS
+=== RUN   TestQueryMetrics_All                       --- PASS
+=== RUN   TestQueryMetrics_FilterByName              --- PASS
+=== RUN   TestQueryMetrics_FilterByStepRange         --- PASS
+=== RUN   TestQueryMetrics_NoMatches                 --- PASS
+=== RUN   TestRecordRewardSignals                    --- PASS
+=== RUN   TestRecordRewardSignals_EmptyExperimentID  --- PASS
+=== RUN   TestRecordRewardSignals_EmptySlice         --- PASS
+=== RUN   TestQueryRewardSignals_All                 --- PASS
+=== RUN   TestQueryRewardSignals_FilterByComponent   --- PASS
+=== RUN   TestQueryRewardSignals_FilterByStepRange   --- PASS
+PASS
+ok  github.com/kstruzzieri/flux-ml/internal/metrics  0.327s
+```
+
+Full suite: 56 tests across 4 packages, all passing. Race detector clean.
 
 ## Implementation Summary
 
-> Pending implementation.
+### Files created
+- `internal/metrics/store.go` — Store with RecordMetrics, QueryMetrics, RecordRewardSignals, QueryRewardSignals
+- `internal/metrics/store_test.go` — 14 tests with isolated DB helper
+- `metrics_api.go` — Wails API pass-through methods
+
+### Files modified
+- `app.go` — Added `metrics *metrics.Store` field and initialization
+
+### Key decisions
+- Single Store handles both `metrics` and `reward_signals` tables
+- Batch inserts use `tx.Begin()`/`tx.Commit()` for atomicity with prepared statements
+- Query methods use dynamic WHERE with parameterized args (experimentID always required)
+- `sql.NullString` for nullable distribution JSON column
+- Empty distribution stored as NULL, empty string on read defaults to `""`
