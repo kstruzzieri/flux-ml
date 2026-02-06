@@ -1,6 +1,6 @@
 # Data Layer Implementation Plan
 
-This document covers the full backend data layer: SQLite infrastructure, experiment CRUD, and event sourcing. These correspond to issues #16, #17, and #18 in the roadmap (Phase 2A: Data Layer).
+This document covers the full backend data layer: SQLite infrastructure, experiment CRUD, event sourcing, and metrics storage. These correspond to issues #16, #17, #18, and #19 in the roadmap (Phase 2A: Data Layer).
 
 ## Overview
 
@@ -8,7 +8,8 @@ This document covers the full backend data layer: SQLite infrastructure, experim
 |-------|-----------|---------|--------|
 | #16 | SQLite integration | `internal/database/` | Complete |
 | #17 | Experiment CRUD | `internal/experiment/` | Complete |
-| #18 | Event store | `internal/event/` | In Progress |
+| #18 | Event store | `internal/event/` | Complete |
+| #19 | Metrics storage | `internal/metrics/` | In Progress |
 
 ## Shared Architecture
 
@@ -172,52 +173,22 @@ Delete (2): Success removes from DB, not found errors.
 
 ## Issue #18: Event Store
 
-**Branch:** `feature/18-event-store` (current)
-**TDD doc:** `docs/tdd/018-event-store.md` (to be created)
+**Branch:** `feature/18-event-store` (merged)
+**TDD doc:** `docs/tdd/018-event-store.md`
 
-### What will be built
+### What was built
 
 Domain package (`internal/event/`) providing:
 
 - **`store.go`** — `Event` struct, type constants, `Store` with Append/Replay/Subscribe/Unsubscribe
-- **`store_test.go`** — 13 tests
+- **`store_test.go`** — 14 tests
 
 Wails integration:
 
 - **`event_api.go`** — AppendEvent + ReplayEvents pass-through methods on `App`
 - **`app.go`** — Add `events *event.Store` field and initialization
 
-### Data types
-
-```go
-type Event struct {
-    ID           int64  `json:"id"`
-    ExperimentID string `json:"experiment_id"`
-    Timestamp    int64  `json:"timestamp"`
-    Type         string `json:"type"`
-    Data         string `json:"data"`
-}
-
-const (
-    TypeMetric       = "metric"
-    TypeConfigChange = "config_change"
-    TypeAlert        = "alert"
-    TypeCheckpoint   = "checkpoint"
-)
-
-type Subscription struct {
-    ch           chan Event
-    experimentID string  // empty = all events
-    id           int
-}
-
-type Store struct {
-    db          *database.DB
-    mu          sync.RWMutex
-    subscribers map[int]*Subscription
-    nextID      int
-}
-```
+Also added migration `003_cascade_deletes.sql` — ON DELETE CASCADE for all child tables.
 
 ### API
 
@@ -239,18 +210,79 @@ type Store struct {
 | Notification | Non-blocking send, buffered channel (64) | Slow subscriber doesn't block writes |
 | Wails exposure | Append + Replay only | Subscribe/Unsubscribe are internal Go APIs |
 
-### Test plan (13 tests)
+### Tests (14 passing)
 
 Append (4): Success with ID/timestamp/fields, empty experimentID error, invalid type error, FK violation error.
 Replay (6): Chronological order (ASC), filter by experiment, filter by time range, filter by type, combined filters, no matches returns empty slice.
-Subscribe (3): Receives appended events, filtered by experiment ID, unsubscribe stops delivery.
+Subscribe (2): Receives appended events, filtered by experiment ID.
+Other (2): Unsubscribe stops delivery, cascade delete removes events.
 
-### Implementation steps
+---
 
-1. Create TDD doc (`docs/tdd/018-event-store.md`)
-2. Write failing tests (`internal/event/store_test.go`) with minimal stub (`store.go`)
-3. Implement store methods
-4. Verify all 13 tests pass
-5. Add Wails API (`event_api.go`) and wire in `app.go`
-6. Run full test suite (database + experiment + event)
-7. Update TDD doc with results
+## Issue #19: Metrics Storage
+
+**Branch:** `feature/19-metrics-storage` (current)
+**TDD doc:** `docs/tdd/019-metrics-storage.md` (to be created)
+
+### What will be built
+
+Domain package (`internal/metrics/`) providing:
+
+- **`store.go`** — `Metric` struct, `RewardSignal` struct, `Store` with RecordMetrics/QueryMetrics/RecordRewardSignals/QueryRewardSignals
+- **`store_test.go`** — 14 tests
+
+Wails integration:
+
+- **`metrics_api.go`** — Pass-through methods on `App` struct
+- **`app.go`** — Add `metrics *metrics.Store` field and initialization
+
+No new migrations needed — `metrics` and `reward_signals` tables already exist (001 + 003).
+
+### Data types
+
+```go
+type Metric struct {
+    ExperimentID string  `json:"experiment_id"`
+    Step         int64   `json:"step"`
+    Name         string  `json:"name"`
+    Value        float64 `json:"value"`
+    Timestamp    int64   `json:"timestamp"`
+}
+
+type RewardSignal struct {
+    ExperimentID string  `json:"experiment_id"`
+    Step         int64   `json:"step"`
+    Component    string  `json:"component"`
+    Value        float64 `json:"value"`
+    Distribution string  `json:"distribution"`
+}
+
+type Store struct {
+    db *database.DB
+}
+```
+
+### API
+
+| Method | Signature | Notes |
+|--------|-----------|-------|
+| RecordMetrics | `RecordMetrics(experimentID string, metrics []Metric) error` | Batch insert in transaction, validates inputs |
+| QueryMetrics | `QueryMetrics(experimentID, name string, startStep, endStep int64) ([]Metric, error)` | experimentID required, name/step range optional, ASC by step |
+| RecordRewardSignals | `RecordRewardSignals(experimentID string, signals []RewardSignal) error` | Batch insert in transaction, validates inputs |
+| QueryRewardSignals | `QueryRewardSignals(experimentID, component string, startStep, endStep int64) ([]RewardSignal, error)` | experimentID required, component/step range optional, ASC by step |
+
+### Design decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Single store | Both tables in one `metrics.Store` | Closely related per-step experiment data |
+| Batch insert | Transaction-wrapped multi-row insert | Training steps emit multiple metrics at once |
+| Query filtering | experiment + name/component + step range | Covers chart and detail view use cases |
+| experimentID required | Always required on queries | Prevents full-table scans |
+
+### Test plan (14 tests)
+
+RecordMetrics (4): Batch insert success, empty experimentID error, empty metrics slice error, FK violation error.
+QueryMetrics (4): Returns all for experiment, filter by name, filter by step range, no matches returns empty slice.
+RecordRewardSignals (3): Batch insert with distribution JSON, empty experimentID error, empty signals slice error.
+QueryRewardSignals (3): Returns all for experiment, filter by component, filter by step range.
