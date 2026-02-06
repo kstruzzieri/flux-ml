@@ -110,11 +110,13 @@ func TestQueryMetrics_All(t *testing.T) {
 	store := newTestMetricsStore(t)
 	now := time.Now().Unix()
 
-	store.RecordMetrics(store.experimentID, []Metric{
+	if err := store.RecordMetrics(store.experimentID, []Metric{
 		{Step: 300, Name: "loss", Value: 0.1, Timestamp: now},
 		{Step: 100, Name: "loss", Value: 0.5, Timestamp: now},
 		{Step: 200, Name: "reward", Value: 0.8, Timestamp: now},
-	})
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
 
 	results, err := store.QueryMetrics(store.experimentID, "", 0, 0)
 	if err != nil {
@@ -136,11 +138,13 @@ func TestQueryMetrics_FilterByName(t *testing.T) {
 	store := newTestMetricsStore(t)
 	now := time.Now().Unix()
 
-	store.RecordMetrics(store.experimentID, []Metric{
+	if err := store.RecordMetrics(store.experimentID, []Metric{
 		{Step: 100, Name: "loss", Value: 0.5, Timestamp: now},
 		{Step: 100, Name: "reward", Value: 0.8, Timestamp: now},
 		{Step: 200, Name: "loss", Value: 0.3, Timestamp: now},
-	})
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
 
 	results, err := store.QueryMetrics(store.experimentID, "loss", 0, 0)
 	if err != nil {
@@ -160,12 +164,14 @@ func TestQueryMetrics_FilterByStepRange(t *testing.T) {
 	store := newTestMetricsStore(t)
 	now := time.Now().Unix()
 
-	store.RecordMetrics(store.experimentID, []Metric{
+	if err := store.RecordMetrics(store.experimentID, []Metric{
 		{Step: 50, Name: "loss", Value: 0.9, Timestamp: now},
 		{Step: 100, Name: "loss", Value: 0.5, Timestamp: now},
 		{Step: 200, Name: "loss", Value: 0.3, Timestamp: now},
 		{Step: 300, Name: "loss", Value: 0.1, Timestamp: now},
-	})
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
 
 	results, err := store.QueryMetrics(store.experimentID, "", 100, 200)
 	if err != nil {
@@ -250,11 +256,13 @@ func TestRecordRewardSignals_EmptySlice(t *testing.T) {
 func TestQueryRewardSignals_All(t *testing.T) {
 	store := newTestMetricsStore(t)
 
-	store.RecordRewardSignals(store.experimentID, []RewardSignal{
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
 		{Step: 300, Component: "honesty", Value: 0.85},
 		{Step: 100, Component: "helpfulness", Value: 0.89},
 		{Step: 200, Component: "harmlessness", Value: 0.92},
-	})
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
 
 	results, err := store.QueryRewardSignals(store.experimentID, "", 0, 0)
 	if err != nil {
@@ -275,11 +283,13 @@ func TestQueryRewardSignals_All(t *testing.T) {
 func TestQueryRewardSignals_FilterByComponent(t *testing.T) {
 	store := newTestMetricsStore(t)
 
-	store.RecordRewardSignals(store.experimentID, []RewardSignal{
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
 		{Step: 100, Component: "helpfulness", Value: 0.89},
 		{Step: 100, Component: "harmlessness", Value: 0.92},
 		{Step: 200, Component: "helpfulness", Value: 0.91},
-	})
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
 
 	results, err := store.QueryRewardSignals(store.experimentID, "helpfulness", 0, 0)
 	if err != nil {
@@ -298,12 +308,14 @@ func TestQueryRewardSignals_FilterByComponent(t *testing.T) {
 func TestQueryRewardSignals_FilterByStepRange(t *testing.T) {
 	store := newTestMetricsStore(t)
 
-	store.RecordRewardSignals(store.experimentID, []RewardSignal{
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
 		{Step: 50, Component: "helpfulness", Value: 0.80},
 		{Step: 100, Component: "helpfulness", Value: 0.89},
 		{Step: 200, Component: "helpfulness", Value: 0.91},
 		{Step: 300, Component: "helpfulness", Value: 0.93},
-	})
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
 
 	results, err := store.QueryRewardSignals(store.experimentID, "", 100, 200)
 	if err != nil {
@@ -316,5 +328,47 @@ func TestQueryRewardSignals_FilterByStepRange(t *testing.T) {
 		if s.Step < 100 || s.Step > 200 {
 			t.Errorf("Step = %d, want in range [100, 200]", s.Step)
 		}
+	}
+}
+
+// --- Cascade delete test ---
+
+func TestCascadeDelete(t *testing.T) {
+	store := newTestMetricsStore(t)
+	now := time.Now().Unix()
+
+	// Insert metrics and reward signals
+	if err := store.RecordMetrics(store.experimentID, []Metric{
+		{Step: 100, Name: "loss", Value: 0.5, Timestamp: now},
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
+		{Step: 100, Component: "helpfulness", Value: 0.89},
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
+
+	// Delete the experiment directly
+	if _, err := store.db.Exec(`DELETE FROM experiments WHERE id = ?`, store.experimentID); err != nil {
+		t.Fatalf("Delete experiment failed: %v", err)
+	}
+
+	// Metrics should be cascade-deleted
+	metrics, err := store.QueryMetrics(store.experimentID, "", 0, 0)
+	if err != nil {
+		t.Fatalf("QueryMetrics after delete failed: %v", err)
+	}
+	if len(metrics) != 0 {
+		t.Errorf("expected 0 metrics after cascade delete, got %d", len(metrics))
+	}
+
+	// Reward signals should be cascade-deleted
+	signals, err := store.QueryRewardSignals(store.experimentID, "", 0, 0)
+	if err != nil {
+		t.Fatalf("QueryRewardSignals after delete failed: %v", err)
+	}
+	if len(signals) != 0 {
+		t.Errorf("expected 0 reward signals after cascade delete, got %d", len(signals))
 	}
 }
