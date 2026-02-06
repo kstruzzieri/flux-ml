@@ -6,12 +6,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/kstruzzieri/flux-ml/internal/database"
+	"github.com/kstruzzieri/flux-ml/internal/experiment"
 )
 
 // App struct
 type App struct {
-	ctx        context.Context
-	configPath string
+	ctx         context.Context
+	configPath  string
+	db          *database.DB
+	experiments *experiment.Store
 }
 
 // NewApp creates a new App application struct
@@ -33,6 +38,27 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+
+	// Open database
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		configDir = "."
+	}
+	dbPath := filepath.Join(configDir, "Flux", "flux.db")
+	db, err := database.Open(dbPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to open database: %v\n", err)
+		return
+	}
+	a.db = db
+	a.experiments = experiment.NewStore(db)
+}
+
+// shutdown is called when the app is closing
+func (a *App) shutdown(ctx context.Context) {
+	if a.db != nil {
+		a.db.Close()
+	}
 }
 
 // Greet returns a greeting for the given name
