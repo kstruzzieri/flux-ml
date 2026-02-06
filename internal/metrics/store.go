@@ -72,8 +72,13 @@ func (s *Store) RecordMetrics(experimentID string, metrics []Metric) error {
 }
 
 // QueryMetrics returns metrics matching the given filters, ordered by step ASC.
-// experimentID is required. name, startStep, endStep are optional (empty/zero = no filter).
+// experimentID is required. name is optional (empty = no filter).
+// startStep and endStep are optional (zero = no filter; step 0 is treated as "from the beginning"
+// which is equivalent since steps are non-negative).
 func (s *Store) QueryMetrics(experimentID, name string, startStep, endStep int64) ([]Metric, error) {
+	if experimentID == "" {
+		return nil, fmt.Errorf("experiment ID cannot be empty")
+	}
 	// Safety: conditions are hardcoded strings only; user values go through
 	// parameterized args. Do not interpolate user input into conditions.
 	query := `SELECT experiment_id, step, name, value, timestamp FROM metrics`
@@ -157,8 +162,13 @@ func (s *Store) RecordRewardSignals(experimentID string, signals []RewardSignal)
 }
 
 // QueryRewardSignals returns reward signals matching the given filters, ordered by step ASC.
-// experimentID is required. component, startStep, endStep are optional (empty/zero = no filter).
+// experimentID is required. component is optional (empty = no filter).
+// startStep and endStep are optional (zero = no filter; step 0 is treated as "from the beginning"
+// which is equivalent since steps are non-negative).
 func (s *Store) QueryRewardSignals(experimentID, component string, startStep, endStep int64) ([]RewardSignal, error) {
+	if experimentID == "" {
+		return nil, fmt.Errorf("experiment ID cannot be empty")
+	}
 	// Safety: conditions are hardcoded strings only; user values go through
 	// parameterized args. Do not interpolate user input into conditions.
 	query := `SELECT experiment_id, step, component, value, distribution FROM reward_signals`

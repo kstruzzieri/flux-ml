@@ -106,6 +106,14 @@ func TestRecordMetrics_ForeignKeyViolation(t *testing.T) {
 
 // --- QueryMetrics tests ---
 
+func TestQueryMetrics_EmptyExperimentID(t *testing.T) {
+	store := newTestMetricsStore(t)
+	_, err := store.QueryMetrics("", "", 0, 0)
+	if err == nil {
+		t.Fatal("expected error for empty experiment ID, got nil")
+	}
+}
+
 func TestQueryMetrics_All(t *testing.T) {
 	store := newTestMetricsStore(t)
 	now := time.Now().Unix()
@@ -252,6 +260,14 @@ func TestRecordRewardSignals_EmptySlice(t *testing.T) {
 }
 
 // --- QueryRewardSignals tests ---
+
+func TestQueryRewardSignals_EmptyExperimentID(t *testing.T) {
+	store := newTestMetricsStore(t)
+	_, err := store.QueryRewardSignals("", "", 0, 0)
+	if err == nil {
+		t.Fatal("expected error for empty experiment ID, got nil")
+	}
+}
 
 func TestQueryRewardSignals_All(t *testing.T) {
 	store := newTestMetricsStore(t)

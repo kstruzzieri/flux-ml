@@ -16,7 +16,7 @@ Implement metrics storage for experiment data. A single `metrics.Store` in `inte
 
 The `metrics` and `reward_signals` tables already exist (migration 001, cascade in 003). This issue adds the Go domain layer: a `Store` wrapping `*database.DB` with batch insert and filtered query methods, following the same patterns as `internal/experiment/` and `internal/event/`.
 
-## Test Plan (15 tests)
+## Test Plan (17 tests)
 
 ### RecordMetrics (4)
 1. `TestRecordMetrics` — Batch insert 3 metrics, verify all queryable
@@ -24,24 +24,26 @@ The `metrics` and `reward_signals` tables already exist (migration 001, cascade 
 3. `TestRecordMetrics_EmptySlice` — Error for empty metrics slice
 4. `TestRecordMetrics_ForeignKeyViolation` — Error for nonexistent experiment
 
-### QueryMetrics (4)
-5. `TestQueryMetrics_All` — Returns all metrics for experiment, ASC by step
-6. `TestQueryMetrics_FilterByName` — Returns only metrics matching name
-7. `TestQueryMetrics_FilterByStepRange` — Returns only metrics in step range
-8. `TestQueryMetrics_NoMatches` — Returns empty slice (not nil)
+### QueryMetrics (5)
+5. `TestQueryMetrics_EmptyExperimentID` — Error for empty experiment ID
+6. `TestQueryMetrics_All` — Returns all metrics for experiment, ASC by step
+7. `TestQueryMetrics_FilterByName` — Returns only metrics matching name
+8. `TestQueryMetrics_FilterByStepRange` — Returns only metrics in step range
+9. `TestQueryMetrics_NoMatches` — Returns empty slice (not nil)
 
 ### RecordRewardSignals (3)
-9. `TestRecordRewardSignals` — Batch insert with distribution JSON
-10. `TestRecordRewardSignals_EmptyExperimentID` — Error for empty experiment ID
-11. `TestRecordRewardSignals_EmptySlice` — Error for empty signals slice
+10. `TestRecordRewardSignals` — Batch insert with distribution JSON
+11. `TestRecordRewardSignals_EmptyExperimentID` — Error for empty experiment ID
+12. `TestRecordRewardSignals_EmptySlice` — Error for empty signals slice
 
-### QueryRewardSignals (3)
-12. `TestQueryRewardSignals_All` — Returns all signals for experiment, ASC by step
-13. `TestQueryRewardSignals_FilterByComponent` — Returns only matching component
-14. `TestQueryRewardSignals_FilterByStepRange` — Returns only signals in step range
+### QueryRewardSignals (4)
+13. `TestQueryRewardSignals_EmptyExperimentID` — Error for empty experiment ID
+14. `TestQueryRewardSignals_All` — Returns all signals for experiment, ASC by step
+15. `TestQueryRewardSignals_FilterByComponent` — Returns only matching component
+16. `TestQueryRewardSignals_FilterByStepRange` — Returns only signals in step range
 
 ### Cascade Delete (1)
-15. `TestCascadeDelete` — Deleting experiment cascades to both metrics and reward_signals
+17. `TestCascadeDelete` — Deleting experiment cascades to both metrics and reward_signals
 
 ## Failing Tests
 
@@ -58,6 +60,7 @@ All 14 tests failed during RED phase with stubs returning nil/no-op:
 === RUN   TestRecordMetrics_EmptyExperimentID        --- PASS
 === RUN   TestRecordMetrics_EmptySlice               --- PASS
 === RUN   TestRecordMetrics_ForeignKeyViolation      --- PASS
+=== RUN   TestQueryMetrics_EmptyExperimentID         --- PASS
 === RUN   TestQueryMetrics_All                       --- PASS
 === RUN   TestQueryMetrics_FilterByName              --- PASS
 === RUN   TestQueryMetrics_FilterByStepRange         --- PASS
@@ -65,21 +68,22 @@ All 14 tests failed during RED phase with stubs returning nil/no-op:
 === RUN   TestRecordRewardSignals                    --- PASS
 === RUN   TestRecordRewardSignals_EmptyExperimentID  --- PASS
 === RUN   TestRecordRewardSignals_EmptySlice         --- PASS
+=== RUN   TestQueryRewardSignals_EmptyExperimentID   --- PASS
 === RUN   TestQueryRewardSignals_All                 --- PASS
 === RUN   TestQueryRewardSignals_FilterByComponent   --- PASS
 === RUN   TestQueryRewardSignals_FilterByStepRange   --- PASS
 === RUN   TestCascadeDelete                          --- PASS
 PASS
-ok  github.com/kstruzzieri/flux-ml/internal/metrics  0.271s
+ok  github.com/kstruzzieri/flux-ml/internal/metrics  3.389s
 ```
 
-Full suite: 57 tests across 4 packages, all passing. Race detector clean.
+Full suite: 59 tests across 4 packages, all passing. Race detector clean.
 
 ## Implementation Summary
 
 ### Files created
 - `internal/metrics/store.go` — Store with RecordMetrics, QueryMetrics, RecordRewardSignals, QueryRewardSignals
-- `internal/metrics/store_test.go` — 15 tests with isolated DB helper
+- `internal/metrics/store_test.go` — 17 tests with isolated DB helper
 - `metrics_api.go` — Wails API pass-through methods
 
 ### Files modified

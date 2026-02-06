@@ -280,10 +280,10 @@ type Store struct {
 | Query filtering | experiment + name/component + step range | Covers chart and detail view use cases |
 | experimentID required | Always required on queries | Prevents full-table scans |
 
-### Test plan (15 tests)
+### Test plan (17 tests)
 
 RecordMetrics (4): Batch insert success, empty experimentID error, empty metrics slice error, FK violation error.
-QueryMetrics (4): Returns all for experiment, filter by name, filter by step range, no matches returns empty slice.
+QueryMetrics (5): Empty experimentID error, returns all for experiment, filter by name, filter by step range, no matches returns empty slice.
 RecordRewardSignals (3): Batch insert with distribution JSON, empty experimentID error, empty signals slice error.
-QueryRewardSignals (3): Returns all for experiment, filter by component, filter by step range.
+QueryRewardSignals (4): Empty experimentID error, returns all for experiment, filter by component, filter by step range.
 Cascade delete (1): Deleting experiment cascades to both metrics and reward_signals.
