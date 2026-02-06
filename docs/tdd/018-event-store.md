@@ -4,13 +4,13 @@
 Implement event sourcing for experiment activity tracking in the `internal/event` package. Events are immutable records of experiment activity (metrics, config changes, alerts, checkpoints). The store supports appending events, replaying by time range with filters, and subscribing to new events via in-memory channel-based pub/sub.
 
 ## Acceptance Criteria
-- [ ] Events can be appended
-- [ ] Events can be replayed by time range
-- [ ] Event replay supports filtering by experiment ID, type, and combined filters
-- [ ] Event subscription works (channel-based pub/sub)
-- [ ] Subscription filtering by experiment ID works
-- [ ] Unsubscribe stops event delivery
-- [ ] Wails bindings expose Append and Replay to frontend
+- [x] Events can be appended
+- [x] Events can be replayed by time range
+- [x] Event replay supports filtering by experiment ID, type, and combined filters
+- [x] Event subscription works (channel-based pub/sub)
+- [x] Subscription filtering by experiment ID works
+- [x] Unsubscribe stops event delivery
+- [x] Wails bindings expose Append and Replay to frontend
 
 ## Rationale
 This is the second domain data layer building on the experiment CRUD (#17) and SQLite foundation (#16). It establishes the event sourcing pattern for experiment activity tracking. The design choices are:
@@ -402,3 +402,59 @@ func insertEvent(t *testing.T, db *database.DB, experimentID string, timestamp i
 FAIL    github.com/kstruzzieri/flux-ml/internal/event    0.001s
 Tests:    0 passed, 13 failed, 13 total
 ```
+
+## Test Summary
+
+### Passing Test Results
+```
+=== RUN   TestAppend
+--- PASS: TestAppend (0.01s)
+=== RUN   TestAppend_EmptyExperimentID
+--- PASS: TestAppend_EmptyExperimentID (0.01s)
+=== RUN   TestAppend_InvalidType
+--- PASS: TestAppend_InvalidType (0.01s)
+=== RUN   TestAppend_ForeignKeyViolation
+--- PASS: TestAppend_ForeignKeyViolation (0.01s)
+=== RUN   TestReplay_ChronologicalOrder
+--- PASS: TestReplay_ChronologicalOrder (0.01s)
+=== RUN   TestReplay_FilterByExperiment
+--- PASS: TestReplay_FilterByExperiment (0.01s)
+=== RUN   TestReplay_FilterByTimeRange
+--- PASS: TestReplay_FilterByTimeRange (0.01s)
+=== RUN   TestReplay_FilterByType
+--- PASS: TestReplay_FilterByType (0.01s)
+=== RUN   TestReplay_CombinedFilters
+--- PASS: TestReplay_CombinedFilters (0.01s)
+=== RUN   TestReplay_NoMatches
+--- PASS: TestReplay_NoMatches (0.01s)
+=== RUN   TestSubscribe_ReceivesEvents
+--- PASS: TestSubscribe_ReceivesEvents (0.01s)
+=== RUN   TestSubscribe_FilteredByExperiment
+--- PASS: TestSubscribe_FilteredByExperiment (0.01s)
+=== RUN   TestUnsubscribe
+--- PASS: TestUnsubscribe (0.01s)
+PASS
+ok  	github.com/kstruzzieri/flux-ml/internal/event	0.157s
+
+Tests:    13 passed, 0 failed, 13 total
+```
+
+## Implementation Summary
+
+### Files Created
+- `internal/event/store.go` — Event type, Store struct, Append/Replay/Subscribe/Unsubscribe methods
+- `internal/event/store_test.go` — 13 tests covering all operations and edge cases
+- `event_api.go` — Wails-bound API methods on App struct (AppendEvent, ReplayEvents)
+
+### Files Modified
+- `app.go` — Added `events *event.Store` field and initialization in startup()
+- `docs/plan/09-data-layer.md` — Consolidated data layer plan covering #16, #17, #18
+
+### Design Decisions
+1. **Store pattern** — `event.Store` wraps `*database.DB` with `sync.RWMutex` for thread-safe subscriber management. Same pattern as `experiment.Store`.
+2. **Channel-based pub/sub** — `Subscribe()` returns a `*Subscription` with buffered channel (64). `Unsubscribe()` removes from map and closes channel. Idiomatic Go, testable without Wails runtime.
+3. **Non-blocking notification** — `select` with `default` ensures slow subscribers don't block `Append()` writes. Events are dropped if buffer is full.
+4. **Dynamic WHERE clause** — `Replay()` builds query dynamically based on which filters are provided (experimentID, startTime, endTime, eventType). All optional.
+5. **Type validation** — `validTypes` map enforces only `metric`, `config_change`, `alert`, `checkpoint` at the application layer.
+6. **Empty slice guarantee** — `Replay()` initializes with `[]Event{}` (not nil) ensuring clean JSON serialization.
+7. **Wails API scope** — Only `AppendEvent` and `ReplayEvents` exposed to frontend. Subscribe/Unsubscribe are internal Go APIs for backend consumers (alert detection engine, metrics streaming).
