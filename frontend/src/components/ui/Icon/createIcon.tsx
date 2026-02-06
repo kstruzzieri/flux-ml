@@ -19,7 +19,12 @@ export function createIcon(path: React.ReactNode, options: CreateIconOptions) {
   const { displayName, iconClass, viewBox = '0 0 24 24' } = options
 
   const Icon = forwardRef<SVGSVGElement, IconProps>(({ size, label, className, ...props }, ref) => {
-    const classes = ['icon', size && `icon--${size}`, iconClass, className]
+    const classes = [
+      'icon',
+      typeof size === 'string' && ['sm', 'md', 'lg'].includes(size) && `icon--${size}`,
+      iconClass,
+      className,
+    ]
       .filter(Boolean)
       .join(' ')
 
@@ -57,7 +62,12 @@ export function createFilledIcon(path: React.ReactNode, options: CreateIconOptio
   const { displayName, iconClass, viewBox = '0 0 24 24' } = options
 
   const Icon = forwardRef<SVGSVGElement, IconProps>(({ size, label, className, ...props }, ref) => {
-    const classes = ['icon', size && `icon--${size}`, iconClass, className]
+    const classes = [
+      'icon',
+      typeof size === 'string' && ['sm', 'md', 'lg'].includes(size) && `icon--${size}`,
+      iconClass,
+      className,
+    ]
       .filter(Boolean)
       .join(' ')
 

@@ -1,4 +1,3 @@
-import type { SVGProps } from 'react'
 import { forwardRef } from 'react'
 import {
   PythonIcon,
@@ -17,15 +16,24 @@ import {
   DockerIcon,
 } from './icons'
 
-export interface FileIconProps extends SVGProps<SVGSVGElement> {
+export interface FileIconProps {
   /** File extension (without the dot) */
   extension?: string
+  /** Additional CSS class */
+  className?: string
+  /** Test ID for testing */
+  'data-testid'?: string
 }
 
-const EXTENSION_MAP: Record<
-  string,
-  { Component: React.ComponentType<Record<string, unknown>>; className: string }
-> = {
+/** Icon component that accepts a size prop (library and custom icons have different size types) */
+type SizeableIcon = React.ComponentType<{ size?: string | number }>
+
+interface ExtensionEntry {
+  Component: SizeableIcon
+  className: string
+}
+
+const EXTENSION_MAP: Record<string, ExtensionEntry> = {
   py: { Component: PythonIcon, className: 'icon--python' },
   yaml: { Component: YamlIcon, className: 'icon--yaml' },
   yml: { Component: YamlIcon, className: 'icon--yaml' },
@@ -51,16 +59,12 @@ const EXTENSION_MAP: Record<
  * Falls back to GenericFileIcon for unknown extensions.
  */
 export const FileIcon = forwardRef<HTMLSpanElement, FileIconProps>(
-  ({ extension, className, ...props }, ref) => {
+  ({ extension, className, 'data-testid': testId }, ref) => {
     const entry = extension ? EXTENSION_MAP[extension.toLowerCase()] : undefined
 
     if (!entry) {
       return (
-        <span
-          ref={ref}
-          className={`icon--generic-file ${className || ''}`}
-          data-testid={props['data-testid' as keyof typeof props] as string}
-        >
+        <span ref={ref} className={`icon--generic-file ${className || ''}`} data-testid={testId}>
           <GenericFileIcon />
         </span>
       )
@@ -69,11 +73,7 @@ export const FileIcon = forwardRef<HTMLSpanElement, FileIconProps>(
     const { Component, className: iconClassName } = entry
 
     return (
-      <span
-        ref={ref}
-        className={`${iconClassName} ${className || ''}`}
-        data-testid={props['data-testid' as keyof typeof props] as string}
-      >
+      <span ref={ref} className={`${iconClassName} ${className || ''}`} data-testid={testId}>
         <Component size="100%" />
       </span>
     )

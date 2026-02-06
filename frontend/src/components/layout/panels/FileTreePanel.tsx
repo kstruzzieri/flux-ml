@@ -48,6 +48,10 @@ const MOCK_FILE_TREE: FileNode[] = [
   { id: '10', name: 'README.md', type: 'file', extension: 'md' },
 ]
 
+const INDENT_GUIDE_BASE_LEFT = 28
+const INDENT_SPACER_BASE_WIDTH = 12
+const INDENT_STEP = 20
+
 interface FileTreeItemProps {
   node: FileNode
   depth: number
@@ -86,10 +90,13 @@ function FileTreeItem({
           <span
             key={i}
             className="file-tree-item__indent-guide"
-            style={{ left: `${28 + i * 20}px` }}
+            style={{ left: `${INDENT_GUIDE_BASE_LEFT + i * INDENT_STEP}px` }}
           />
         ))}
-        <span className="file-tree-item__indent" style={{ width: `${12 + depth * 20}px` }} />
+        <span
+          className="file-tree-item__indent"
+          style={{ width: `${INDENT_SPACER_BASE_WIDTH + depth * INDENT_STEP}px` }}
+        />
         {node.type === 'folder' ? (
           <span
             className={`file-tree-item__chevron ${isExpanded ? 'file-tree-item__chevron--open' : ''}`}

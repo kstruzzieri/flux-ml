@@ -45,11 +45,6 @@
   color: var(--color-icon-folder-open);
 }
 
-/* Python - official brand colors */
-.icon--python {
-  /* Uses embedded colors in SVG paths */
-}
-
 /* YAML - default paths to light color; the "A" path keeps its red fill attribute */
 .icon--yaml svg {
   fill: var(--color-text-secondary);

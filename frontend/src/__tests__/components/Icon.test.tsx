@@ -138,6 +138,11 @@ describe('Icon', () => {
       expect(screen.getByTestId('file-icon')).toHaveClass('icon--generic-file')
     })
 
+    it('falls back to generic icon when extension is undefined', () => {
+      render(<FileIcon data-testid="file-icon" />)
+      expect(screen.getByTestId('file-icon')).toHaveClass('icon--generic-file')
+    })
+
     it('maps additional language extensions', () => {
       const { rerender } = render(<FileIcon extension="js" data-testid="file-icon" />)
       expect(screen.getByTestId('file-icon')).toHaveClass('icon--javascript')
