@@ -58,14 +58,20 @@ wails build
 
 This project is in active development. See the [GitHub Issues](https://github.com/kstruzzieri/flux-ml/issues) for the roadmap.
 
+### Completed
+
+- **Phase 1: Foundation** — Wails setup, core UI shell with resizable panels, icon system, design tokens
+- **Phase 2A: Data Layer** — SQLite integration, experiment CRUD, event sourcing, metrics storage (59 tests across 4 packages)
+
 ### Phases
 
 1. **Foundation** - Wails setup, core infrastructure
-2. **File System** - File explorer, editor, workspace management
-3. **Editor Core** - CodeMirror integration, syntax highlighting
-4. **Run System** - Run profiles, terminal integration
-5. **ML Features** - Visualizations, metrics, experiment tracking
-6. **Polish** - Performance optimization, packaging
+2. **Data Layer** - SQLite, experiment management, event sourcing, metrics storage
+3. **File System** - File explorer, editor, workspace management
+4. **Editor Core** - CodeMirror integration, syntax highlighting
+5. **Run System** - Run profiles, terminal integration
+6. **ML Features** - Visualizations, metrics, experiment tracking
+7. **Polish** - Performance optimization, packaging
 
 ## Architecture
 
@@ -73,6 +79,11 @@ This project is in active development. See the [GitHub Issues](https://github.co
 flux-ml/
 ├── main.go              # Application entry point
 ├── app.go               # Wails application logic / Go backend
+├── internal/            # Go backend packages
+│   ├── database/        # SQLite infrastructure, migrations
+│   ├── experiment/      # Experiment CRUD store
+│   ├── event/           # Event sourcing store
+│   └── metrics/         # Metrics and reward signal storage
 ├── frontend/            # React + TypeScript frontend
 │   ├── src/
 │   │   ├── components/  # React components
@@ -92,7 +103,7 @@ Key technical choices and their rationale:
 | CSS | Vanilla CSS + BEM | Zero runtime overhead, optimal for fixed desktop UI |
 | State | React built-in | Sufficient for Phase 1; evaluate libraries as complexity grows |
 | Charts | uPlot (planned) | Lightweight Canvas-based, handles 100k+ points |
-| Database | SQLite (planned) | Embedded, no server, works offline |
+| Database | SQLite (`modernc.org/sqlite`) | Embedded, pure Go, no CGo, works offline |
 
 See [`docs/plan/08-frontend-architecture.md`](docs/plan/08-frontend-architecture.md) for detailed documentation.
 
