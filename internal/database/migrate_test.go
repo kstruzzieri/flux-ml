@@ -65,7 +65,7 @@ func TestMigrate_RecordsVersions(t *testing.T) {
 		}
 		versions = append(versions, v)
 	}
-	expected := []string{"001_initial_schema", "002_logs_fts5"}
+	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes"}
 	if len(versions) != len(expected) {
 		t.Fatalf("expected %d versions, got %d: %v", len(expected), len(versions), versions)
 	}
@@ -85,8 +85,8 @@ func TestMigrate_Idempotent(t *testing.T) {
 	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count query failed: %v", err)
 	}
-	if count != 2 {
-		t.Errorf("expected 2 migration versions, got %d", count)
+	if count != 3 {
+		t.Errorf("expected 3 migration versions, got %d", count)
 	}
 }
 
@@ -222,6 +222,44 @@ func TestSchema_AlertsTable(t *testing.T) {
 	}
 	if alertType != "length_gaming" {
 		t.Errorf("type = %q, want %q", alertType, "length_gaming")
+	}
+}
+
+func TestSchema_CascadeDelete(t *testing.T) {
+	db := openTestDB(t)
+	db.Exec("PRAGMA foreign_keys = ON")
+
+	// Create experiment with child rows in all tables
+	db.Exec(`INSERT INTO experiments (id, name, status, created_at, updated_at)
+		VALUES ('exp-001', 'test', 'running', 1706745600, 1706745600)`)
+	db.Exec(`INSERT INTO events (experiment_id, timestamp, type, data)
+		VALUES ('exp-001', 1706745600, 'metric', '{}')`)
+	db.Exec(`INSERT INTO metrics (experiment_id, step, name, value, timestamp)
+		VALUES ('exp-001', 1, 'loss', 0.5, 1706745600)`)
+	db.Exec(`INSERT INTO reward_signals (experiment_id, step, component, value)
+		VALUES ('exp-001', 1, 'helpfulness', 0.8)`)
+	db.Exec(`INSERT INTO alerts (experiment_id, type, step, confidence, data, created_at)
+		VALUES ('exp-001', 'length_gaming', 1, 0.9, '{}', 1706745600)`)
+
+	// Delete the experiment — should cascade to all child tables
+	_, err := db.Exec(`DELETE FROM experiments WHERE id = 'exp-001'`)
+	if err != nil {
+		t.Fatalf("delete experiment failed: %v", err)
+	}
+
+	// Verify all child rows are gone
+	tables := []string{"events", "metrics", "reward_signals", "alerts"}
+	for _, table := range tables {
+		var count int
+		err := db.QueryRow(
+			"SELECT COUNT(*) FROM "+table+" WHERE experiment_id = 'exp-001'",
+		).Scan(&count)
+		if err != nil {
+			t.Fatalf("count %s failed: %v", table, err)
+		}
+		if count != 0 {
+			t.Errorf("%s: expected 0 rows after cascade delete, got %d", table, count)
+		}
 	}
 }
 

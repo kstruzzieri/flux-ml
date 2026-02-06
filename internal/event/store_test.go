@@ -277,6 +277,38 @@ func TestSubscribe_FilteredByExperiment(t *testing.T) {
 	}
 }
 
+func TestCascadeDelete(t *testing.T) {
+	store := newTestEventStore(t)
+
+	// Append events for the experiment
+	store.Append(store.experimentID, TypeMetric, `{"step": 1}`)
+	store.Append(store.experimentID, TypeAlert, `{"step": 2}`)
+
+	// Verify events exist
+	events, err := store.Replay(store.experimentID, 0, 0, "")
+	if err != nil {
+		t.Fatalf("Replay failed: %v", err)
+	}
+	if len(events) != 2 {
+		t.Fatalf("expected 2 events before delete, got %d", len(events))
+	}
+
+	// Delete the experiment directly
+	_, err = store.db.Exec(`DELETE FROM experiments WHERE id = ?`, store.experimentID)
+	if err != nil {
+		t.Fatalf("Delete experiment failed: %v", err)
+	}
+
+	// Events should be cascade-deleted
+	events, err = store.Replay("", 0, 0, "")
+	if err != nil {
+		t.Fatalf("Replay after delete failed: %v", err)
+	}
+	if len(events) != 0 {
+		t.Errorf("expected 0 events after cascade delete, got %d", len(events))
+	}
+}
+
 func TestUnsubscribe(t *testing.T) {
 	store := newTestEventStore(t)
 	sub := store.Subscribe("")

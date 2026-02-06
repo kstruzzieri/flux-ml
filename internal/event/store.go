@@ -119,6 +119,8 @@ func (s *Store) notify(ev Event) {
 // Replay returns events matching the given filters, ordered by timestamp ASC.
 // All filter parameters are optional: empty string or zero value means no filter.
 func (s *Store) Replay(experimentID string, startTime, endTime int64, eventType string) ([]Event, error) {
+	// Safety: conditions are hardcoded strings only; user values go through
+	// parameterized args. Do not interpolate user input into conditions.
 	query := `SELECT id, experiment_id, timestamp, type, data FROM events`
 	var conditions []string
 	var args []any
