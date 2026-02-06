@@ -26,6 +26,27 @@
 
 ## Data Architecture
 
+### SQLite Implementation
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Driver | `modernc.org/sqlite` (pure Go) | No CGo, easier cross-compilation, works cleanly with Wails |
+| DB location | App data directory (`~/Library/Application Support/Flux/flux.db`) | OS convention, survives app updates |
+| Migrations | Embedded SQL files via `//go:embed` | Transparent, reviewable, simple |
+| Journal mode | WAL | Concurrent reads during writes |
+| Foreign keys | Enforced (`PRAGMA foreign_keys=ON`) | Referential integrity |
+
+**Connection management (`internal/database/database.go`):**
+- `Open(path)` creates parent dirs, opens connection, applies pragmas, runs migrations
+- Pragmas: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`
+- Called from `app.go` startup, closed on Wails shutdown
+
+**Migration system (`internal/database/migrate.go`):**
+- SQL files in `internal/database/migrations/` embedded via `//go:embed`
+- `schema_migrations` table tracks applied versions
+- Each migration runs in a transaction (FTS5 excluded — requires `META:no_transaction` flag)
+- Idempotent — safe to call on every startup
+
 ### SQLite Schema
 
 ```sql
@@ -34,11 +55,15 @@ CREATE TABLE experiments (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     config JSON,
-    parent_id TEXT,  -- For forking/lineage
-    status TEXT,     -- pending, running, completed, failed
-    created_at INTEGER,
-    updated_at INTEGER
+    parent_id TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (parent_id) REFERENCES experiments(id)
 );
+
+CREATE INDEX idx_experiments_status ON experiments(status);
+CREATE INDEX idx_experiments_created_at ON experiments(created_at);
 
 -- Event sourcing
 CREATE TABLE events (
@@ -50,37 +75,51 @@ CREATE TABLE events (
     FOREIGN KEY (experiment_id) REFERENCES experiments(id)
 );
 
+CREATE INDEX idx_events_experiment_id ON events(experiment_id);
+CREATE INDEX idx_events_type ON events(type);
+CREATE INDEX idx_events_timestamp ON events(timestamp);
+
 -- Metrics (denormalized for fast queries)
 CREATE TABLE metrics (
-    experiment_id TEXT,
-    step INTEGER,
-    name TEXT,
-    value REAL,
-    timestamp INTEGER,
-    PRIMARY KEY (experiment_id, step, name)
+    experiment_id TEXT NOT NULL,
+    step INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    value REAL NOT NULL,
+    timestamp INTEGER NOT NULL,
+    PRIMARY KEY (experiment_id, step, name),
+    FOREIGN KEY (experiment_id) REFERENCES experiments(id)
 );
+
+CREATE INDEX idx_metrics_experiment_name ON metrics(experiment_id, name);
 
 -- Reward signals (specialized for RM work)
 CREATE TABLE reward_signals (
-    experiment_id TEXT,
-    step INTEGER,
-    component TEXT,  -- helpfulness, harmlessness, honesty
-    value REAL,
+    experiment_id TEXT NOT NULL,
+    step INTEGER NOT NULL,
+    component TEXT NOT NULL,  -- helpfulness, harmlessness, honesty
+    value REAL NOT NULL,
     distribution JSON,  -- histogram data
-    PRIMARY KEY (experiment_id, step, component)
+    PRIMARY KEY (experiment_id, step, component),
+    FOREIGN KEY (experiment_id) REFERENCES experiments(id)
 );
+
+CREATE INDEX idx_reward_signals_experiment ON reward_signals(experiment_id);
 
 -- Alerts
 CREATE TABLE alerts (
     id INTEGER PRIMARY KEY,
-    experiment_id TEXT,
-    type TEXT,       -- length_gaming, sycophancy, etc.
-    step INTEGER,
-    confidence REAL,
+    experiment_id TEXT NOT NULL,
+    type TEXT NOT NULL,       -- length_gaming, sycophancy, etc.
+    step INTEGER NOT NULL,
+    confidence REAL NOT NULL,
     data JSON,       -- evidence
-    acknowledged INTEGER DEFAULT 0,
-    created_at INTEGER
+    acknowledged INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (experiment_id) REFERENCES experiments(id)
 );
+
+CREATE INDEX idx_alerts_experiment_id ON alerts(experiment_id);
+CREATE INDEX idx_alerts_type ON alerts(type);
 
 -- Full-text search on logs
 CREATE VIRTUAL TABLE logs USING fts5(
@@ -109,6 +148,10 @@ For notebook analysis, export to Parquet:
 
 ```
 internal/
+├── database/
+│   ├── database.go    # DB struct, Open/Close, connection management
+│   ├── migrate.go     # Migration runner
+│   └── migrations/    # Embedded SQL migration files
 ├── events/
 │   ├── store.go       # Event sourcing storage
 │   └── bus.go         # Event pub/sub

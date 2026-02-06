@@ -8,7 +8,7 @@
 
 **Tech Stack:** Go 1.23, `modernc.org/sqlite`, `database/sql`, `embed`, `testing`
 
-**Design doc:** `docs/plans/2026-02-05-sqlite-integration-design.md`
+**Design doc:** `docs/plan/05-technical-architecture.md` (SQLite Implementation section)
 
 **TDD doc:** `docs/tdd/016-sqlite-integration.md` (created in Task 1)
 
