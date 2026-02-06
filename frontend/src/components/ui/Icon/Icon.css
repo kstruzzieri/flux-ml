@@ -1,0 +1,71 @@
+/**
+ * Icon System Styles
+ *
+ * Icons inherit size from their container by default.
+ * The base .icon class sets no explicit width/height, so parent
+ * containers (e.g., .header__nav-icon, .activity-bar__btn) control
+ * sizing via their own `svg` descendant rules.
+ *
+ * Use explicit size classes (icon--sm, icon--md, icon--lg) only when
+ * the icon is standalone and not inside a sized container.
+ */
+
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Explicit size variants for standalone usage */
+.icon--sm {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.icon--md {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.icon--lg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+
+/* ========================================
+ * File Type Icon Colors
+ * ======================================== */
+
+/* Folder icons use design tokens */
+.icon--folder {
+  color: var(--color-icon-folder);
+}
+
+.icon--folder-open {
+  color: var(--color-icon-folder-open);
+}
+
+/* Python - official brand colors */
+.icon--python {
+  /* Uses embedded colors in SVG paths */
+}
+
+/* YAML - default paths to light color; the "A" path keeps its red fill attribute */
+.icon--yaml svg {
+  fill: var(--color-text-secondary);
+}
+
+/* Markdown - light fill for dark backgrounds */
+.icon--markdown svg {
+  fill: var(--color-text-secondary);
+}
+
+/* Text file - inherits current color */
+.icon--text-file {
+  color: var(--color-text-secondary);
+}
+
+/* Generic file - inherits current color */
+.icon--generic-file {
+  color: var(--color-text-secondary);
+}

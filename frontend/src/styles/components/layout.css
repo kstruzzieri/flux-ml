@@ -2614,7 +2614,8 @@ body.resizing-row * {
 .file-tree-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
+  position: relative;
   padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
   border: none;
@@ -2647,8 +2648,31 @@ body.resizing-row * {
 }
 
 .file-tree-item__chevron svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+}
+
+.file-tree-item__indent {
+  flex-shrink: 0;
+}
+
+.file-tree-item__indent-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border-subtle);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.file-tree:hover .file-tree-item__indent-guide {
+  opacity: 1;
+}
+
+.file-tree-item__chevron-spacer {
+  width: 16px;
+  flex-shrink: 0;
 }
 
 .file-tree-item__chevron--open {
@@ -2656,36 +2680,19 @@ body.resizing-row * {
 }
 
 .file-tree-item__icon {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .file-tree-item__icon svg {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
 }
 
-/* Folder icons */
-.file-tree-item__icon--folder {
-  color: var(--color-icon-folder);
-}
-
-.file-tree-item__icon--folder-open {
-  color: var(--color-icon-folder-open);
-}
-
-/* Text file icon - gray */
-.file-tree-item__icon--text {
-  color: var(--color-text-muted);
-}
-
-/* Generic file icon - gray */
-.file-tree-item__icon--generic {
-  color: var(--color-text-muted);
-}
+/* File type icon colors now handled by Icon system (Icon.css) */
 
 .file-tree-item__name {
   flex: 1;
@@ -2752,10 +2759,7 @@ body.resizing-row * {
   height: 15px;
 }
 
-/* Generic file icon in tabs - gray */
-.editor-tab__icon--generic {
-  color: var(--color-text-muted);
-}
+/* File type icon colors now handled by Icon system (Icon.css) */
 
 .editor-tab__name {
   display: flex;

@@ -76,6 +76,13 @@
   --color-icon-folder-open: #f59e0b;
 
   /* ========================================
+   * Icon Sizes
+   * ======================================== */
+  --icon-size-sm: 16px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 24px;
+
+  /* ========================================
    * Typography - Font Families
    * ======================================== */
   --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
