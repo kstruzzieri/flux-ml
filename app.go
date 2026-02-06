@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/kstruzzieri/flux-ml/internal/database"
+	"github.com/kstruzzieri/flux-ml/internal/event"
 	"github.com/kstruzzieri/flux-ml/internal/experiment"
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -18,6 +19,7 @@ type App struct {
 	configPath  string
 	db          *database.DB
 	experiments *experiment.Store
+	events      *event.Store
 	dbError     string
 }
 
@@ -68,6 +70,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.db = db
 	a.experiments = experiment.NewStore(db)
+	a.events = event.NewStore(db)
 }
 
 // GetDBStatus returns the database initialization error, or empty string if OK.
