@@ -79,7 +79,7 @@ Full suite: 57 tests across 4 packages, all passing. Race detector clean.
 
 ### Files created
 - `internal/metrics/store.go` — Store with RecordMetrics, QueryMetrics, RecordRewardSignals, QueryRewardSignals
-- `internal/metrics/store_test.go` — 14 tests with isolated DB helper
+- `internal/metrics/store_test.go` — 15 tests with isolated DB helper
 - `metrics_api.go` — Wails API pass-through methods
 
 ### Files modified

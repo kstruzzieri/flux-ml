@@ -229,7 +229,7 @@ Other (2): Unsubscribe stops delivery, cascade delete removes events.
 Domain package (`internal/metrics/`) providing:
 
 - **`store.go`** — `Metric` struct, `RewardSignal` struct, `Store` with RecordMetrics/QueryMetrics/RecordRewardSignals/QueryRewardSignals
-- **`store_test.go`** — 14 tests
+- **`store_test.go`** — 15 tests
 
 Wails integration:
 
@@ -280,9 +280,10 @@ type Store struct {
 | Query filtering | experiment + name/component + step range | Covers chart and detail view use cases |
 | experimentID required | Always required on queries | Prevents full-table scans |
 
-### Test plan (14 tests)
+### Test plan (15 tests)
 
 RecordMetrics (4): Batch insert success, empty experimentID error, empty metrics slice error, FK violation error.
 QueryMetrics (4): Returns all for experiment, filter by name, filter by step range, no matches returns empty slice.
 RecordRewardSignals (3): Batch insert with distribution JSON, empty experimentID error, empty signals slice error.
 QueryRewardSignals (3): Returns all for experiment, filter by component, filter by step range.
+Cascade delete (1): Deleting experiment cascades to both metrics and reward_signals.
