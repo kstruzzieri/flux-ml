@@ -4,13 +4,13 @@
 Set up SQLite database for experiment data storage using `modernc.org/sqlite` (pure Go driver). This is the first backend package (`internal/database`), providing connection management, a migration system, and the full initial schema for all experiment-related tables.
 
 ## Acceptance Criteria
-- [ ] SQLite database created on first run
-- [ ] Connection works
-- [ ] Basic queries execute
-- [ ] Migration system works
-- [ ] All schema tables created (experiments, events, metrics, reward_signals, alerts, logs)
-- [ ] Foreign key enforcement works
-- [ ] FTS5 full-text search works
+- [x] SQLite database created on first run
+- [x] Connection works
+- [x] Basic queries execute
+- [x] Migration system works
+- [x] All schema tables created (experiments, events, metrics, reward_signals, alerts, logs)
+- [x] Foreign key enforcement works
+- [x] FTS5 full-text search works
 
 ## Rationale
 This is the foundation for all backend data operations (issues #17-20). Without a working database layer, no experiment data can be persisted, queried, or streamed to the frontend. The design choices are:
@@ -640,39 +640,67 @@ func TestSchema_LogsFTS(t *testing.T) {
 ```
 --- FAIL: TestOpen_CreatesDatabase (0.00s)
     database_test.go:10: Open() error = undefined: database.Open
---- FAIL: TestOpen_CreatesParentDirectory (0.00s)
-    database_test.go:22: Open() error = undefined: database.Open
---- FAIL: TestOpen_PragmasApplied (0.00s)
-    database_test.go:34: Open() error = undefined: database.Open
---- FAIL: TestOpen_RunsMigrations (0.00s)
-    database_test.go:60: Open() error = undefined: database.Open
---- FAIL: TestClose (0.00s)
-    database_test.go:83: Open() error = undefined: database.Open
---- FAIL: TestMigrate_CreatesSchemaTable (0.00s)
-    migrate_test.go:10: Open() error = undefined: database.Open
---- FAIL: TestMigrate_AppliesAllMigrations (0.00s)
-    migrate_test.go:24: Open() error = undefined: database.Open
---- FAIL: TestMigrate_RecordsVersions (0.00s)
-    migrate_test.go:55: Open() error = undefined: database.Open
---- FAIL: TestMigrate_Idempotent (0.00s)
-    migrate_test.go:85: Open() error = undefined: database.Open
---- FAIL: TestSchema_ExperimentsTable (0.00s)
-    migrate_test.go:103: Open() error = undefined: database.Open
---- FAIL: TestSchema_MetricsTable (0.00s)
-    migrate_test.go:130: Open() error = undefined: database.Open
---- FAIL: TestSchema_RewardSignalsTable (0.00s)
-    migrate_test.go:170: Open() error = undefined: database.Open
---- FAIL: TestSchema_EventsTable (0.00s)
-    migrate_test.go:210: Open() error = undefined: database.Open
---- FAIL: TestSchema_AlertsTable (0.00s)
-    migrate_test.go:240: Open() error = undefined: database.Open
---- FAIL: TestSchema_ForeignKeyEnforcement (0.00s)
-    migrate_test.go:276: Open() error = undefined: database.Open
---- FAIL: TestSchema_LogsFTS (0.00s)
-    migrate_test.go:292: Open() error = undefined: database.Open
-FAIL
+...
 FAIL    github.com/kstruzzieri/flux-ml/internal/database    0.001s
-FAIL
-
 Tests:    0 passed, 16 failed, 16 total
 ```
+
+## Test Summary
+
+### Passing Test Results
+```
+=== RUN   TestOpen_CreatesDatabase
+--- PASS: TestOpen_CreatesDatabase (0.01s)
+=== RUN   TestOpen_CreatesParentDirectory
+--- PASS: TestOpen_CreatesParentDirectory (0.01s)
+=== RUN   TestOpen_PragmasApplied
+--- PASS: TestOpen_PragmasApplied (0.01s)
+=== RUN   TestOpen_RunsMigrations
+--- PASS: TestOpen_RunsMigrations (0.01s)
+=== RUN   TestClose
+--- PASS: TestClose (0.01s)
+=== RUN   TestMigrate_CreatesSchemaTable
+--- PASS: TestMigrate_CreatesSchemaTable (0.05s)
+=== RUN   TestMigrate_AppliesAllMigrations
+--- PASS: TestMigrate_AppliesAllMigrations (0.02s)
+=== RUN   TestMigrate_RecordsVersions
+--- PASS: TestMigrate_RecordsVersions (0.01s)
+=== RUN   TestMigrate_Idempotent
+--- PASS: TestMigrate_Idempotent (0.01s)
+=== RUN   TestSchema_ExperimentsTable
+--- PASS: TestSchema_ExperimentsTable (0.01s)
+=== RUN   TestSchema_MetricsTable
+--- PASS: TestSchema_MetricsTable (0.02s)
+=== RUN   TestSchema_RewardSignalsTable
+--- PASS: TestSchema_RewardSignalsTable (0.01s)
+=== RUN   TestSchema_EventsTable
+--- PASS: TestSchema_EventsTable (0.01s)
+=== RUN   TestSchema_AlertsTable
+--- PASS: TestSchema_AlertsTable (0.01s)
+=== RUN   TestSchema_ForeignKeyEnforcement
+--- PASS: TestSchema_ForeignKeyEnforcement (0.01s)
+=== RUN   TestSchema_LogsFTS
+--- PASS: TestSchema_LogsFTS (0.01s)
+PASS
+ok  	github.com/kstruzzieri/flux-ml/internal/database	0.292s
+
+Tests:    16 passed, 0 failed, 16 total
+```
+
+## Implementation Summary
+
+### Files Created
+- `internal/database/database.go` — DB struct, Open(), Path(), driver registration
+- `internal/database/database_test.go` — 5 connection management tests
+- `internal/database/migrate.go` — Migrate(), execMigrationTx(), execMigrationNoTx()
+- `internal/database/migrate_test.go` — 11 migration and schema tests
+- `internal/database/migrations/001_initial_schema.sql` — experiments, events, metrics, reward_signals, alerts tables with indexes
+- `internal/database/migrations/002_logs_fts5.sql` — FTS5 virtual table for logs (no_transaction)
+
+### Design Decisions
+1. **Pure Go SQLite driver** (`modernc.org/sqlite`) — no CGo dependency, cross-compiles cleanly for Wails
+2. **Embedded migrations** (`//go:embed`) — SQL files compiled into binary, no runtime file dependencies
+3. **Transaction-aware migrations** — Regular migrations run in transactions; FTS5 uses `META:no_transaction` flag
+4. **Idempotent migrations** — `schema_migrations` table tracks applied versions, safe to re-run
+5. **Pragmas applied on every Open()** — WAL journal mode, foreign keys ON, 5s busy timeout
+6. **Parent directory auto-creation** — `os.MkdirAll` ensures database path exists before opening
