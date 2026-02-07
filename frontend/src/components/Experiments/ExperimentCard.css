@@ -49,3 +49,26 @@
   color: var(--color-text-muted);
   flex-shrink: 0;
 }
+
+.exp-card__metrics {
+  display: flex;
+  gap: 16px;
+  padding-left: 16px;
+}
+
+.exp-card__metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exp-card__metric-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.exp-card__metric-value {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+}
