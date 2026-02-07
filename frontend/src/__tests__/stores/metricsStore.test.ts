@@ -1,0 +1,84 @@
+import { act } from '@testing-library/react'
+import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
+import { __resetMockState } from '../../__mocks__/wailsjs/go/main/App'
+import { metrics } from '../../__mocks__/wailsjs/go/models'
+import { RecordMetrics } from '../../__mocks__/wailsjs/go/main/App'
+
+beforeEach(() => {
+  __resetMockState()
+  __resetMetricsStore()
+})
+
+describe('useMetricsStore', () => {
+  it('fetchLatestMetrics populates state for an experiment', async () => {
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'loss',
+        value: 2.5,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 5,
+        name: 'loss',
+        value: 0.3,
+        timestamp: 5000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 3,
+        name: 'reward',
+        value: 0.7,
+        timestamp: 3000,
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchLatestMetrics('exp-1')
+    })
+
+    const metricMap = useMetricsStore.getState().latestMetrics['exp-1']
+    expect(metricMap).toBeDefined()
+    expect(metricMap['loss']).toBe(0.3)
+    expect(metricMap['reward']).toBe(0.7)
+  })
+
+  it('returns empty object for experiment with no metrics', async () => {
+    await act(async () => {
+      await useMetricsStore.getState().fetchLatestMetrics('exp-no-data')
+    })
+
+    const metricMap = useMetricsStore.getState().latestMetrics['exp-no-data']
+    expect(metricMap).toEqual({})
+  })
+
+  it('fetchAllLatestMetrics fetches for multiple experiments', async () => {
+    await RecordMetrics('exp-a', [
+      new metrics.Metric({
+        experiment_id: 'exp-a',
+        step: 1,
+        name: 'loss',
+        value: 1.0,
+        timestamp: 1000,
+      }),
+    ])
+    await RecordMetrics('exp-b', [
+      new metrics.Metric({
+        experiment_id: 'exp-b',
+        step: 1,
+        name: 'loss',
+        value: 2.0,
+        timestamp: 1000,
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchAllLatestMetrics(['exp-a', 'exp-b'])
+    })
+
+    expect(useMetricsStore.getState().latestMetrics['exp-a']['loss']).toBe(1.0)
+    expect(useMetricsStore.getState().latestMetrics['exp-b']['loss']).toBe(2.0)
+  })
+})
