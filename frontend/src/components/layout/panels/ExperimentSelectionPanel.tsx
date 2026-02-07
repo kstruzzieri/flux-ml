@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { StatusDot } from '@components/ui/StatusDot/StatusDot'
 
 interface Experiment {
   id: string
@@ -126,12 +127,7 @@ export function ExperimentSelectionPanel() {
                   {exp.duration} • {exp.steps}
                 </div>
               </div>
-              {exp.status === 'running' && (
-                <span className="experiment-item__status experiment-item__status--running" />
-              )}
-              {exp.status === 'completed' && (
-                <span className="experiment-item__status experiment-item__status--completed" />
-              )}
+              <StatusDot status={exp.status} size="sm" />
             </div>
           ))}
         </div>

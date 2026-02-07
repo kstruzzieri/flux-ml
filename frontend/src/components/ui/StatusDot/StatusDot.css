@@ -1,0 +1,52 @@
+.status-dot {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-text-muted);
+}
+
+/* Sizes */
+.status-dot--sm {
+  width: 6px;
+  height: 6px;
+}
+
+.status-dot--md {
+  width: 8px;
+  height: 8px;
+}
+
+/* Status colors */
+.status-dot--running {
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+}
+
+.status-dot--completed {
+  background: var(--color-success);
+}
+
+.status-dot--failed {
+  background: var(--color-error);
+}
+
+.status-dot--pending {
+  background: var(--color-text-muted);
+}
+
+/* Pulse animation for running status */
+.status-dot--pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}

@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { formatDuration, type ExperimentStatus } from '@utils/formatting'
+import { StatusDot } from '../ui/StatusDot/StatusDot'
 import type { experiment } from '../../../wailsjs/go/models'
 import './ExperimentCard.css'
 
@@ -32,11 +33,7 @@ function ExperimentCardInner({ experiment: exp, isActive, onSelect }: Experiment
       aria-label={`${exp.name}, ${statusLabel}`}
     >
       <div className="exp-card__row">
-        <span
-          className={`exp-card__status exp-card__status--${status}`}
-          title={statusLabel}
-          aria-label={statusLabel}
-        />
+        <StatusDot status={status} />
         <span className="exp-card__name">{exp.name}</span>
         <span className="exp-card__duration">{duration}</span>
       </div>
