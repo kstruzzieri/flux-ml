@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useExperimentStore } from '@stores/experimentStore'
 import { useMetricsStore } from '@stores/metricsStore'
 import { ExperimentList } from '../../Experiments/ExperimentList'
@@ -20,11 +20,13 @@ export function ExperimentsPanel() {
     initializeMetrics()
   }, [initialize, initializeMetrics])
 
+  const experimentIds = useMemo(() => experiments.map((e) => e.id).join(','), [experiments])
+
   useEffect(() => {
     if (experiments.length > 0) {
-      fetchAllLatestMetrics(experiments.map((e) => e.id))
+      fetchAllLatestMetrics(experimentIds.split(','))
     }
-  }, [experiments, fetchAllLatestMetrics])
+  }, [experimentIds, experiments.length, fetchAllLatestMetrics])
 
   return (
     <div className="panel panel--experiments">

@@ -40,8 +40,8 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
           [experimentId]: metricMap,
         },
       }))
-    } catch {
-      // Silently ignore — metrics are supplementary
+    } catch (err) {
+      console.error(`Failed to fetch metrics for ${experimentId}:`, err)
     }
   },
 

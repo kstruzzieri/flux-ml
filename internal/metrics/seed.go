@@ -49,6 +49,8 @@ func (s *Store) SeedDemoMetrics() error {
 	for _, exp := range experiments {
 		var metrics []Metric
 
+		// Status strings match experiment.Status* constants but are inlined here
+		// to avoid importing the experiment package (would create a circular dependency).
 		switch exp.Status {
 		case "running":
 			// Running experiments: loss decreasing, reward increasing over ~50 steps
