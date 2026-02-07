@@ -20,13 +20,14 @@ export function ExperimentsPanel() {
     initializeMetrics()
   }, [initialize, initializeMetrics])
 
-  const experimentIds = useMemo(() => experiments.map((e) => e.id).join(','), [experiments])
+  const experimentIds = useMemo(() => experiments.map((e) => e.id), [experiments])
+  const experimentIdsKey = JSON.stringify(experimentIds)
 
   useEffect(() => {
-    if (experiments.length > 0) {
-      fetchAllLatestMetrics(experimentIds.split(','))
+    if (experimentIds.length > 0) {
+      fetchAllLatestMetrics(experimentIds)
     }
-  }, [experimentIds, experiments.length, fetchAllLatestMetrics])
+  }, [experimentIdsKey, fetchAllLatestMetrics])
 
   return (
     <div className="panel panel--experiments">

@@ -16,11 +16,16 @@ interface MetricsState {
 
 let _initialized = false
 let _debounceTimers: Record<string, ReturnType<typeof setTimeout>> = {}
+let _unsubscribe: (() => void) | null = null
 
 export function __resetMetricsStore(): void {
   _initialized = false
   Object.values(_debounceTimers).forEach(clearTimeout)
   _debounceTimers = {}
+  if (_unsubscribe) {
+    _unsubscribe()
+    _unsubscribe = null
+  }
   useMetricsStore.setState({ latestMetrics: {} })
 }
 
@@ -53,7 +58,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     if (_initialized) return
     _initialized = true
 
-    EventsOn('metrics:recorded', (data: { experimentId?: string }) => {
+    _unsubscribe = EventsOn('metrics:recorded', (data: { experimentId?: string }) => {
       if (!data?.experimentId) return
       const expId = data.experimentId
 
