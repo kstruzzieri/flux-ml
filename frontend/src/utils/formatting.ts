@@ -32,3 +32,20 @@ export function formatDuration(
 
   return `${hours}h ${minutes}m`
 }
+
+const METRIC_DECIMALS: Record<string, number> = {
+  loss: 4,
+  reward: 3,
+}
+
+/**
+ * Formats a metric value for inline display.
+ * Returns em dash for null/undefined values.
+ */
+export function formatMetricValue(name: string, value: number | null | undefined): string {
+  if (value == null) {
+    return '\u2014'
+  }
+  const decimals = METRIC_DECIMALS[name] ?? 2
+  return value.toFixed(decimals)
+}
