@@ -19,7 +19,8 @@
   background: var(--color-bg-hover);
 }
 
-.experiment-item--active {
+.experiment-item--active,
+.experiment-item--active:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-dim);
 }

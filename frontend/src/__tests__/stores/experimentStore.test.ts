@@ -1,4 +1,4 @@
-import { useExperimentStore } from '@stores/experimentStore'
+import { useExperimentStore, __resetInitialized } from '@stores/experimentStore'
 import {
   CreateExperiment,
   __resetMockState,
@@ -15,6 +15,7 @@ beforeEach(() => {
     loading: false,
     error: null,
   })
+  __resetInitialized()
   __resetMockState()
 })
 

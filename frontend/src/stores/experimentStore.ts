@@ -14,6 +14,12 @@ interface ExperimentState {
   initialize: () => void
 }
 
+let _initialized = false
+
+export function __resetInitialized(): void {
+  _initialized = false
+}
+
 export const useExperimentStore = create<ExperimentState>((set, get) => ({
   experiments: [],
   selectedId: null,
@@ -38,6 +44,9 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
   },
 
   initialize: () => {
+    if (_initialized) return
+    _initialized = true
+
     const { fetchExperiments } = get()
     fetchExperiments()
 
