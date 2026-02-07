@@ -26,6 +26,10 @@ export function GetExperiment(arg1) {
   return window['go']['main']['App']['GetExperiment'](arg1);
 }
 
+export function GetLatestMetrics(arg1) {
+  return window['go']['main']['App']['GetLatestMetrics'](arg1);
+}
+
 export function GetLayout() {
   return window['go']['main']['App']['GetLayout']();
 }

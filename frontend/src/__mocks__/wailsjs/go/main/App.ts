@@ -138,6 +138,20 @@ export function RecordMetrics(
   return Promise.resolve()
 }
 
+export function GetLatestMetrics(
+  experimentID: string,
+): Promise<metrics.Metric[]> {
+  const expMetrics = mockMetrics.filter((m) => m.experiment_id === experimentID)
+  const latestByName = new Map<string, metrics.Metric>()
+  for (const m of expMetrics) {
+    const existing = latestByName.get(m.name)
+    if (!existing || m.step > existing.step) {
+      latestByName.set(m.name, m)
+    }
+  }
+  return Promise.resolve([...latestByName.values()])
+}
+
 export function QueryMetrics(
   experimentID: string,
   name: string,

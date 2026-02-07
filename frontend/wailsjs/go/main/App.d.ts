@@ -17,6 +17,8 @@ export function GetDBStatus():Promise<string>;
 
 export function GetExperiment(arg1:string):Promise<experiment.Experiment>;
 
+export function GetLatestMetrics(arg1:string):Promise<Array<metrics.Metric>>;
+
 export function GetLayout():Promise<main.LayoutState>;
 
 export function Greet(arg1:string):Promise<string>;
