@@ -25,5 +25,12 @@ export function StatusDot({ status, size = 'md', className }: StatusDotProps) {
     .filter(Boolean)
     .join(' ')
 
-  return <span className={classes} role="img" aria-label={STATUS_LABELS[status]} />
+  return (
+    <span
+      className={classes}
+      role="img"
+      aria-label={STATUS_LABELS[status]}
+      title={STATUS_LABELS[status]}
+    />
+  )
 }
