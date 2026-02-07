@@ -74,6 +74,11 @@ func (a *App) startup(ctx context.Context) {
 	a.experiments = experiment.NewStore(db)
 	a.events = event.NewStore(db)
 	a.metrics = metrics.NewStore(db)
+
+	// Seed demo experiments for UI development (no-op if data already exists)
+	if err := a.experiments.SeedDemoExperiments(); err != nil {
+		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo experiments: %v", err))
+	}
 }
 
 // GetDBStatus returns the database initialization error, or empty string if OK.

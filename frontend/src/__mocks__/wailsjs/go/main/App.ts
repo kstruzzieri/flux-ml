@@ -18,6 +18,7 @@ let mockEvents: event.Event[] = []
 let mockMetrics: metrics.Metric[] = []
 let mockRewardSignals: metrics.RewardSignal[] = []
 let nextEventId = 1
+let listExperimentsOverride: (() => Promise<experiment.Experiment[]>) | null = null
 
 // --- Existing methods ---
 
@@ -62,6 +63,7 @@ export function CreateExperiment(name: string, config: string): Promise<experime
 }
 
 export function ListExperiments(): Promise<experiment.Experiment[]> {
+  if (listExperimentsOverride) return listExperimentsOverride()
   return Promise.resolve([...mockExperiments])
 }
 
@@ -188,6 +190,13 @@ export function __resetMockState(): void {
   mockMetrics = []
   mockRewardSignals = []
   nextEventId = 1
+  listExperimentsOverride = null
+}
+
+export function __setListExperimentsOverride(
+  fn: (() => Promise<experiment.Experiment[]>) | null,
+): void {
+  listExperimentsOverride = fn
 }
 
 // Keep backward-compatible alias

@@ -29,6 +29,8 @@ export default {
       '<rootDir>/src/__mocks__/wailsjs/go/main/App.ts',
     '^(\\.\\./)+wailsjs/go/models$':
       '<rootDir>/src/__mocks__/wailsjs/go/models.ts',
+    '^(\\.\\./)+wailsjs/runtime/runtime$':
+      '<rootDir>/src/__mocks__/wailsjs/runtime/runtime.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/__mocks__/fileMock.js',
   },

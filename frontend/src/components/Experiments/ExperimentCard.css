@@ -1,0 +1,77 @@
+.exp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.exp-card:hover {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-hover);
+}
+
+.exp-card--active,
+.exp-card--active:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
+}
+
+.exp-card__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exp-card__status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-text-muted);
+}
+
+.exp-card__status--running {
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+  animation: pulse 2s infinite;
+}
+
+.exp-card__status--completed {
+  background: var(--color-success);
+}
+
+.exp-card__status--failed {
+  background: var(--color-error);
+}
+
+.exp-card__status--pending {
+  background: var(--color-text-muted);
+}
+
+.exp-card__name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exp-card__duration {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
