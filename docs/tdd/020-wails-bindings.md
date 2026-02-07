@@ -4,13 +4,13 @@
 Bridge the Go backend data layer (Phase 2A) to the frontend by adding Wails event emissions to mutation API methods, writing integration tests for all App-level API methods, regenerating TypeScript bindings, and updating frontend mocks. This completes the backend-to-frontend contract so Phase 2B can build frontend stores and hooks.
 
 ## Acceptance Criteria
-- [ ] `emitEvent` helper on App struct guards against nil ctx
-- [ ] Mutation methods emit Wails events: experiment:created, experiment:updated, experiment:deleted, event:appended, metrics:recorded, rewards:recorded
-- [ ] Read methods (List, Get, Replay, Query) emit no events
-- [ ] 16 integration tests in `app_api_test.go` covering all API methods
-- [ ] Wails TypeScript bindings regenerated with all 16 methods
-- [ ] Frontend mocks updated with new data layer types and methods
-- [ ] All 75 tests pass (59 existing + 16 new)
+- [x] `emitEvent` helper on App struct guards against nil ctx
+- [x] Mutation methods emit Wails events: experiment:created, experiment:updated, experiment:deleted, event:appended, metrics:recorded, rewards:recorded
+- [x] Read methods (List, Get, Replay, Query) emit no events
+- [x] 16 integration tests in `app_api_test.go` covering all API methods
+- [x] Wails TypeScript bindings regenerated with all 16 methods
+- [x] Frontend mocks updated with new data layer types and methods
+- [x] All 75 tests pass (59 existing + 16 new)
 
 ## Rationale
 1. **Event emission** — Frontend needs real-time notifications when data changes. Wails events provide a built-in pub/sub mechanism that avoids polling. Only mutations emit events; reads are pull-based.
@@ -336,7 +336,71 @@ Tests:    0 passed, 16 failed, 16 total
 ## Test Summary
 
 ### Passing Test Results
-_To be filled after implementation._
+```
+=== RUN   TestApp_CreateExperiment
+--- PASS: TestApp_CreateExperiment (0.17s)
+=== RUN   TestApp_ListExperiments
+--- PASS: TestApp_ListExperiments (0.14s)
+=== RUN   TestApp_GetExperiment
+--- PASS: TestApp_GetExperiment (0.14s)
+=== RUN   TestApp_UpdateExperimentStatus
+--- PASS: TestApp_UpdateExperimentStatus (0.17s)
+=== RUN   TestApp_DeleteExperiment
+--- PASS: TestApp_DeleteExperiment (0.17s)
+=== RUN   TestApp_NilExperimentStore
+--- PASS: TestApp_NilExperimentStore (0.00s)
+=== RUN   TestApp_AppendEvent
+--- PASS: TestApp_AppendEvent (0.13s)
+=== RUN   TestApp_ReplayEvents
+--- PASS: TestApp_ReplayEvents (0.14s)
+=== RUN   TestApp_NilEventStore
+--- PASS: TestApp_NilEventStore (0.00s)
+=== RUN   TestApp_RecordMetrics
+--- PASS: TestApp_RecordMetrics (0.13s)
+=== RUN   TestApp_QueryMetrics
+--- PASS: TestApp_QueryMetrics (0.14s)
+=== RUN   TestApp_RecordRewardSignals
+--- PASS: TestApp_RecordRewardSignals (0.13s)
+=== RUN   TestApp_QueryRewardSignals
+--- PASS: TestApp_QueryRewardSignals (0.13s)
+=== RUN   TestApp_NilMetricsStore
+--- PASS: TestApp_NilMetricsStore (0.00s)
+=== RUN   TestApp_EmitEvent_NilCtx
+--- PASS: TestApp_EmitEvent_NilCtx (0.14s)
+=== RUN   TestApp_GetDBStatus_NoDB
+--- PASS: TestApp_GetDBStatus_NoDB (0.00s)
+PASS
+ok      github.com/kstruzzieri/flux-ml    2.818s
+
+Total: 75 tests across 5 packages, all passing
+- github.com/kstruzzieri/flux-ml: 16 tests (new)
+- github.com/kstruzzieri/flux-ml/internal/database: 17 tests
+- github.com/kstruzzieri/flux-ml/internal/event: 14 tests
+- github.com/kstruzzieri/flux-ml/internal/experiment: 11 tests
+- github.com/kstruzzieri/flux-ml/internal/metrics: 17 tests
+
+Frontend: 105 tests across 9 suites, all passing
+```
 
 ## Implementation Summary
-_To be filled after implementation._
+
+### Files Created
+- `app_api_test.go` — 16 integration tests with `newTestApp` helper. Tests cover all App API methods: experiment CRUD (6), event API (3), metrics API (5), and safety tests (2).
+
+### Files Modified
+- `app.go` — Added `emitEvent` helper method that guards against nil `ctx` for test safety. Single control point for all Wails event emission.
+- `experiment_api.go` — Added event emissions: `experiment:created` (full experiment), `experiment:updated` (id+status map), `experiment:deleted` (id map). Changed return flow to capture errors before emitting.
+- `event_api.go` — Added `event:appended` emission with full event payload. Changed return flow to capture error before emitting.
+- `metrics_api.go` — Added `metrics:recorded` and `rewards:recorded` emissions with experimentId+count payloads. Changed return flow to capture errors before emitting.
+- `frontend/wailsjs/go/main/App.js` — Regenerated with 16 methods (12 new).
+- `frontend/wailsjs/go/main/App.d.ts` — Regenerated with typed declarations importing `event`, `experiment`, `metrics` namespaces.
+- `frontend/wailsjs/go/models.ts` — Regenerated with 4 namespaces: `event.Event`, `experiment.Experiment`, `main.AppInfo`, `main.LayoutState`, `metrics.Metric`, `metrics.RewardSignal`.
+- `frontend/src/__mocks__/wailsjs/go/models.ts` — Added `event`, `experiment`, `metrics` namespace mocks matching generated bindings.
+- `frontend/src/__mocks__/wailsjs/go/main/App.ts` — Added 12 new mock method implementations with in-memory state. Added `__resetMockState()` helper for test isolation.
+
+### Design Decisions
+1. **emitEvent helper** — Centralized event emission with nil ctx guard. Tests run without Wails runtime, so ctx is nil. The guard prevents panics while keeping emission logic in one place.
+2. **Emit after success** — Events are only emitted after the store operation succeeds. This prevents the frontend from receiving notifications about operations that actually failed.
+3. **Payload conventions** — Mutations that create/return data emit the full object. Status updates emit a minimal map with just the changed fields. Batch operations emit a summary count to avoid sending large payloads over the event bus.
+4. **Mock state isolation** — `__resetMockState()` clears all mock data between tests, preventing test pollution. The old `__resetMockLayout()` is kept as a backward-compatible alias.
+5. **No read events** — List, Get, Replay, and Query methods don't emit events. These are pull-based operations; only mutations need push notifications.
