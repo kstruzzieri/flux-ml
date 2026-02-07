@@ -4,10 +4,10 @@
 Implement the experiment list in the left sidebar panel. Users can view all experiments with status indicators (running/completed/failed/pending), select an experiment to highlight it, and see duration. This is the first frontend feature of Phase 2B, building on the Phase 2A data layer and #20 Wails bindings.
 
 ## Acceptance Criteria
-- [ ] List renders experiments from backend
-- [ ] Selection state works (click to select)
-- [ ] Active experiment highlighted with accent styling
-- [ ] Memoized to prevent unnecessary re-renders
+- [x] List renders experiments from backend
+- [x] Selection state works (click to select)
+- [x] Active experiment highlighted with accent styling
+- [x] Memoized to prevent unnecessary re-renders
 
 ## Rationale
 1. **Zustand store** — Matches the planned architecture (`stores/experimentStore.ts`). Tiny footprint (~1KB), no provider boilerplate. The store owns data lifecycle and subscribes to Wails events at store level so events are never missed regardless of which components are mounted.
@@ -375,8 +375,70 @@ Tests:  0 passed, ~26 failed, ~26 total
 
 ## Test Summary
 
-_To be updated after implementation._
+```
+PASS src/__tests__/utils/formatting.test.ts
+  formatDuration
+    ✓ formats running experiment duration from createdAt to now
+    ✓ formats completed experiment duration from createdAt to updatedAt
+    ✓ formats failed experiment duration
+    ✓ returns dash for pending experiments
+    ✓ formats sub-hour durations as minutes only
+    ✓ formats sub-minute durations
+
+PASS src/__tests__/stores/experimentStore.test.ts
+  experimentStore
+    fetchExperiments
+      ✓ populates experiments from backend
+      ✓ sets error on fetch failure
+    selectExperiment
+      ✓ sets selectedId
+      ✓ clears selectedId with null
+    initialize
+      ✓ fetches experiments on init
+      ✓ re-fetches when experiment event is emitted
+
+PASS src/__tests__/components/Experiments/ExperimentCard.test.tsx
+  ExperimentCard
+    ✓ renders experiment name
+    ✓ renders running status dot with correct class
+    ✓ renders completed status dot with correct class
+    ✓ renders failed status dot with correct class
+    ✓ renders pending status dot with correct class
+    ✓ applies active class when isActive is true
+    ✓ does not apply active class when isActive is false
+    ✓ calls onSelect with experiment id on click
+    ✓ shows formatted duration
+    ✓ does not re-render when props are unchanged
+
+PASS src/__tests__/components/Experiments/ExperimentList.test.tsx
+  ExperimentList
+    ✓ renders a card for each experiment
+    ✓ shows empty state when no experiments
+    ✓ calls onSelect with experiment id on card click
+    ✓ passes isActive to the selected card
+
+Test Suites: 13 passed, 13 total
+Tests:       131 passed, 131 total (26 new + 105 existing)
+```
 
 ## Implementation Summary
 
-_To be updated after implementation._
+Implemented the experiment list for the left sidebar panel with 26 new tests across 4 test suites.
+
+**New files:**
+- `frontend/src/utils/formatting.ts` — `formatDuration` utility for experiment cards
+- `frontend/src/stores/experimentStore.ts` — Zustand store with Wails event subscription
+- `frontend/src/components/Experiments/ExperimentCard.tsx` — Memoized card component with status dots
+- `frontend/src/components/Experiments/ExperimentCard.css` — Card styles with status indicators
+- `frontend/src/components/Experiments/ExperimentList.tsx` — List component with empty state
+- `frontend/src/components/Experiments/ExperimentList.css` — List container styles
+- `frontend/src/components/Experiments/index.ts` — Barrel export
+
+**Modified files:**
+- `frontend/package.json` — Added zustand dependency
+- `frontend/jest.config.js` — Added Wails runtime mock mapping
+- `frontend/src/setupTests.ts` — Added `__resetListeners` + `crypto.randomUUID` polyfill
+- `frontend/src/stores/index.ts` — Added experimentStore barrel export
+- `frontend/src/__mocks__/wailsjs/runtime/runtime.ts` — Wails runtime mock for EventsOn/EventsOff
+- `frontend/src/__mocks__/wailsjs/go/main/App.ts` — Added listExperimentsOverride for error testing
+- `frontend/src/components/layout/panels/ExperimentsPanel.tsx` — Wired to store with dynamic data
