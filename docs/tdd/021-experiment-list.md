@@ -1,0 +1,318 @@
+# TDD: Issue #21 - Experiment List Component
+
+## Issue Summary
+Implement the experiment list in the left sidebar panel. Users can view all experiments with status indicators (running/completed/failed/pending), select an experiment to highlight it, and see duration. This is the first frontend feature of Phase 2B, building on the Phase 2A data layer and #20 Wails bindings.
+
+## Acceptance Criteria
+- [ ] List renders experiments from backend
+- [ ] Selection state works (click to select)
+- [ ] Active experiment highlighted with accent styling
+- [ ] Memoized to prevent unnecessary re-renders
+
+## Rationale
+1. **Zustand store** — Matches the planned architecture (`stores/experimentStore.ts`). Tiny footprint (~1KB), no provider boilerplate. The store owns data lifecycle and subscribes to Wails events at store level so events are never missed regardless of which components are mounted.
+2. **Three component layers (Panel -> List -> Card)** — ExperimentsPanel is the sidebar container. ExperimentList handles mapping and empty state (virtualization plugs in here later). ExperimentCard renders a single experiment with React.memo and custom comparison.
+3. **Store-level Wails event subscription** — The store subscribes to `experiment:created`, `experiment:updated`, `experiment:deleted` events and re-fetches the full list on any mutation. This is simpler and more reliable than surgically merging individual changes into local state.
+4. **Duration formatting utility** — Extracted to `utils/formatting.ts` for testability and reuse. Running experiments show elapsed time from `createdAt` to now; completed/failed show total duration; pending shows em dash.
+5. **Status tooltips** — Each status dot has a `title` attribute ("Running", "Completed", etc.) for discoverability. Zero visual footprint, accessible via screen readers with `aria-label`.
+
+## Failing Tests
+
+### formatDuration (6 tests)
+
+#### Test 1: formats running experiment duration from createdAt to now
+```typescript
+it('formats running experiment duration from createdAt to now', () => {
+  const now = Math.floor(Date.now() / 1000)
+  const twoHoursAgo = now - 2 * 3600 - 34 * 60
+  const result = formatDuration(twoHoursAgo, now, 'running')
+  expect(result).toBe('2h 34m')
+})
+```
+
+#### Test 2: formats completed experiment duration from createdAt to updatedAt
+```typescript
+it('formats completed experiment duration from createdAt to updatedAt', () => {
+  const start = 1000000
+  const end = start + 4 * 3600 + 12 * 60
+  const result = formatDuration(start, end, 'completed')
+  expect(result).toBe('4h 12m')
+})
+```
+
+#### Test 3: formats failed experiment duration
+```typescript
+it('formats failed experiment duration', () => {
+  const start = 1000000
+  const end = start + 12 * 60
+  const result = formatDuration(start, end, 'failed')
+  expect(result).toBe('12m')
+})
+```
+
+#### Test 4: returns dash for pending experiments
+```typescript
+it('returns dash for pending experiments', () => {
+  const now = Math.floor(Date.now() / 1000)
+  const result = formatDuration(now, now, 'pending')
+  expect(result).toBe('\u2014')
+})
+```
+
+#### Test 5: formats sub-hour durations as minutes only
+```typescript
+it('formats sub-hour durations as minutes only', () => {
+  const start = 1000000
+  const end = start + 45 * 60
+  const result = formatDuration(start, end, 'completed')
+  expect(result).toBe('45m')
+})
+```
+
+#### Test 6: formats sub-minute durations
+```typescript
+it('formats sub-minute durations', () => {
+  const start = 1000000
+  const end = start + 30
+  const result = formatDuration(start, end, 'completed')
+  expect(result).toBe('<1m')
+})
+```
+
+### experimentStore (5 tests)
+
+#### Test 7: populates experiments from backend
+```typescript
+it('populates experiments from backend', async () => {
+  await CreateExperiment('exp-1', '{}')
+  await CreateExperiment('exp-2', '{}')
+  await act(async () => {
+    await useExperimentStore.getState().fetchExperiments()
+  })
+  const state = useExperimentStore.getState()
+  expect(state.experiments).toHaveLength(2)
+  expect(state.loading).toBe(false)
+  expect(state.error).toBeNull()
+})
+```
+
+#### Test 8: sets error on fetch failure
+```typescript
+it('sets error on fetch failure', async () => {
+  jest.spyOn(
+    require('../../__mocks__/wailsjs/go/main/App'),
+    'ListExperiments'
+  ).mockRejectedValueOnce(new Error('network error'))
+  await act(async () => {
+    await useExperimentStore.getState().fetchExperiments()
+  })
+  const state = useExperimentStore.getState()
+  expect(state.error).toBe('network error')
+  expect(state.experiments).toHaveLength(0)
+})
+```
+
+#### Test 9: sets selectedId
+```typescript
+it('sets selectedId', () => {
+  act(() => {
+    useExperimentStore.getState().selectExperiment('abc-123')
+  })
+  expect(useExperimentStore.getState().selectedId).toBe('abc-123')
+})
+```
+
+#### Test 10: clears selectedId with null
+```typescript
+it('clears selectedId with null', () => {
+  act(() => {
+    useExperimentStore.getState().selectExperiment('abc-123')
+    useExperimentStore.getState().selectExperiment(null)
+  })
+  expect(useExperimentStore.getState().selectedId).toBeNull()
+})
+```
+
+#### Test 11: fetches experiments on init
+```typescript
+it('fetches experiments on init', async () => {
+  await CreateExperiment('exp-1', '{}')
+  await act(async () => {
+    useExperimentStore.getState().initialize()
+    await new Promise((r) => setTimeout(r, 0))
+  })
+  expect(useExperimentStore.getState().experiments).toHaveLength(1)
+})
+```
+
+#### Test 12: re-fetches when experiment event is emitted
+```typescript
+it('re-fetches when experiment event is emitted', async () => {
+  await act(async () => {
+    useExperimentStore.getState().initialize()
+    await new Promise((r) => setTimeout(r, 0))
+  })
+  expect(useExperimentStore.getState().experiments).toHaveLength(0)
+  await CreateExperiment('exp-new', '{}')
+  await act(async () => {
+    EventsEmit('experiment:created')
+    await new Promise((r) => setTimeout(r, 0))
+  })
+  expect(useExperimentStore.getState().experiments).toHaveLength(1)
+})
+```
+
+### ExperimentCard (10 tests)
+
+#### Test 13: renders experiment name
+```typescript
+it('renders experiment name', () => {
+  render(<ExperimentCard {...defaultProps} />)
+  expect(screen.getByText('reward-model-v2-run-47')).toBeInTheDocument()
+})
+```
+
+#### Test 14-17: renders status dots with correct classes
+```typescript
+it('renders running status dot with correct class', () => {
+  render(<ExperimentCard {...defaultProps} />)
+  const dot = screen.getByTitle('Running')
+  expect(dot).toHaveClass('experiment-item__status--running')
+})
+// + completed, failed, pending variants
+```
+
+#### Test 18-19: applies/doesn't apply active class
+```typescript
+it('applies active class when isActive is true', () => {
+  render(<ExperimentCard {...defaultProps} isActive={true} />)
+  const item = screen.getByRole('button')
+  expect(item).toHaveClass('experiment-item--active')
+})
+```
+
+#### Test 20: calls onSelect with experiment id on click
+```typescript
+it('calls onSelect with experiment id on click', async () => {
+  const user = userEvent.setup()
+  const onSelect = jest.fn()
+  render(<ExperimentCard {...defaultProps} onSelect={onSelect} />)
+  await user.click(screen.getByRole('button'))
+  expect(onSelect).toHaveBeenCalledWith('exp-1')
+})
+```
+
+#### Test 21: shows formatted duration
+```typescript
+it('shows formatted duration', () => {
+  const now = Math.floor(Date.now() / 1000)
+  const exp = makeExperiment({
+    status: 'completed',
+    createdAt: now - 4 * 3600 - 12 * 60,
+    updatedAt: now,
+  })
+  render(<ExperimentCard {...defaultProps} experiment={exp} />)
+  expect(screen.getByText('4h 12m')).toBeInTheDocument()
+})
+```
+
+#### Test 22: does not re-render when props are unchanged (memo)
+```typescript
+it('does not re-render when props are unchanged', () => {
+  const exp = makeExperiment()
+  const { rerender } = render(
+    <ExperimentCard experiment={exp} isActive={false} onSelect={jest.fn()} />
+  )
+  const firstHTML = screen.getByRole('button').innerHTML
+  const exp2 = makeExperiment()
+  rerender(
+    <ExperimentCard experiment={exp2} isActive={false} onSelect={jest.fn()} />
+  )
+  const secondHTML = screen.getByRole('button').innerHTML
+  expect(firstHTML).toBe(secondHTML)
+})
+```
+
+### ExperimentList (4 tests)
+
+#### Test 23: renders a card for each experiment
+```typescript
+it('renders a card for each experiment', () => {
+  const experiments = [
+    makeExperiment('1', 'exp-alpha'),
+    makeExperiment('2', 'exp-beta'),
+    makeExperiment('3', 'exp-gamma'),
+  ]
+  render(
+    <ExperimentList experiments={experiments} selectedId={null} onSelect={jest.fn()} />
+  )
+  expect(screen.getByText('exp-alpha')).toBeInTheDocument()
+  expect(screen.getByText('exp-beta')).toBeInTheDocument()
+  expect(screen.getByText('exp-gamma')).toBeInTheDocument()
+})
+```
+
+#### Test 24: shows empty state when no experiments
+```typescript
+it('shows empty state when no experiments', () => {
+  render(
+    <ExperimentList experiments={[]} selectedId={null} onSelect={jest.fn()} />
+  )
+  expect(screen.getByText('No experiments yet')).toBeInTheDocument()
+})
+```
+
+#### Test 25: calls onSelect with experiment id on card click
+```typescript
+it('calls onSelect with experiment id on card click', async () => {
+  const user = userEvent.setup()
+  const onSelect = jest.fn()
+  const experiments = [makeExperiment('abc-123', 'my-experiment')]
+  render(
+    <ExperimentList experiments={experiments} selectedId={null} onSelect={onSelect} />
+  )
+  await user.click(screen.getByText('my-experiment'))
+  expect(onSelect).toHaveBeenCalledWith('abc-123')
+})
+```
+
+#### Test 26: passes isActive to the selected card
+```typescript
+it('passes isActive to the selected card', () => {
+  const experiments = [
+    makeExperiment('1', 'exp-alpha'),
+    makeExperiment('2', 'exp-beta'),
+  ]
+  render(
+    <ExperimentList experiments={experiments} selectedId="1" onSelect={jest.fn()} />
+  )
+  const buttons = screen.getAllByRole('button')
+  expect(buttons[0]).toHaveClass('experiment-item--active')
+  expect(buttons[1]).not.toHaveClass('experiment-item--active')
+})
+```
+
+## Expected Output (Failing)
+```
+FAIL  src/__tests__/utils/formatting.test.ts
+  Cannot find module '@utils/formatting'
+
+FAIL  src/__tests__/stores/experimentStore.test.ts
+  Cannot find module '@stores/experimentStore'
+
+FAIL  src/__tests__/components/Experiments/ExperimentCard.test.tsx
+  Cannot find module '@components/Experiments/ExperimentCard'
+
+FAIL  src/__tests__/components/Experiments/ExperimentList.test.tsx
+  Cannot find module '@components/Experiments/ExperimentList'
+
+Tests:  0 passed, ~26 failed, ~26 total
+```
+
+## Test Summary
+
+_To be updated after implementation._
+
+## Implementation Summary
+
+_To be updated after implementation._
