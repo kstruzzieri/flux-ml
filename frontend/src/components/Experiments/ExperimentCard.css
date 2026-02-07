@@ -1,4 +1,4 @@
-.experiment-item {
+.exp-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -7,56 +7,59 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
   width: 100%;
   text-align: left;
   color: inherit;
   font: inherit;
 }
 
-.experiment-item:hover {
+.exp-card:hover {
   border-color: var(--color-border-default);
   background: var(--color-bg-hover);
 }
 
-.experiment-item--active,
-.experiment-item--active:hover {
+.exp-card--active,
+.exp-card--active:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-dim);
 }
 
-.experiment-item__row {
+.exp-card__row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.experiment-item__status {
+.exp-card__status {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  background: var(--color-text-muted);
 }
 
-.experiment-item__status--running {
+.exp-card__status--running {
   background: var(--color-accent);
   box-shadow: 0 0 6px var(--color-accent);
   animation: pulse 2s infinite;
 }
 
-.experiment-item__status--completed {
+.exp-card__status--completed {
   background: var(--color-success);
 }
 
-.experiment-item__status--failed {
+.exp-card__status--failed {
   background: var(--color-error);
 }
 
-.experiment-item__status--pending {
+.exp-card__status--pending {
   background: var(--color-text-muted);
 }
 
-.experiment-item__name {
+.exp-card__name {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
@@ -66,7 +69,7 @@
   text-overflow: ellipsis;
 }
 
-.experiment-item__duration {
+.exp-card__duration {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--color-text-muted);

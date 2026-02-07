@@ -95,7 +95,8 @@ describe('experimentStore', () => {
 
       await act(async () => {
         EventsEmit('experiment:created')
-        await new Promise((r) => setTimeout(r, 0))
+        // Wait for debounce (100ms) + async fetch
+        await new Promise((r) => setTimeout(r, 150))
       })
 
       expect(useExperimentStore.getState().experiments).toHaveLength(1)

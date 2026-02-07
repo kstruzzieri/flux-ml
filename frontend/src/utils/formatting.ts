@@ -1,3 +1,5 @@
+export type ExperimentStatus = 'pending' | 'running' | 'completed' | 'failed'
+
 /**
  * Formats the duration of an experiment for display in the experiment card.
  *
@@ -5,7 +7,11 @@
  * - completed/failed: total from createdAt to updatedAt
  * - pending: em dash
  */
-export function formatDuration(createdAt: number, updatedAt: number, status: string): string {
+export function formatDuration(
+  createdAt: number,
+  updatedAt: number,
+  status: ExperimentStatus
+): string {
   if (status === 'pending') {
     return '\u2014'
   }

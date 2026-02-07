@@ -7,6 +7,8 @@ export function ExperimentsPanel() {
   const selectedId = useExperimentStore((s) => s.selectedId)
   const selectExperiment = useExperimentStore((s) => s.selectExperiment)
   const initialize = useExperimentStore((s) => s.initialize)
+  const loading = useExperimentStore((s) => s.loading)
+  const error = useExperimentStore((s) => s.error)
 
   useEffect(() => {
     initialize()
@@ -27,11 +29,21 @@ export function ExperimentsPanel() {
         </div>
       </div>
       <div className="panel__content">
-        <ExperimentList
-          experiments={experiments}
-          selectedId={selectedId}
-          onSelect={selectExperiment}
-        />
+        {error && (
+          <div className="panel__error" role="alert">
+            Failed to load experiments: {error}
+          </div>
+        )}
+        {loading && experiments.length === 0 && !error && (
+          <div className="panel__loading">Loading experiments…</div>
+        )}
+        {!error && (
+          <ExperimentList
+            experiments={experiments}
+            selectedId={selectedId}
+            onSelect={selectExperiment}
+          />
+        )}
       </div>
     </div>
   )

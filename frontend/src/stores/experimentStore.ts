@@ -15,9 +15,16 @@ interface ExperimentState {
 }
 
 let _initialized = false
+let _fetchSeq = 0
+let _debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export function __resetInitialized(): void {
   _initialized = false
+  _fetchSeq = 0
+  if (_debounceTimer) {
+    clearTimeout(_debounceTimer)
+    _debounceTimer = null
+  }
 }
 
 export const useExperimentStore = create<ExperimentState>((set, get) => ({
@@ -27,11 +34,14 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
   error: null,
 
   fetchExperiments: async () => {
+    const seq = ++_fetchSeq
     set({ loading: true, error: null })
     try {
       const experiments = await ListExperiments()
+      if (seq !== _fetchSeq) return // stale response, discard
       set({ experiments, loading: false })
     } catch (err) {
+      if (seq !== _fetchSeq) return // stale response, discard
       set({
         error: err instanceof Error ? err.message : String(err),
         loading: false,
@@ -50,11 +60,17 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
     const { fetchExperiments } = get()
     fetchExperiments()
 
+    const debouncedFetch = () => {
+      if (_debounceTimer) clearTimeout(_debounceTimer)
+      _debounceTimer = setTimeout(() => {
+        _debounceTimer = null
+        fetchExperiments()
+      }, 100)
+    }
+
     const events = ['experiment:created', 'experiment:updated', 'experiment:deleted']
     events.forEach((eventName) => {
-      EventsOn(eventName, () => {
-        fetchExperiments()
-      })
+      EventsOn(eventName, debouncedFetch)
     })
   },
 }))

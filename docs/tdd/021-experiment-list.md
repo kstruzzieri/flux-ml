@@ -107,13 +107,12 @@ it('populates experiments from backend', async () => {
 When the backend call fails, the store must capture the error message and keep experiments empty.
 ```typescript
 it('sets error on fetch failure', async () => {
-  jest.spyOn(
-    require('../../__mocks__/wailsjs/go/main/App'),
-    'ListExperiments'
-  ).mockRejectedValueOnce(new Error('network error'))
+  __setListExperimentsOverride(() => Promise.reject(new Error('network error')))
+
   await act(async () => {
     await useExperimentStore.getState().fetchExperiments()
   })
+
   const state = useExperimentStore.getState()
   expect(state.error).toBe('network error')
   expect(state.experiments).toHaveLength(0)

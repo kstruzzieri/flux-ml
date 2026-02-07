@@ -33,41 +33,41 @@ describe('ExperimentCard', () => {
   it('renders running status dot with correct class', () => {
     render(<ExperimentCard {...defaultProps} />)
     const dot = screen.getByTitle('Running')
-    expect(dot).toHaveClass('experiment-item__status--running')
+    expect(dot).toHaveClass('exp-card__status--running')
   })
 
   it('renders completed status dot with correct class', () => {
     const exp = makeExperiment({ status: 'completed' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
     const dot = screen.getByTitle('Completed')
-    expect(dot).toHaveClass('experiment-item__status--completed')
+    expect(dot).toHaveClass('exp-card__status--completed')
   })
 
   it('renders failed status dot with correct class', () => {
     const exp = makeExperiment({ status: 'failed' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
     const dot = screen.getByTitle('Failed')
-    expect(dot).toHaveClass('experiment-item__status--failed')
+    expect(dot).toHaveClass('exp-card__status--failed')
   })
 
   it('renders pending status dot with correct class', () => {
     const exp = makeExperiment({ status: 'pending' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
     const dot = screen.getByTitle('Pending')
-    expect(dot).toHaveClass('experiment-item__status--pending')
+    expect(dot).toHaveClass('exp-card__status--pending')
   })
 
   // Active experiment must be visually distinct with accent styling.
   it('applies active class when isActive is true', () => {
     render(<ExperimentCard {...defaultProps} isActive={true} />)
     const item = screen.getByRole('button')
-    expect(item).toHaveClass('experiment-item--active')
+    expect(item).toHaveClass('exp-card--active')
   })
 
   it('does not apply active class when isActive is false', () => {
     render(<ExperimentCard {...defaultProps} isActive={false} />)
     const item = screen.getByRole('button')
-    expect(item).not.toHaveClass('experiment-item--active')
+    expect(item).not.toHaveClass('exp-card--active')
   })
 
   // Clicking a card selects it.

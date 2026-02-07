@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { formatDuration } from '@utils/formatting'
+import { formatDuration, type ExperimentStatus } from '@utils/formatting'
 import type { experiment } from '../../../wailsjs/go/models'
 import './ExperimentCard.css'
 
@@ -9,20 +9,21 @@ interface ExperimentCardProps {
   onSelect: (id: string) => void
 }
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<ExperimentStatus, string> = {
   running: 'Running',
   completed: 'Completed',
   failed: 'Failed',
   pending: 'Pending',
 }
 
-function ExperimentCardInner({ experiment: exp, isActive, onSelect }: ExperimentCardProps) {
-  const statusLabel = STATUS_LABELS[exp.status] || exp.status
-  const duration = formatDuration(exp.createdAt, exp.updatedAt, exp.status)
+const VALID_STATUSES = new Set<string>(Object.keys(STATUS_LABELS))
 
-  const className = ['experiment-item', isActive && 'experiment-item--active']
-    .filter(Boolean)
-    .join(' ')
+function ExperimentCardInner({ experiment: exp, isActive, onSelect }: ExperimentCardProps) {
+  const status = VALID_STATUSES.has(exp.status) ? (exp.status as ExperimentStatus) : 'pending'
+  const statusLabel = STATUS_LABELS[status]
+  const duration = formatDuration(exp.createdAt, exp.updatedAt, status)
+
+  const className = ['exp-card', isActive && 'exp-card--active'].filter(Boolean).join(' ')
 
   return (
     <button
@@ -30,14 +31,14 @@ function ExperimentCardInner({ experiment: exp, isActive, onSelect }: Experiment
       onClick={() => onSelect(exp.id)}
       aria-label={`${exp.name}, ${statusLabel}`}
     >
-      <div className="experiment-item__row">
+      <div className="exp-card__row">
         <span
-          className={`experiment-item__status experiment-item__status--${exp.status}`}
+          className={`exp-card__status exp-card__status--${status}`}
           title={statusLabel}
           aria-label={statusLabel}
         />
-        <span className="experiment-item__name">{exp.name}</span>
-        <span className="experiment-item__duration">{duration}</span>
+        <span className="exp-card__name">{exp.name}</span>
+        <span className="exp-card__duration">{duration}</span>
       </div>
     </button>
   )
@@ -46,8 +47,10 @@ function ExperimentCardInner({ experiment: exp, isActive, onSelect }: Experiment
 export const ExperimentCard = memo(ExperimentCardInner, (prev, next) => {
   return (
     prev.experiment.id === next.experiment.id &&
+    prev.experiment.name === next.experiment.name &&
     prev.experiment.status === next.experiment.status &&
     prev.experiment.updatedAt === next.experiment.updatedAt &&
     prev.isActive === next.isActive
   )
 })
+ExperimentCard.displayName = 'ExperimentCard'

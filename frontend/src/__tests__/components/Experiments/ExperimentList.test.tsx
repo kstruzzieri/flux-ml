@@ -54,7 +54,7 @@ describe('ExperimentList', () => {
     const experiments = [makeExperiment('1', 'exp-alpha'), makeExperiment('2', 'exp-beta')]
     render(<ExperimentList experiments={experiments} selectedId="1" onSelect={jest.fn()} />)
     const buttons = screen.getAllByRole('button')
-    expect(buttons[0]).toHaveClass('experiment-item--active')
-    expect(buttons[1]).not.toHaveClass('experiment-item--active')
+    expect(buttons[0]).toHaveClass('exp-card--active')
+    expect(buttons[1]).not.toHaveClass('exp-card--active')
   })
 })
