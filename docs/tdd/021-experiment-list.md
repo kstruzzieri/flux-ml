@@ -21,6 +21,7 @@ Implement the experiment list in the left sidebar panel. Users can view all expe
 ### formatDuration (6 tests)
 
 #### Test 1: formats running experiment duration from createdAt to now
+Running experiments show elapsed time from creation to the current moment.
 ```typescript
 it('formats running experiment duration from createdAt to now', () => {
   const now = Math.floor(Date.now() / 1000)
@@ -31,6 +32,7 @@ it('formats running experiment duration from createdAt to now', () => {
 ```
 
 #### Test 2: formats completed experiment duration from createdAt to updatedAt
+Completed experiments show the total duration from start to finish.
 ```typescript
 it('formats completed experiment duration from createdAt to updatedAt', () => {
   const start = 1000000
@@ -41,6 +43,7 @@ it('formats completed experiment duration from createdAt to updatedAt', () => {
 ```
 
 #### Test 3: formats failed experiment duration
+Failed experiments also show total duration from start to failure.
 ```typescript
 it('formats failed experiment duration', () => {
   const start = 1000000
@@ -51,6 +54,7 @@ it('formats failed experiment duration', () => {
 ```
 
 #### Test 4: returns dash for pending experiments
+Pending experiments have no meaningful duration, so display an em dash.
 ```typescript
 it('returns dash for pending experiments', () => {
   const now = Math.floor(Date.now() / 1000)
@@ -60,6 +64,7 @@ it('returns dash for pending experiments', () => {
 ```
 
 #### Test 5: formats sub-hour durations as minutes only
+Durations under one hour omit the hours component.
 ```typescript
 it('formats sub-hour durations as minutes only', () => {
   const start = 1000000
@@ -70,6 +75,7 @@ it('formats sub-hour durations as minutes only', () => {
 ```
 
 #### Test 6: formats sub-minute durations
+Very short durations display as less than one minute.
 ```typescript
 it('formats sub-minute durations', () => {
   const start = 1000000
@@ -79,9 +85,10 @@ it('formats sub-minute durations', () => {
 })
 ```
 
-### experimentStore (5 tests)
+### experimentStore (6 tests)
 
 #### Test 7: populates experiments from backend
+Fetching experiments must populate the store with data from the Wails backend.
 ```typescript
 it('populates experiments from backend', async () => {
   await CreateExperiment('exp-1', '{}')
@@ -97,6 +104,7 @@ it('populates experiments from backend', async () => {
 ```
 
 #### Test 8: sets error on fetch failure
+When the backend call fails, the store must capture the error message and keep experiments empty.
 ```typescript
 it('sets error on fetch failure', async () => {
   jest.spyOn(
@@ -113,6 +121,7 @@ it('sets error on fetch failure', async () => {
 ```
 
 #### Test 9: sets selectedId
+Selecting an experiment must set the selectedId in the store.
 ```typescript
 it('sets selectedId', () => {
   act(() => {
@@ -123,6 +132,7 @@ it('sets selectedId', () => {
 ```
 
 #### Test 10: clears selectedId with null
+Passing null to selectExperiment must clear the selection.
 ```typescript
 it('clears selectedId with null', () => {
   act(() => {
@@ -134,6 +144,7 @@ it('clears selectedId with null', () => {
 ```
 
 #### Test 11: fetches experiments on init
+Calling initialize must trigger an initial fetch of experiments from the backend.
 ```typescript
 it('fetches experiments on init', async () => {
   await CreateExperiment('exp-1', '{}')
@@ -146,6 +157,7 @@ it('fetches experiments on init', async () => {
 ```
 
 #### Test 12: re-fetches when experiment event is emitted
+When a Wails experiment event fires, the store must re-fetch to stay in sync with the backend.
 ```typescript
 it('re-fetches when experiment event is emitted', async () => {
   await act(async () => {
@@ -165,6 +177,7 @@ it('re-fetches when experiment event is emitted', async () => {
 ### ExperimentCard (10 tests)
 
 #### Test 13: renders experiment name
+The experiment name is the primary identifier displayed on each card.
 ```typescript
 it('renders experiment name', () => {
   render(<ExperimentCard {...defaultProps} />)
@@ -172,17 +185,51 @@ it('renders experiment name', () => {
 })
 ```
 
-#### Test 14-17: renders status dots with correct classes
+#### Test 14: renders running status dot with correct class
+Running experiments must display a status dot with the running CSS class for cyan color and pulse animation.
 ```typescript
 it('renders running status dot with correct class', () => {
   render(<ExperimentCard {...defaultProps} />)
   const dot = screen.getByTitle('Running')
   expect(dot).toHaveClass('experiment-item__status--running')
 })
-// + completed, failed, pending variants
 ```
 
-#### Test 18-19: applies/doesn't apply active class
+#### Test 15: renders completed status dot with correct class
+Completed experiments must display a green status dot.
+```typescript
+it('renders completed status dot with correct class', () => {
+  const exp = makeExperiment({ status: 'completed' })
+  render(<ExperimentCard {...defaultProps} experiment={exp} />)
+  const dot = screen.getByTitle('Completed')
+  expect(dot).toHaveClass('experiment-item__status--completed')
+})
+```
+
+#### Test 16: renders failed status dot with correct class
+Failed experiments must display a red status dot.
+```typescript
+it('renders failed status dot with correct class', () => {
+  const exp = makeExperiment({ status: 'failed' })
+  render(<ExperimentCard {...defaultProps} experiment={exp} />)
+  const dot = screen.getByTitle('Failed')
+  expect(dot).toHaveClass('experiment-item__status--failed')
+})
+```
+
+#### Test 17: renders pending status dot with correct class
+Pending experiments must display a muted status dot.
+```typescript
+it('renders pending status dot with correct class', () => {
+  const exp = makeExperiment({ status: 'pending' })
+  render(<ExperimentCard {...defaultProps} experiment={exp} />)
+  const dot = screen.getByTitle('Pending')
+  expect(dot).toHaveClass('experiment-item__status--pending')
+})
+```
+
+#### Test 18: applies active class when isActive is true
+The selected experiment must be visually distinct with accent styling.
 ```typescript
 it('applies active class when isActive is true', () => {
   render(<ExperimentCard {...defaultProps} isActive={true} />)
@@ -191,7 +238,18 @@ it('applies active class when isActive is true', () => {
 })
 ```
 
+#### Test 19: does not apply active class when isActive is false
+Non-selected experiments must not have the active class.
+```typescript
+it('does not apply active class when isActive is false', () => {
+  render(<ExperimentCard {...defaultProps} isActive={false} />)
+  const item = screen.getByRole('button')
+  expect(item).not.toHaveClass('experiment-item--active')
+})
+```
+
 #### Test 20: calls onSelect with experiment id on click
+Clicking a card must invoke the onSelect callback with the experiment's ID.
 ```typescript
 it('calls onSelect with experiment id on click', async () => {
   const user = userEvent.setup()
@@ -203,6 +261,7 @@ it('calls onSelect with experiment id on click', async () => {
 ```
 
 #### Test 21: shows formatted duration
+Each card must display the formatted duration based on experiment timestamps and status.
 ```typescript
 it('shows formatted duration', () => {
   const now = Math.floor(Date.now() / 1000)
@@ -217,6 +276,7 @@ it('shows formatted duration', () => {
 ```
 
 #### Test 22: does not re-render when props are unchanged (memo)
+React.memo with custom comparison must prevent unnecessary re-renders when props have equal values.
 ```typescript
 it('does not re-render when props are unchanged', () => {
   const exp = makeExperiment()
@@ -236,6 +296,7 @@ it('does not re-render when props are unchanged', () => {
 ### ExperimentList (4 tests)
 
 #### Test 23: renders a card for each experiment
+The list must render one ExperimentCard per experiment in the array.
 ```typescript
 it('renders a card for each experiment', () => {
   const experiments = [
@@ -253,6 +314,7 @@ it('renders a card for each experiment', () => {
 ```
 
 #### Test 24: shows empty state when no experiments
+When no experiments exist, the list must display an empty state message.
 ```typescript
 it('shows empty state when no experiments', () => {
   render(
@@ -263,6 +325,7 @@ it('shows empty state when no experiments', () => {
 ```
 
 #### Test 25: calls onSelect with experiment id on card click
+Clicking an experiment card in the list must delegate selection to the parent via onSelect.
 ```typescript
 it('calls onSelect with experiment id on card click', async () => {
   const user = userEvent.setup()
@@ -277,6 +340,7 @@ it('calls onSelect with experiment id on card click', async () => {
 ```
 
 #### Test 26: passes isActive to the selected card
+The list must pass isActive=true only to the card whose ID matches selectedId.
 ```typescript
 it('passes isActive to the selected card', () => {
   const experiments = [
