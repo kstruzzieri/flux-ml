@@ -27,7 +27,7 @@ export function ExperimentsPanel() {
     if (experimentIds.length > 0) {
       fetchAllLatestMetrics(experimentIds)
     }
-  }, [experimentIdsKey, fetchAllLatestMetrics])
+  }, [experimentIds, experimentIdsKey, fetchAllLatestMetrics])
 
   return (
     <div className="panel panel--experiments">
