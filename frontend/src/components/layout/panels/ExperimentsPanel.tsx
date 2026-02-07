@@ -1,9 +1,22 @@
+import { useEffect } from 'react'
+import { useExperimentStore } from '@stores/experimentStore'
+import { ExperimentList } from '../../Experiments/ExperimentList'
+
 export function ExperimentsPanel() {
+  const experiments = useExperimentStore((s) => s.experiments)
+  const selectedId = useExperimentStore((s) => s.selectedId)
+  const selectExperiment = useExperimentStore((s) => s.selectExperiment)
+  const initialize = useExperimentStore((s) => s.initialize)
+
+  useEffect(() => {
+    initialize()
+  }, [initialize])
+
   return (
     <div className="panel panel--experiments">
       <div className="panel__header">
         <span className="panel__title">Experiments</span>
-        <span className="panel__badge">0</span>
+        <span className="panel__badge">{experiments.length}</span>
         <div className="panel__actions">
           <button className="panel__action" title="New Experiment" aria-label="New Experiment">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -14,7 +27,11 @@ export function ExperimentsPanel() {
         </div>
       </div>
       <div className="panel__content">
-        <div className="panel__placeholder">No experiments yet</div>
+        <ExperimentList
+          experiments={experiments}
+          selectedId={selectedId}
+          onSelect={selectExperiment}
+        />
       </div>
     </div>
   )
