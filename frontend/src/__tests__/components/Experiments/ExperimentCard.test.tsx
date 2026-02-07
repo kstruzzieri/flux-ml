@@ -32,29 +32,29 @@ describe('ExperimentCard', () => {
   // Status dot color must match the experiment status.
   it('renders running status dot with correct class', () => {
     render(<ExperimentCard {...defaultProps} />)
-    const dot = screen.getByTitle('Running')
-    expect(dot).toHaveClass('exp-card__status--running')
+    const dot = screen.getByRole('img', { name: 'Running' })
+    expect(dot).toHaveClass('status-dot--running')
   })
 
   it('renders completed status dot with correct class', () => {
     const exp = makeExperiment({ status: 'completed' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
-    const dot = screen.getByTitle('Completed')
-    expect(dot).toHaveClass('exp-card__status--completed')
+    const dot = screen.getByRole('img', { name: 'Completed' })
+    expect(dot).toHaveClass('status-dot--completed')
   })
 
   it('renders failed status dot with correct class', () => {
     const exp = makeExperiment({ status: 'failed' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
-    const dot = screen.getByTitle('Failed')
-    expect(dot).toHaveClass('exp-card__status--failed')
+    const dot = screen.getByRole('img', { name: 'Failed' })
+    expect(dot).toHaveClass('status-dot--failed')
   })
 
   it('renders pending status dot with correct class', () => {
     const exp = makeExperiment({ status: 'pending' })
     render(<ExperimentCard {...defaultProps} experiment={exp} />)
-    const dot = screen.getByTitle('Pending')
-    expect(dot).toHaveClass('exp-card__status--pending')
+    const dot = screen.getByRole('img', { name: 'Pending' })
+    expect(dot).toHaveClass('status-dot--pending')
   })
 
   // Active experiment must be visually distinct with accent styling.
