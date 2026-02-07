@@ -75,9 +75,12 @@ func (a *App) startup(ctx context.Context) {
 	a.events = event.NewStore(db)
 	a.metrics = metrics.NewStore(db)
 
-	// Seed demo experiments for UI development (no-op if data already exists)
+	// Seed demo data for UI development (no-op if data already exists)
 	if err := a.experiments.SeedDemoExperiments(); err != nil {
 		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo experiments: %v", err))
+	}
+	if err := a.metrics.SeedDemoMetrics(); err != nil {
+		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo metrics: %v", err))
 	}
 }
 

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useExperimentStore } from '@stores/experimentStore'
+import { useMetricsStore } from '@stores/metricsStore'
 import { ExperimentList } from '../../Experiments/ExperimentList'
 
 export function ExperimentsPanel() {
@@ -10,9 +11,20 @@ export function ExperimentsPanel() {
   const loading = useExperimentStore((s) => s.loading)
   const error = useExperimentStore((s) => s.error)
 
+  const latestMetrics = useMetricsStore((s) => s.latestMetrics)
+  const fetchAllLatestMetrics = useMetricsStore((s) => s.fetchAllLatestMetrics)
+  const initializeMetrics = useMetricsStore((s) => s.initialize)
+
   useEffect(() => {
     initialize()
-  }, [initialize])
+    initializeMetrics()
+  }, [initialize, initializeMetrics])
+
+  useEffect(() => {
+    if (experiments.length > 0) {
+      fetchAllLatestMetrics(experiments.map((e) => e.id))
+    }
+  }, [experiments, fetchAllLatestMetrics])
 
   return (
     <div className="panel panel--experiments">
@@ -42,6 +54,7 @@ export function ExperimentsPanel() {
             experiments={experiments}
             selectedId={selectedId}
             onSelect={selectExperiment}
+            metricsMap={latestMetrics}
           />
         )}
       </div>
