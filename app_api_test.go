@@ -305,6 +305,25 @@ func TestApp_QueryRewardSignals(t *testing.T) {
 	}
 }
 
+func TestApp_GetLatestMetrics(t *testing.T) {
+	app := newTestApp(t)
+	exp, _ := app.CreateExperiment("test-latest", "{}")
+
+	app.RecordMetrics(exp.ID, []metrics.Metric{
+		{Step: 1, Name: "loss", Value: 2.5, Timestamp: 1000},
+		{Step: 5, Name: "loss", Value: 0.3, Timestamp: 5000},
+		{Step: 3, Name: "reward", Value: 0.7, Timestamp: 3000},
+	})
+
+	results, err := app.GetLatestMetrics(exp.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 metrics, got %d", len(results))
+	}
+}
+
 func TestApp_NilMetricsStore(t *testing.T) {
 	app := &App{}
 	err := app.RecordMetrics("id", nil)
@@ -322,6 +341,10 @@ func TestApp_NilMetricsStore(t *testing.T) {
 	_, err = app.QueryRewardSignals("id", "", 0, 0)
 	if err == nil || err.Error() != "database not initialized" {
 		t.Errorf("QueryRewardSignals: expected 'database not initialized', got %v", err)
+	}
+	_, err = app.GetLatestMetrics("id")
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("GetLatestMetrics: expected 'database not initialized', got %v", err)
 	}
 }
 

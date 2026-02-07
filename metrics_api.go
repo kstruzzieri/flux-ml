@@ -47,3 +47,11 @@ func (a *App) QueryRewardSignals(experimentID, component string, startStep, endS
 	}
 	return a.metrics.QueryRewardSignals(experimentID, component, startStep, endStep)
 }
+
+// GetLatestMetrics returns the most recent value per metric name for an experiment.
+func (a *App) GetLatestMetrics(experimentID string) ([]metrics.Metric, error) {
+	if a.metrics == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+	return a.metrics.LatestMetrics(experimentID)
+}
