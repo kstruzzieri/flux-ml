@@ -1,2 +1,1 @@
-// Zustand stores will be added here
-export {}
+export { useExperimentStore } from './experimentStore'
