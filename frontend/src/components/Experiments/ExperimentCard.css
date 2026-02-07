@@ -1,0 +1,73 @@
+.experiment-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.experiment-item:hover {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-hover);
+}
+
+.experiment-item--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
+}
+
+.experiment-item__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.experiment-item__status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.experiment-item__status--running {
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+  animation: pulse 2s infinite;
+}
+
+.experiment-item__status--completed {
+  background: var(--color-success);
+}
+
+.experiment-item__status--failed {
+  background: var(--color-error);
+}
+
+.experiment-item__status--pending {
+  background: var(--color-text-muted);
+}
+
+.experiment-item__name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.experiment-item__duration {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
