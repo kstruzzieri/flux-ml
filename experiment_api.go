@@ -11,7 +11,12 @@ func (a *App) CreateExperiment(name, config string) (*experiment.Experiment, err
 	if a.experiments == nil {
 		return nil, fmt.Errorf("database not initialized")
 	}
-	return a.experiments.Create(name, config)
+	exp, err := a.experiments.Create(name, config)
+	if err != nil {
+		return nil, err
+	}
+	a.emitEvent("experiment:created", exp)
+	return exp, nil
 }
 
 // ListExperiments returns all experiments ordered by creation time (newest first).
@@ -35,7 +40,11 @@ func (a *App) UpdateExperimentStatus(id, status string) error {
 	if a.experiments == nil {
 		return fmt.Errorf("database not initialized")
 	}
-	return a.experiments.UpdateStatus(id, status)
+	if err := a.experiments.UpdateStatus(id, status); err != nil {
+		return err
+	}
+	a.emitEvent("experiment:updated", map[string]string{"id": id, "status": status})
+	return nil
 }
 
 // DeleteExperiment removes an experiment by ID.
@@ -43,5 +52,9 @@ func (a *App) DeleteExperiment(id string) error {
 	if a.experiments == nil {
 		return fmt.Errorf("database not initialized")
 	}
-	return a.experiments.Delete(id)
+	if err := a.experiments.Delete(id); err != nil {
+		return err
+	}
+	a.emitEvent("experiment:deleted", map[string]string{"id": id})
+	return nil
 }

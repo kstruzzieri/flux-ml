@@ -82,6 +82,14 @@ func (a *App) GetDBStatus() string {
 	return a.dbError
 }
 
+// emitEvent emits a Wails event if the runtime context is available.
+// Guards against nil ctx so tests without a Wails runtime don't panic.
+func (a *App) emitEvent(eventName string, data ...interface{}) {
+	if a.ctx != nil {
+		wailsRuntime.EventsEmit(a.ctx, eventName, data...)
+	}
+}
+
 // shutdown is called when the app is closing
 func (a *App) shutdown(ctx context.Context) {
 	if a.db != nil {

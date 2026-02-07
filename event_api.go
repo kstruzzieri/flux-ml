@@ -11,7 +11,12 @@ func (a *App) AppendEvent(experimentID, eventType, data string) (*event.Event, e
 	if a.events == nil {
 		return nil, fmt.Errorf("database not initialized")
 	}
-	return a.events.Append(experimentID, eventType, data)
+	ev, err := a.events.Append(experimentID, eventType, data)
+	if err != nil {
+		return nil, err
+	}
+	a.emitEvent("event:appended", ev)
+	return ev, nil
 }
 
 // ReplayEvents returns events matching the given filters, ordered chronologically.
