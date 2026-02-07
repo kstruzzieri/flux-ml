@@ -1,3 +1,57 @@
+export namespace event {
+	
+	export class Event {
+	    id: number;
+	    experiment_id: string;
+	    timestamp: number;
+	    type: string;
+	    data: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Event(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.experiment_id = source["experiment_id"];
+	        this.timestamp = source["timestamp"];
+	        this.type = source["type"];
+	        this.data = source["data"];
+	    }
+	}
+
+}
+
+export namespace experiment {
+	
+	export class Experiment {
+	    id: string;
+	    name: string;
+	    config: string;
+	    parentId?: string;
+	    status: string;
+	    createdAt: number;
+	    updatedAt: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Experiment(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.config = source["config"];
+	        this.parentId = source["parentId"];
+	        this.status = source["status"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+
+}
+
 export namespace main {
 	
 	export class AppInfo {
@@ -38,6 +92,51 @@ export namespace main {
 	        this.leftCollapsed = source["leftCollapsed"];
 	        this.rightCollapsed = source["rightCollapsed"];
 	        this.outputCollapsed = source["outputCollapsed"];
+	    }
+	}
+
+}
+
+export namespace metrics {
+	
+	export class Metric {
+	    experiment_id: string;
+	    step: number;
+	    name: string;
+	    value: number;
+	    timestamp: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Metric(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.experiment_id = source["experiment_id"];
+	        this.step = source["step"];
+	        this.name = source["name"];
+	        this.value = source["value"];
+	        this.timestamp = source["timestamp"];
+	    }
+	}
+	export class RewardSignal {
+	    experiment_id: string;
+	    step: number;
+	    component: string;
+	    value: number;
+	    distribution: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new RewardSignal(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.experiment_id = source["experiment_id"];
+	        this.step = source["step"];
+	        this.component = source["component"];
+	        this.value = source["value"];
+	        this.distribution = source["distribution"];
 	    }
 	}
 

@@ -11,7 +11,11 @@ func (a *App) RecordMetrics(experimentID string, m []metrics.Metric) error {
 	if a.metrics == nil {
 		return fmt.Errorf("database not initialized")
 	}
-	return a.metrics.RecordMetrics(experimentID, m)
+	if err := a.metrics.RecordMetrics(experimentID, m); err != nil {
+		return err
+	}
+	a.emitEvent("metrics:recorded", map[string]interface{}{"experimentId": experimentID, "count": len(m)})
+	return nil
 }
 
 // QueryMetrics returns metrics matching the given filters, ordered by step ASC.
@@ -28,7 +32,11 @@ func (a *App) RecordRewardSignals(experimentID string, signals []metrics.RewardS
 	if a.metrics == nil {
 		return fmt.Errorf("database not initialized")
 	}
-	return a.metrics.RecordRewardSignals(experimentID, signals)
+	if err := a.metrics.RecordRewardSignals(experimentID, signals); err != nil {
+		return err
+	}
+	a.emitEvent("rewards:recorded", map[string]interface{}{"experimentId": experimentID, "count": len(signals)})
+	return nil
 }
 
 // QueryRewardSignals returns reward signals matching the given filters, ordered by step ASC.
