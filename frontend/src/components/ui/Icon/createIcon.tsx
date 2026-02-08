@@ -1,4 +1,3 @@
-import { forwardRef } from 'react'
 import type { IconProps } from './types'
 import './Icon.css'
 
@@ -18,7 +17,13 @@ interface CreateIconOptions {
 export function createIcon(path: React.ReactNode, options: CreateIconOptions) {
   const { displayName, iconClass, viewBox = '0 0 24 24' } = options
 
-  const Icon = forwardRef<SVGSVGElement, IconProps>(({ size, label, className, ...props }, ref) => {
+  function Icon({
+    ref,
+    size,
+    label,
+    className,
+    ...props
+  }: IconProps & { ref?: React.Ref<SVGSVGElement> }) {
     const classes = [
       'icon',
       typeof size === 'string' && ['sm', 'md', 'lg'].includes(size) && `icon--${size}`,
@@ -48,7 +53,7 @@ export function createIcon(path: React.ReactNode, options: CreateIconOptions) {
         {path}
       </svg>
     )
-  })
+  }
 
   Icon.displayName = displayName
   return Icon
@@ -61,7 +66,13 @@ export function createIcon(path: React.ReactNode, options: CreateIconOptions) {
 export function createFilledIcon(path: React.ReactNode, options: CreateIconOptions) {
   const { displayName, iconClass, viewBox = '0 0 24 24' } = options
 
-  const Icon = forwardRef<SVGSVGElement, IconProps>(({ size, label, className, ...props }, ref) => {
+  function Icon({
+    ref,
+    size,
+    label,
+    className,
+    ...props
+  }: IconProps & { ref?: React.Ref<SVGSVGElement> }) {
     const classes = [
       'icon',
       typeof size === 'string' && ['sm', 'md', 'lg'].includes(size) && `icon--${size}`,
@@ -80,7 +91,7 @@ export function createFilledIcon(path: React.ReactNode, options: CreateIconOptio
         {path}
       </svg>
     )
-  })
+  }
 
   Icon.displayName = displayName
   return Icon
