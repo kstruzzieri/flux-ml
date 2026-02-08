@@ -53,7 +53,7 @@
 .exp-card__metrics {
   display: flex;
   gap: 16px;
-  padding-left: 16px;
+  padding-left: 22px;
 }
 
 .exp-card__metric {

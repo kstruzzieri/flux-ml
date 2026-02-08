@@ -2,6 +2,22 @@ import { render, screen } from '@testing-library/react'
 import { StatusDot } from '@components/ui/StatusDot/StatusDot'
 
 describe('StatusDot', () => {
+  it('renders an SVG icon inside the wrapper', () => {
+    const { container } = render(<StatusDot status="running" />)
+    const svg = container.querySelector('svg')
+    expect(svg).toBeInTheDocument()
+  })
+
+  it('renders a different icon per status', () => {
+    const { container, rerender } = render(<StatusDot status="running" />)
+    const runningClasses = container.querySelector('svg')?.getAttribute('class')
+
+    rerender(<StatusDot status="completed" />)
+    const completedClasses = container.querySelector('svg')?.getAttribute('class')
+
+    expect(runningClasses).not.toBe(completedClasses)
+  })
+
   it('renders with running status and correct class', () => {
     render(<StatusDot status="running" />)
     const dot = screen.getByRole('img', { name: 'Running' })
@@ -26,18 +42,18 @@ describe('StatusDot', () => {
     expect(dot).toHaveClass('status-dot', 'status-dot--pending')
   })
 
-  it('applies pulse animation class only to running status', () => {
+  it('applies spin animation class only to running status', () => {
     const { rerender } = render(<StatusDot status="running" />)
-    expect(screen.getByRole('img', { name: 'Running' })).toHaveClass('status-dot--pulse')
+    expect(screen.getByRole('img', { name: 'Running' })).toHaveClass('status-dot--spin')
 
     rerender(<StatusDot status="completed" />)
-    expect(screen.getByRole('img', { name: 'Completed' })).not.toHaveClass('status-dot--pulse')
+    expect(screen.getByRole('img', { name: 'Completed' })).not.toHaveClass('status-dot--spin')
 
     rerender(<StatusDot status="failed" />)
-    expect(screen.getByRole('img', { name: 'Failed' })).not.toHaveClass('status-dot--pulse')
+    expect(screen.getByRole('img', { name: 'Failed' })).not.toHaveClass('status-dot--spin')
 
     rerender(<StatusDot status="pending" />)
-    expect(screen.getByRole('img', { name: 'Pending' })).not.toHaveClass('status-dot--pulse')
+    expect(screen.getByRole('img', { name: 'Pending' })).not.toHaveClass('status-dot--spin')
   })
 
   it('accepts custom className', () => {
