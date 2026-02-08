@@ -12,7 +12,9 @@ export function ExperimentsPanel() {
   const error = useExperimentStore((s) => s.error)
 
   const latestMetrics = useMetricsStore((s) => s.latestMetrics)
+  const sparklineData = useMetricsStore((s) => s.sparklineData)
   const fetchAllLatestMetrics = useMetricsStore((s) => s.fetchAllLatestMetrics)
+  const fetchAllSparklineData = useMetricsStore((s) => s.fetchAllSparklineData)
   const initializeMetrics = useMetricsStore((s) => s.initialize)
 
   useEffect(() => {
@@ -26,8 +28,9 @@ export function ExperimentsPanel() {
   useEffect(() => {
     if (experimentIds.length > 0) {
       fetchAllLatestMetrics(experimentIds)
+      fetchAllSparklineData(experimentIds)
     }
-  }, [experimentIds, experimentIdsKey, fetchAllLatestMetrics])
+  }, [experimentIds, experimentIdsKey, fetchAllLatestMetrics, fetchAllSparklineData])
 
   return (
     <div className="panel panel--experiments">
@@ -58,6 +61,7 @@ export function ExperimentsPanel() {
             selectedId={selectedId}
             onSelect={selectExperiment}
             metricsMap={latestMetrics}
+            sparklineDataMap={sparklineData}
           />
         )}
       </div>

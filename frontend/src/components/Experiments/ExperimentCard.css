@@ -72,3 +72,20 @@
   font-family: var(--font-mono);
   color: var(--color-text-primary);
 }
+
+.exp-card__sparklines {
+  display: flex;
+  gap: 12px;
+  padding-left: 22px;
+}
+
+.exp-card__sparkline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exp-card__sparkline-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}

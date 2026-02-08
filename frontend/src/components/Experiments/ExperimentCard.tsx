@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import { formatDuration, formatMetricValue, type ExperimentStatus } from '@utils/formatting'
+import { Sparkline } from './Sparkline'
 import { StatusDot } from '../ui/StatusDot/StatusDot'
+import type { Point } from '@utils/downsample'
 import type { experiment } from '../../../wailsjs/go/models'
 import './ExperimentCard.css'
 
@@ -10,6 +12,7 @@ interface ExperimentCardProps {
   onSelect: (id: string) => void
   loss?: number | null
   reward?: number | null
+  sparklineData?: Record<string, Point[]>
 }
 
 const STATUS_LABELS: Record<ExperimentStatus, string> = {
@@ -27,6 +30,7 @@ function ExperimentCardInner({
   onSelect,
   loss,
   reward,
+  sparklineData,
 }: ExperimentCardProps) {
   const status = VALID_STATUSES.has(exp.status) ? (exp.status as ExperimentStatus) : 'pending'
   const statusLabel = STATUS_LABELS[status]
@@ -55,6 +59,22 @@ function ExperimentCardInner({
           <span className="exp-card__metric-value">{formatMetricValue('reward', reward)}</span>
         </span>
       </div>
+      {sparklineData && Object.keys(sparklineData).length > 0 && (
+        <div className="exp-card__sparklines" data-testid="sparkline-row">
+          {sparklineData.loss && (
+            <div className="exp-card__sparkline">
+              <span className="exp-card__sparkline-label">loss</span>
+              <Sparkline data={sparklineData.loss} color="var(--color-chart-1)" />
+            </div>
+          )}
+          {sparklineData.reward && (
+            <div className="exp-card__sparkline">
+              <span className="exp-card__sparkline-label">reward</span>
+              <Sparkline data={sparklineData.reward} color="var(--color-chart-4)" />
+            </div>
+          )}
+        </div>
+      )}
     </button>
   )
 }
@@ -67,7 +87,8 @@ export const ExperimentCard = memo(ExperimentCardInner, (prev, next) => {
     prev.experiment.updatedAt === next.experiment.updatedAt &&
     prev.isActive === next.isActive &&
     prev.loss === next.loss &&
-    prev.reward === next.reward
+    prev.reward === next.reward &&
+    prev.sparklineData === next.sparklineData
   )
 })
 ExperimentCard.displayName = 'ExperimentCard'
