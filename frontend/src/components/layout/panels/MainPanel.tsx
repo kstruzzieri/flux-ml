@@ -1,3 +1,7 @@
+import { useExperimentStore } from '@stores/experimentStore'
+import { StatusDot } from '@components/ui/StatusDot/StatusDot'
+import { formatDuration, toExperimentStatus } from '@utils/formatting'
+
 function FluxBanner() {
   return (
     <svg
@@ -72,13 +76,38 @@ function FluxBanner() {
 }
 
 export function MainPanel() {
+  const selectedId = useExperimentStore((s) => s.selectedId)
+  const experiments = useExperimentStore((s) => s.experiments)
+  const selected = experiments.find((e) => e.id === selectedId)
+
+  if (!selected) {
+    return (
+      <div className="panel panel--main">
+        <div className="main-content__welcome">
+          <FluxBanner />
+          <p className="main-content__tagline">The ML development environment</p>
+          <p className="main-content__hint">Select an experiment to view metrics</p>
+        </div>
+      </div>
+    )
+  }
+
+  const status = toExperimentStatus(selected.status)
+  const duration = formatDuration(selected.createdAt, selected.updatedAt, status)
+
   return (
     <div className="panel panel--main">
-      <div className="main-content__welcome">
-        <FluxBanner />
-        <p className="main-content__tagline">The ML development environment</p>
-        <p className="main-content__hint">Select an experiment to view metrics</p>
+      <div className="experiment-header">
+        <StatusDot status={status} />
+        <div className="experiment-header__info">
+          <h1 className="experiment-header__name">{selected.name}</h1>
+          <div className="experiment-header__meta">
+            <span aria-label={`Duration: ${duration}`}>{duration}</span>
+            <span aria-label={`Status: ${status}`}>{status}</span>
+          </div>
+        </div>
       </div>
+      <div className="experiment-header__dashboard" />
     </div>
   )
 }

@@ -10,7 +10,7 @@ interface ExperimentState {
   error: string | null
 
   fetchExperiments: () => Promise<void>
-  selectExperiment: (id: string | null) => void
+  selectExperiment: (id: string) => void
   initialize: () => void
 }
 
@@ -39,7 +39,10 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
     try {
       const experiments = await ListExperiments()
       if (seq !== _fetchSeq) return // stale response, discard
-      set({ experiments, loading: false })
+      const { selectedId } = get()
+      const selectionValid = selectedId != null && experiments.some((e) => e.id === selectedId)
+      const nextSelectedId = selectionValid ? selectedId : (experiments[0]?.id ?? null)
+      set({ experiments, loading: false, selectedId: nextSelectedId })
     } catch (err) {
       if (seq !== _fetchSeq) return // stale response, discard
       set({
@@ -49,7 +52,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
     }
   },
 
-  selectExperiment: (id: string | null) => {
+  selectExperiment: (id: string) => {
     set({ selectedId: id })
   },
 

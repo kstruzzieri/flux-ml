@@ -59,11 +59,61 @@ describe('experimentStore', () => {
       expect(useExperimentStore.getState().selectedId).toBe('abc-123')
     })
 
-    it('clears selectedId with null', () => {
+    it('updates selectedId to a different experiment', () => {
       act(() => {
         useExperimentStore.getState().selectExperiment('abc-123')
-        useExperimentStore.getState().selectExperiment(null)
+        useExperimentStore.getState().selectExperiment('def-456')
       })
+      expect(useExperimentStore.getState().selectedId).toBe('def-456')
+    })
+  })
+
+  // Auto-select ensures one experiment is always active when the list is non-empty.
+  describe('auto-select', () => {
+    it('auto-selects first experiment after fetch when selectedId is null', async () => {
+      await CreateExperiment('exp-1', '{}')
+      await CreateExperiment('exp-2', '{}')
+
+      await act(async () => {
+        await useExperimentStore.getState().fetchExperiments()
+      })
+
+      const state = useExperimentStore.getState()
+      expect(state.selectedId).toBe(state.experiments[0].id)
+    })
+
+    it('preserves selectedId if experiment still exists in list', async () => {
+      const exp = await CreateExperiment('exp-1', '{}')
+
+      useExperimentStore.setState({ selectedId: exp.id })
+
+      await act(async () => {
+        await useExperimentStore.getState().fetchExperiments()
+      })
+
+      expect(useExperimentStore.getState().selectedId).toBe(exp.id)
+    })
+
+    it('auto-selects first remaining if selected experiment is removed', async () => {
+      await CreateExperiment('exp-remaining', '{}')
+
+      useExperimentStore.setState({ selectedId: 'deleted-id' })
+
+      await act(async () => {
+        await useExperimentStore.getState().fetchExperiments()
+      })
+
+      const state = useExperimentStore.getState()
+      expect(state.selectedId).toBe(state.experiments[0].id)
+    })
+
+    it('sets selectedId to null when list becomes empty', async () => {
+      useExperimentStore.setState({ selectedId: 'old-id' })
+
+      await act(async () => {
+        await useExperimentStore.getState().fetchExperiments()
+      })
+
       expect(useExperimentStore.getState().selectedId).toBeNull()
     })
   })
