@@ -11,7 +11,7 @@ interface HeaderProps {
   onCommandPalette?: () => void
 }
 
-const NAV_ITEMS: { id: ViewId; label: string; icon: JSX.Element }[] = [
+const NAV_ITEMS: { id: ViewId; label: string; icon: React.JSX.Element }[] = [
   {
     id: 'experiments',
     label: 'Experiments',

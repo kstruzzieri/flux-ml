@@ -1,4 +1,3 @@
-import { forwardRef } from 'react'
 import {
   PythonIcon,
   YamlIcon,
@@ -58,26 +57,27 @@ const EXTENSION_MAP: Record<string, ExtensionEntry> = {
  * Uses devicons-react for language icons and custom SVGs for generic files.
  * Falls back to GenericFileIcon for unknown extensions.
  */
-export const FileIcon = forwardRef<HTMLSpanElement, FileIconProps>(
-  ({ extension, className, 'data-testid': testId }, ref) => {
-    const entry = extension ? EXTENSION_MAP[extension.toLowerCase()] : undefined
+export function FileIcon({
+  ref,
+  extension,
+  className,
+  'data-testid': testId,
+}: FileIconProps & { ref?: React.Ref<HTMLSpanElement> }) {
+  const entry = extension ? EXTENSION_MAP[extension.toLowerCase()] : undefined
 
-    if (!entry) {
-      return (
-        <span ref={ref} className={`icon--generic-file ${className || ''}`} data-testid={testId}>
-          <GenericFileIcon />
-        </span>
-      )
-    }
-
-    const { Component, className: iconClassName } = entry
-
+  if (!entry) {
     return (
-      <span ref={ref} className={`${iconClassName} ${className || ''}`} data-testid={testId}>
-        <Component size="100%" />
+      <span ref={ref} className={`icon--generic-file ${className || ''}`} data-testid={testId}>
+        <GenericFileIcon />
       </span>
     )
   }
-)
 
-FileIcon.displayName = 'FileIcon'
+  const { Component, className: iconClassName } = entry
+
+  return (
+    <span ref={ref} className={`${iconClassName} ${className || ''}`} data-testid={testId}>
+      <Component size="100%" />
+    </span>
+  )
+}

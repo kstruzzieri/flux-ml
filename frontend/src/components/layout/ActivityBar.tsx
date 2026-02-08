@@ -8,7 +8,7 @@ import {
   SettingsIcon,
 } from '../ui/Icon'
 
-const ACTIVITY_ITEMS: { id: ViewId; label: string; icon: JSX.Element }[] = [
+const ACTIVITY_ITEMS: { id: ViewId; label: string; icon: React.JSX.Element }[] = [
   {
     id: 'experiments',
     label: 'Experiments',
