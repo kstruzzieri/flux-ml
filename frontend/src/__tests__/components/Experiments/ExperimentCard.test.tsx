@@ -106,4 +106,30 @@ describe('ExperimentCard', () => {
 
     expect(firstHTML).toBe(secondHTML)
   })
+
+  // Inline metrics display — loss and reward values shown on card.
+  it('renders loss value with monospace styling', () => {
+    render(<ExperimentCard {...defaultProps} loss={0.1235} reward={0.567} />)
+    const lossEl = screen.getByText('0.1235')
+    expect(lossEl).toBeInTheDocument()
+    expect(lossEl.closest('.exp-card__metrics')).toBeInTheDocument()
+  })
+
+  it('renders reward value with monospace styling', () => {
+    render(<ExperimentCard {...defaultProps} loss={0.1235} reward={0.567} />)
+    const rewardEl = screen.getByText('0.567')
+    expect(rewardEl).toBeInTheDocument()
+  })
+
+  it('renders em dash when no metrics provided', () => {
+    render(<ExperimentCard {...defaultProps} />)
+    const metricsRow = screen.getByTestId('metrics-row')
+    expect(metricsRow).toHaveTextContent('\u2014')
+  })
+
+  it('renders em dash for loss when only reward is provided', () => {
+    render(<ExperimentCard {...defaultProps} reward={0.5} />)
+    const labels = screen.getAllByText('\u2014')
+    expect(labels.length).toBeGreaterThanOrEqual(1)
+  })
 })

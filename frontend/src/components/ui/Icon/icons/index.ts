@@ -15,6 +15,10 @@ export {
   Code as CodeIcon,
   FilePlus as FilePlusIcon,
   FolderPlus as FolderPlusIcon,
+  LoaderCircle as StatusRunningIcon,
+  CircleCheck as StatusCompletedIcon,
+  CircleX as StatusFailedIcon,
+  Clock as StatusPendingIcon,
 } from 'lucide-react'
 
 // ============================================

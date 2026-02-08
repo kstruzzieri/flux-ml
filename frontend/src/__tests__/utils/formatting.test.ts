@@ -1,4 +1,4 @@
-import { formatDuration } from '@utils/formatting'
+import { formatDuration, formatMetricValue } from '@utils/formatting'
 
 describe('formatDuration', () => {
   // Duration is key experiment metadata shown on every card.
@@ -47,5 +47,34 @@ describe('formatDuration', () => {
     const end = start + 30
     const result = formatDuration(start, end, 'completed')
     expect(result).toBe('<1m')
+  })
+})
+
+describe('formatMetricValue', () => {
+  // Loss metrics need higher precision (4 decimal places) for meaningful
+  // comparison between training steps where differences are small.
+  it('formats loss with 4 decimal places', () => {
+    expect(formatMetricValue('loss', 0.123456789)).toBe('0.1235')
+  })
+
+  // Reward values use 3 decimal places — sufficient precision for
+  // reward signal display without visual clutter.
+  it('formats reward with 3 decimal places', () => {
+    expect(formatMetricValue('reward', 0.567891)).toBe('0.568')
+  })
+
+  // Any metric not explicitly configured defaults to 2 decimal places.
+  it('formats unknown metrics with 2 decimal places', () => {
+    expect(formatMetricValue('accuracy', 0.987654)).toBe('0.99')
+  })
+
+  // Null values represent missing data — display as em dash.
+  it('returns em dash for null', () => {
+    expect(formatMetricValue('loss', null)).toBe('\u2014')
+  })
+
+  // Undefined values also represent missing data — display as em dash.
+  it('returns em dash for undefined', () => {
+    expect(formatMetricValue('loss', undefined)).toBe('\u2014')
   })
 })

@@ -347,6 +347,66 @@ func TestQueryRewardSignals_FilterByStepRange(t *testing.T) {
 	}
 }
 
+// --- LatestMetrics tests ---
+
+func TestLatestMetrics_ReturnsHighestStep(t *testing.T) {
+	ts := newTestMetricsStore(t)
+	expID := createTestExperiment(t, ts.db, "test-latest")
+
+	ts.RecordMetrics(expID, []Metric{
+		{Step: 1, Name: "loss", Value: 2.5, Timestamp: 1000},
+		{Step: 2, Name: "loss", Value: 1.8, Timestamp: 2000},
+		{Step: 3, Name: "loss", Value: 0.9, Timestamp: 3000},
+		{Step: 1, Name: "reward", Value: 0.1, Timestamp: 1000},
+		{Step: 2, Name: "reward", Value: 0.5, Timestamp: 2000},
+	})
+
+	results, err := ts.LatestMetrics(expID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 metrics, got %d", len(results))
+	}
+
+	byName := make(map[string]Metric)
+	for _, m := range results {
+		byName[m.Name] = m
+	}
+	if byName["loss"].Value != 0.9 {
+		t.Errorf("expected loss=0.9, got %f", byName["loss"].Value)
+	}
+	if byName["loss"].Step != 3 {
+		t.Errorf("expected loss step=3, got %d", byName["loss"].Step)
+	}
+	if byName["reward"].Value != 0.5 {
+		t.Errorf("expected reward=0.5, got %f", byName["reward"].Value)
+	}
+	if byName["reward"].Step != 2 {
+		t.Errorf("expected reward step=2, got %d", byName["reward"].Step)
+	}
+}
+
+func TestLatestMetrics_EmptyExperimentID(t *testing.T) {
+	ts := newTestMetricsStore(t)
+	_, err := ts.LatestMetrics("")
+	if err == nil {
+		t.Fatal("expected error for empty experiment ID")
+	}
+}
+
+func TestLatestMetrics_NoMetrics(t *testing.T) {
+	ts := newTestMetricsStore(t)
+	expID := createTestExperiment(t, ts.db, "test-no-metrics")
+	results, err := ts.LatestMetrics(expID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("expected 0 metrics, got %d", len(results))
+	}
+}
+
 // --- Cascade delete test ---
 
 func TestCascadeDelete(t *testing.T) {

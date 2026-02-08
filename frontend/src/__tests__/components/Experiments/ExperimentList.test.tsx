@@ -57,4 +57,36 @@ describe('ExperimentList', () => {
     expect(buttons[0]).toHaveClass('exp-card--active')
     expect(buttons[1]).not.toHaveClass('exp-card--active')
   })
+
+  // Metrics map passes loss/reward values to cards.
+  it('passes metrics to cards from metricsMap prop', () => {
+    const experiments = [makeExperiment('exp-1', 'exp-alpha', 'running')]
+    const metricsMap: Record<string, Record<string, number>> = {
+      'exp-1': { loss: 0.1234, reward: 0.567 },
+    }
+    render(
+      <ExperimentList
+        experiments={experiments}
+        selectedId={null}
+        onSelect={jest.fn()}
+        metricsMap={metricsMap}
+      />
+    )
+    expect(screen.getByText('0.1234')).toBeInTheDocument()
+    expect(screen.getByText('0.567')).toBeInTheDocument()
+  })
+
+  it('renders em dashes when metricsMap has no data for experiment', () => {
+    const experiments = [makeExperiment('exp-1', 'exp-alpha')]
+    render(
+      <ExperimentList
+        experiments={experiments}
+        selectedId={null}
+        onSelect={jest.fn()}
+        metricsMap={{}}
+      />
+    )
+    const dashes = screen.getAllByText('\u2014')
+    expect(dashes.length).toBeGreaterThanOrEqual(2)
+  })
 })
