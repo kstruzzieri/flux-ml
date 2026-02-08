@@ -2,7 +2,7 @@ import { act } from '@testing-library/react'
 import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
 import { __resetMockState } from '../../__mocks__/wailsjs/go/main/App'
 import { metrics } from '../../__mocks__/wailsjs/go/models'
-import { RecordMetrics } from '../../__mocks__/wailsjs/go/main/App'
+import { RecordMetrics, RecordRewardSignals } from '../../__mocks__/wailsjs/go/main/App'
 
 beforeEach(() => {
   __resetMockState()
@@ -162,5 +162,63 @@ describe('useMetricsStore', () => {
     })
     expect(useMetricsStore.getState().sparklineData['exp-a']['loss']).toHaveLength(1)
     expect(useMetricsStore.getState().sparklineData['exp-b']['loss']).toHaveLength(1)
+  })
+})
+
+describe('reward signal support', () => {
+  it('fetchLatestRewardSignals populates state for an experiment', async () => {
+    await RecordRewardSignals('exp-1', [
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 10,
+        component: 'helpfulness',
+        value: 0.82,
+        distribution: '',
+      }),
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 20,
+        component: 'helpfulness',
+        value: 0.85,
+        distribution: '',
+      }),
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 20,
+        component: 'harmlessness',
+        value: 0.74,
+        distribution: '',
+      }),
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 20,
+        component: 'honesty',
+        value: 0.79,
+        distribution: '',
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchLatestRewardSignals('exp-1')
+    })
+
+    const signals = useMetricsStore.getState().latestRewardSignals['exp-1']
+    expect(signals).toBeDefined()
+    expect(signals).toHaveLength(3)
+    expect(signals.find((s: { component: string }) => s.component === 'helpfulness')?.value).toBe(
+      0.85
+    )
+    expect(signals.find((s: { component: string }) => s.component === 'harmlessness')?.value).toBe(
+      0.74
+    )
+  })
+
+  it('returns empty array for experiment with no reward signals', async () => {
+    await act(async () => {
+      await useMetricsStore.getState().fetchLatestRewardSignals('exp-none')
+    })
+
+    const signals = useMetricsStore.getState().latestRewardSignals['exp-none']
+    expect(signals).toEqual([])
   })
 })

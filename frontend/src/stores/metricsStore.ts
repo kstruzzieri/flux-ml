@@ -1,21 +1,30 @@
 import { create } from 'zustand'
-import { GetLatestMetrics, QueryMetrics } from '../../wailsjs/go/main/App'
+import { GetLatestMetrics, QueryMetrics, QueryRewardSignals } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { downsampleLTTB, type Point } from '@utils/downsample'
 
 /** Map of metric name to its latest value */
 type MetricMap = Record<string, number>
 
+export interface LatestRewardSignal {
+  component: string
+  value: number
+  step: number
+}
+
 interface MetricsState {
   /** experimentId -> { metricName -> value } */
   latestMetrics: Record<string, MetricMap>
   /** experimentId -> { metricName -> Point[] } */
   sparklineData: Record<string, Record<string, Point[]>>
+  /** experimentId -> LatestRewardSignal[] */
+  latestRewardSignals: Record<string, LatestRewardSignal[]>
 
   fetchLatestMetrics: (experimentId: string) => Promise<void>
   fetchAllLatestMetrics: (experimentIds: string[]) => Promise<void>
   fetchSparklineData: (experimentId: string) => Promise<void>
   fetchAllSparklineData: (experimentIds: string[]) => Promise<void>
+  fetchLatestRewardSignals: (experimentId: string) => Promise<void>
   initialize: () => void
 }
 
@@ -31,12 +40,13 @@ export function __resetMetricsStore(): void {
     _unsubscribe()
     _unsubscribe = null
   }
-  useMetricsStore.setState({ latestMetrics: {}, sparklineData: {} })
+  useMetricsStore.setState({ latestMetrics: {}, sparklineData: {}, latestRewardSignals: {} })
 }
 
 export const useMetricsStore = create<MetricsState>((set, get) => ({
   latestMetrics: {},
   sparklineData: {},
+  latestRewardSignals: {},
 
   fetchLatestMetrics: async (experimentId: string) => {
     try {
@@ -104,11 +114,42 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     await Promise.all(experimentIds.map((id) => get().fetchSparklineData(id)))
   },
 
+  fetchLatestRewardSignals: async (experimentId: string) => {
+    try {
+      const results = await QueryRewardSignals(experimentId, '', 0, 0)
+      const latestByComponent = new Map<string, LatestRewardSignal>()
+      for (const s of results) {
+        const existing = latestByComponent.get(s.component)
+        if (!existing || s.step > existing.step) {
+          latestByComponent.set(s.component, {
+            component: s.component,
+            value: s.value,
+            step: s.step,
+          })
+        }
+      }
+      set((state) => ({
+        latestRewardSignals: {
+          ...state.latestRewardSignals,
+          [experimentId]: [...latestByComponent.values()],
+        },
+      }))
+    } catch (err) {
+      console.error(`Failed to fetch reward signals for ${experimentId}:`, err)
+      set((state) => ({
+        latestRewardSignals: {
+          ...state.latestRewardSignals,
+          [experimentId]: [],
+        },
+      }))
+    }
+  },
+
   initialize: () => {
     if (_initialized) return
     _initialized = true
 
-    _unsubscribe = EventsOn('metrics:recorded', (data: { experimentId?: string }) => {
+    const unsubMetrics = EventsOn('metrics:recorded', (data: { experimentId?: string }) => {
       if (!data?.experimentId) return
       const expId = data.experimentId
 
@@ -119,5 +160,23 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
         get().fetchSparklineData(expId)
       }, 200)
     })
+
+    const unsubRewards = EventsOn('rewards:recorded', (data: { experimentId?: string }) => {
+      if (!data?.experimentId) return
+      const expId = data.experimentId
+
+      if (_debounceTimers[expId]) clearTimeout(_debounceTimers[expId])
+      _debounceTimers[expId] = setTimeout(() => {
+        delete _debounceTimers[expId]
+        get().fetchLatestMetrics(expId)
+        get().fetchSparklineData(expId)
+        get().fetchLatestRewardSignals(expId)
+      }, 200)
+    })
+
+    _unsubscribe = () => {
+      unsubMetrics()
+      unsubRewards()
+    }
   },
 }))

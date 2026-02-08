@@ -43,6 +43,7 @@ export function formatDuration(
 const METRIC_DECIMALS: Record<string, number> = {
   loss: 4,
   reward: 3,
+  kl: 6,
 }
 
 /**
@@ -53,6 +54,13 @@ export function formatMetricValue(name: string, value: number | null | undefined
   if (value == null) {
     return '\u2014'
   }
+  if (name === 'learning_rate') {
+    return value.toExponential(2)
+  }
   const decimals = METRIC_DECIMALS[name] ?? 2
   return value.toFixed(decimals)
+}
+
+export function formatStepCount(step: number): string {
+  return step.toLocaleString('en-US')
 }
