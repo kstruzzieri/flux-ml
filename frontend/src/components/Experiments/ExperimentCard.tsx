@@ -1,5 +1,10 @@
 import { memo } from 'react'
-import { formatDuration, formatMetricValue, type ExperimentStatus } from '@utils/formatting'
+import {
+  formatDuration,
+  formatMetricValue,
+  toExperimentStatus,
+  type ExperimentStatus,
+} from '@utils/formatting'
 import { Sparkline } from './Sparkline'
 import { StatusDot } from '../ui/StatusDot/StatusDot'
 import type { Point } from '@utils/downsample'
@@ -22,8 +27,6 @@ const STATUS_LABELS: Record<ExperimentStatus, string> = {
   pending: 'Pending',
 }
 
-const VALID_STATUSES = new Set<string>(Object.keys(STATUS_LABELS))
-
 function ExperimentCardInner({
   experiment: exp,
   isActive,
@@ -32,7 +35,7 @@ function ExperimentCardInner({
   reward,
   sparklineData,
 }: ExperimentCardProps) {
-  const status = VALID_STATUSES.has(exp.status) ? (exp.status as ExperimentStatus) : 'pending'
+  const status = toExperimentStatus(exp.status)
   const statusLabel = STATUS_LABELS[status]
   const duration = formatDuration(exp.createdAt, exp.updatedAt, status)
 
