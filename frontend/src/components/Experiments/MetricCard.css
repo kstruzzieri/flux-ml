@@ -1,0 +1,128 @@
+.metric-card {
+  background: var(--color-bg-content);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  border-left: 3px solid var(--color-border-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-card--healthy {
+  border-left-color: var(--color-success);
+}
+
+.metric-card--warning {
+  border-left-color: var(--color-warning);
+}
+
+.metric-card--critical {
+  border-left-color: var(--color-error);
+}
+
+.metric-card__label {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.metric-card__value {
+  font-size: 20px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.metric-card__trend {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.metric-card__trend--up {
+  color: var(--color-error);
+}
+
+.metric-card__trend--down {
+  color: var(--color-success);
+}
+
+.metric-card__trend--flat {
+  color: var(--color-text-muted);
+}
+
+/* Reward Components Card */
+.reward-components-card {
+  grid-column: span 2;
+}
+
+.reward-components-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reward-components-card__step {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+.reward-components-card__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reward-components-card__empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: 8px 0;
+}
+
+.reward-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reward-bar__label {
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.reward-bar__track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-bg-panel);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.reward-bar__fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 3px;
+  transition: width var(--transition-normal);
+}
+
+.reward-bar__value {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
