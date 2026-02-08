@@ -654,6 +654,17 @@
 }
 
 /* ========================================
+ * Metrics Grid
+ * ======================================== */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+/* ========================================
  * Scrollbar
  * ======================================== */
 
