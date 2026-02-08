@@ -89,4 +89,30 @@ describe('ExperimentList', () => {
     const dashes = screen.getAllByText('\u2014')
     expect(dashes.length).toBeGreaterThanOrEqual(2)
   })
+
+  it('passes sparkline data from sparklineDataMap prop to cards', () => {
+    const experiments = [makeExperiment('exp-1', 'exp-alpha', 'running')]
+    const sparklineDataMap: Record<string, Record<string, { step: number; value: number }[]>> = {
+      'exp-1': {
+        loss: [
+          { step: 0, value: 2.0 },
+          { step: 1, value: 1.0 },
+        ],
+        reward: [
+          { step: 0, value: 0.1 },
+          { step: 1, value: 0.5 },
+        ],
+      },
+    }
+    render(
+      <ExperimentList
+        experiments={experiments}
+        selectedId={null}
+        onSelect={jest.fn()}
+        metricsMap={{}}
+        sparklineDataMap={sparklineDataMap}
+      />
+    )
+    expect(screen.getByTestId('sparkline-row')).toBeInTheDocument()
+  })
 })

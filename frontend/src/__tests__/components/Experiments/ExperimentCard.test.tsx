@@ -132,4 +132,48 @@ describe('ExperimentCard', () => {
     const labels = screen.getAllByText('\u2014')
     expect(labels.length).toBeGreaterThanOrEqual(1)
   })
+
+  // Sparkline charts display
+  it('renders sparkline row when sparkline data provided', () => {
+    const sparklineData = {
+      loss: [
+        { step: 0, value: 2.0 },
+        { step: 1, value: 1.5 },
+        { step: 2, value: 1.0 },
+      ],
+      reward: [
+        { step: 0, value: 0.1 },
+        { step: 1, value: 0.3 },
+        { step: 2, value: 0.5 },
+      ],
+    }
+    render(<ExperimentCard {...defaultProps} sparklineData={sparklineData} />)
+    const sparklineRow = screen.getByTestId('sparkline-row')
+    expect(sparklineRow).toBeInTheDocument()
+    const svgs = sparklineRow.querySelectorAll('svg')
+    expect(svgs).toHaveLength(2)
+  })
+
+  it('does not render sparkline row when data is absent', () => {
+    render(<ExperimentCard {...defaultProps} />)
+    expect(screen.queryByTestId('sparkline-row')).not.toBeInTheDocument()
+  })
+
+  it('memo comparator detects sparkline data changes', () => {
+    const sparkData1 = {
+      loss: [{ step: 0, value: 2.0 }],
+    }
+    const sparkData2 = {
+      loss: [
+        { step: 0, value: 2.0 },
+        { step: 1, value: 1.0 },
+      ],
+    }
+    const { rerender } = render(<ExperimentCard {...defaultProps} sparklineData={sparkData1} />)
+    expect(screen.getByTestId('sparkline-row').querySelectorAll('svg')).toHaveLength(1)
+    rerender(<ExperimentCard {...defaultProps} sparklineData={sparkData2} />)
+    const polyline = screen.getByTestId('sparkline-row').querySelector('polyline')
+    const points = polyline!.getAttribute('points')!.split(' ')
+    expect(points).toHaveLength(2)
+  })
 })

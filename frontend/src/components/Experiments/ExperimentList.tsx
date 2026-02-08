@@ -1,4 +1,5 @@
 import { ExperimentCard } from './ExperimentCard'
+import type { Point } from '@utils/downsample'
 import type { experiment } from '../../../wailsjs/go/models'
 import './ExperimentList.css'
 
@@ -7,6 +8,7 @@ interface ExperimentListProps {
   selectedId: string | null
   onSelect: (id: string) => void
   metricsMap?: Record<string, Record<string, number>>
+  sparklineDataMap?: Record<string, Record<string, Point[]>>
 }
 
 export function ExperimentList({
@@ -14,6 +16,7 @@ export function ExperimentList({
   selectedId,
   onSelect,
   metricsMap = {},
+  sparklineDataMap = {},
 }: ExperimentListProps) {
   if (experiments.length === 0) {
     return (
@@ -35,6 +38,7 @@ export function ExperimentList({
             onSelect={onSelect}
             loss={expMetrics?.loss ?? null}
             reward={expMetrics?.reward ?? null}
+            sparklineData={sparklineDataMap[exp.id]}
           />
         )
       })}
