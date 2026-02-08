@@ -5,7 +5,7 @@
 **The ML development environment.**
 *Write code. Watch it learn.*
 
-![Flux Screenshot](docs/screenshots/022-status-indicators.png)
+![Flux Screenshot](docs/screenshots/023-inline-metrics-display.png)
 
 ---
 
