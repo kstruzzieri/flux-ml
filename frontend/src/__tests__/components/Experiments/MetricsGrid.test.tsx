@@ -19,15 +19,15 @@ describe('MetricsGrid', () => {
       new metrics.Metric({
         experiment_id: 'exp-1',
         step: 1,
-        name: 'loss',
-        value: 2.5,
+        name: 'kl',
+        value: 0.045,
         timestamp: 1000,
       }),
       new metrics.Metric({
         experiment_id: 'exp-1',
         step: 1,
-        name: 'reward',
-        value: 0.3,
+        name: 'learning_rate',
+        value: 0.0003,
         timestamp: 1000,
       }),
     ])
@@ -39,10 +39,10 @@ describe('MetricsGrid', () => {
 
     render(<MetricsGrid experimentId="exp-1" />)
 
-    expect(screen.getByText('Loss')).toBeInTheDocument()
-    expect(screen.getByText('Reward')).toBeInTheDocument()
     expect(screen.getByText('KL Divergence')).toBeInTheDocument()
     expect(screen.getByText('Learning Rate')).toBeInTheDocument()
+    expect(screen.getByText('Reward Variance')).toBeInTheDocument()
+    expect(screen.getByText('Policy Entropy')).toBeInTheDocument()
   })
 
   it('renders reward components card', async () => {

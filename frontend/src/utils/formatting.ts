@@ -44,6 +44,8 @@ const METRIC_DECIMALS: Record<string, number> = {
   loss: 4,
   reward: 3,
   kl: 6,
+  reward_variance: 4,
+  policy_entropy: 4,
 }
 
 /**

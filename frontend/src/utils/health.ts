@@ -29,6 +29,8 @@ const HEALTH_RULES: Record<string, HealthRule> = {
   loss: { down: 'healthy', flat: 'warning', up: 'critical' },
   reward: { up: 'healthy', flat: 'warning', down: 'critical' },
   kl: { flat: 'healthy', up: 'warning', down: 'healthy' },
+  reward_variance: { flat: 'healthy', down: 'warning', up: 'healthy' },
+  policy_entropy: { flat: 'healthy', down: 'warning', up: 'warning' },
 }
 
 export function assessHealth(metricName: string, trend: Trend): HealthStatus {

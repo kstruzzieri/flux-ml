@@ -9,10 +9,10 @@ interface MetricsGridProps {
 }
 
 const METRIC_CARDS = [
-  { label: 'Loss', name: 'loss' },
-  { label: 'Reward', name: 'reward' },
   { label: 'KL Divergence', name: 'kl' },
   { label: 'Learning Rate', name: 'learning_rate' },
+  { label: 'Reward Variance', name: 'reward_variance' },
+  { label: 'Policy Entropy', name: 'policy_entropy' },
 ] as const
 
 export function MetricsGrid({ experimentId }: MetricsGridProps) {
@@ -45,6 +45,7 @@ export function MetricsGrid({ experimentId }: MetricsGridProps) {
             metricName={name}
             trend={trend}
             health={health}
+            sparklinePoints={points}
           />
         )
       })}

@@ -7,7 +7,7 @@ Build the experiment detail view layout in MainPanel when an experiment is selec
 - [x] Health utilities: computeTrend (windowed average comparison), assessHealth (trend-based thresholds), assessRewardDivergence (ratio + min-spread guard)
 - [x] Formatting: KL with 6 decimals, learning rate in scientific notation, step count with locale formatting
 - [x] metricsStore: fetchLatestRewardSignals, rewards:recorded event subscription, latestRewardSignals state
-- [x] MetricCard: label, formatted value, trend arrow (up/down/flat), health border (healthy/warning/critical/none), muted for insufficient data
+- [x] MetricCard: label, formatted value, trend arrow (up/down/flat), health border (healthy/warning/critical/none), muted for insufficient data, inline sparkline, trend percentage, subtitle
 - [x] RewardComponentsCard: horizontal bars with proportional fill, divergence detection, step number display, empty state
 - [x] ChartsArea: three workflow-oriented tabs (Overview, Reward Components, Diagnostics), placeholder content
 - [x] MetricsGrid: composes 4 MetricCards + RewardComponentsCard, fetches data on mount, derives trend and health from sparkline data
@@ -129,18 +129,18 @@ All failing tests should fail with "module not found" or "function not defined" 
 | health.test.ts | 19 | PASS |
 | formatting.test.ts | 16 (11 existing + 5 new) | PASS |
 | metricsStore.test.ts | 8 (6 existing + 2 new) | PASS |
-| MetricCard.test.tsx | 10 | PASS |
+| MetricCard.test.tsx | 16 (10 + 6 sparkline/subtitle) | PASS |
 | RewardComponentsCard.test.tsx | 7 | PASS |
 | ChartsArea.test.tsx | 4 | PASS |
 | MetricsGrid.test.tsx | 3 | PASS |
 | MainPanel.test.tsx | 9 (5 existing + 4 new) | PASS |
-| **Total new tests** | **54** | **PASS** |
-| **Full suite** | **234 tests, 23 suites** | **ALL PASS** |
+| **Total new tests** | **60** | **PASS** |
+| **Full suite** | **240 tests, 23 suites** | **ALL PASS** |
 
 ## Passing Test Results
 ```
 Test Suites: 23 passed, 23 total
-Tests:       234 passed, 234 total
+Tests:       240 passed, 240 total
 Snapshots:   0 total
 ```
 
@@ -151,7 +151,7 @@ Snapshots:   0 total
 |------|---------|
 | `frontend/src/utils/health.ts` | computeTrend, assessHealth, assessRewardDivergence |
 | `frontend/src/__tests__/utils/health.test.ts` | 17 health utility tests |
-| `frontend/src/components/Experiments/MetricCard.tsx` | Health-bordered metric card with trend arrow |
+| `frontend/src/components/Experiments/MetricCard.tsx` | Health-bordered metric card with trend arrow, inline sparkline, percentage, subtitle |
 | `frontend/src/components/Experiments/MetricCard.css` | Card styles + reward components card styles |
 | `frontend/src/components/Experiments/RewardComponentsCard.tsx` | Reward component bars with divergence detection |
 | `frontend/src/components/Experiments/ChartsArea.tsx` | Tabbed placeholder for Phase 3 uPlot |

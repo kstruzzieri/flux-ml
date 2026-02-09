@@ -71,6 +71,26 @@ describe('assessHealth', () => {
   it('returns "none" for metrics without health rules (e.g., learning_rate)', () => {
     expect(assessHealth('learning_rate', 'up')).toBe('none')
   })
+
+  it('returns "warning" for decreasing reward_variance', () => {
+    expect(assessHealth('reward_variance', 'down')).toBe('warning')
+  })
+
+  it('returns "healthy" for stable reward_variance', () => {
+    expect(assessHealth('reward_variance', 'flat')).toBe('healthy')
+  })
+
+  it('returns "warning" for decreasing policy_entropy', () => {
+    expect(assessHealth('policy_entropy', 'down')).toBe('warning')
+  })
+
+  it('returns "warning" for increasing policy_entropy', () => {
+    expect(assessHealth('policy_entropy', 'up')).toBe('warning')
+  })
+
+  it('returns "healthy" for stable policy_entropy', () => {
+    expect(assessHealth('policy_entropy', 'flat')).toBe('healthy')
+  })
 })
 
 describe('assessRewardDivergence', () => {
