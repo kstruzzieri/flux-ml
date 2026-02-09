@@ -1,6 +1,7 @@
 import { render, screen, act } from '@testing-library/react'
 import { MainPanel } from '@components/layout/panels/MainPanel'
 import { useExperimentStore } from '@stores/experimentStore'
+import { useMetricsStore } from '@stores/metricsStore'
 import { experiment } from '../../../../__mocks__/wailsjs/go/models'
 
 // Mock the Wails runtime (EventsOn) so experimentStore can import
@@ -10,6 +11,9 @@ jest.mock('../../../../../wailsjs/runtime/runtime', () => ({
 
 jest.mock('../../../../../wailsjs/go/main/App', () => ({
   ListExperiments: jest.fn().mockResolvedValue([]),
+  GetLatestMetrics: jest.fn().mockResolvedValue([]),
+  QueryMetrics: jest.fn().mockResolvedValue([]),
+  QueryRewardSignals: jest.fn().mockResolvedValue([]),
 }))
 
 function makeExperiment(overrides: Partial<Record<string, unknown>> = {}): experiment.Experiment {
@@ -102,5 +106,56 @@ describe('MainPanel', () => {
     })
     rerender(<MainPanel />)
     expect(screen.getByText('exp-beta')).toBeInTheDocument()
+  })
+
+  it('shows metrics grid when experiment is selected', () => {
+    const exp = makeExperiment()
+    useExperimentStore.setState({
+      experiments: [exp],
+      selectedId: exp.id,
+    })
+    render(<MainPanel />)
+    expect(screen.getByTestId('metrics-grid')).toBeInTheDocument()
+  })
+
+  it('shows charts area when experiment is selected', () => {
+    const exp = makeExperiment()
+    useExperimentStore.setState({
+      experiments: [exp],
+      selectedId: exp.id,
+    })
+    render(<MainPanel />)
+    expect(screen.getByText('Overview')).toBeInTheDocument()
+    expect(screen.getByText('Chart visualization coming soon')).toBeInTheDocument()
+  })
+
+  it('shows step count in header when sparkline data is available', () => {
+    const exp = makeExperiment()
+    useExperimentStore.setState({
+      experiments: [exp],
+      selectedId: exp.id,
+    })
+    useMetricsStore.setState({
+      sparklineData: {
+        [exp.id]: {
+          loss: [
+            { step: 100, value: 2.5 },
+            { step: 12400, value: 0.5 },
+          ],
+        },
+      },
+    })
+    render(<MainPanel />)
+    expect(screen.getByTestId('step-count')).toHaveTextContent('Step 12,400')
+  })
+
+  it('does not show step count when no sparkline data', () => {
+    const exp = makeExperiment()
+    useExperimentStore.setState({
+      experiments: [exp],
+      selectedId: exp.id,
+    })
+    render(<MainPanel />)
+    expect(screen.queryByTestId('step-count')).not.toBeInTheDocument()
   })
 })

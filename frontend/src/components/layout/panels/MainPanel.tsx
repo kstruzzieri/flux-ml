@@ -1,6 +1,9 @@
 import { useExperimentStore } from '@stores/experimentStore'
+import { useMetricsStore } from '@stores/metricsStore'
 import { StatusDot } from '@components/ui/StatusDot/StatusDot'
-import { formatDuration, toExperimentStatus } from '@utils/formatting'
+import { formatDuration, formatStepCount, toExperimentStatus } from '@utils/formatting'
+import { MetricsGrid } from '@components/Experiments/MetricsGrid'
+import { ChartsArea } from '@components/Experiments/ChartsArea'
 
 function FluxBanner() {
   return (
@@ -75,10 +78,25 @@ function FluxBanner() {
   )
 }
 
+function useLatestStep(experimentId: string | null): number | null {
+  const sparklineData = useMetricsStore((s) =>
+    experimentId ? s.sparklineData[experimentId] : undefined
+  )
+  if (!sparklineData) return null
+  let maxStep = 0
+  for (const points of Object.values(sparklineData)) {
+    for (const p of points) {
+      if (p.step > maxStep) maxStep = p.step
+    }
+  }
+  return maxStep > 0 ? maxStep : null
+}
+
 export function MainPanel() {
   const selectedId = useExperimentStore((s) => s.selectedId)
   const experiments = useExperimentStore((s) => s.experiments)
   const selected = experiments.find((e) => e.id === selectedId)
+  const latestStep = useLatestStep(selected?.id ?? null)
 
   if (!selected) {
     return (
@@ -104,10 +122,18 @@ export function MainPanel() {
           <div className="experiment-header__meta">
             <span aria-label={`Duration: ${duration}`}>{duration}</span>
             <span aria-label={`Status: ${status}`}>{status}</span>
+            {latestStep !== null && (
+              <span className="experiment-header__step" data-testid="step-count">
+                Step {formatStepCount(latestStep)}
+              </span>
+            )}
           </div>
         </div>
       </div>
-      <div className="experiment-header__dashboard" />
+      <div className="experiment-header__dashboard">
+        <MetricsGrid experimentId={selected.id} />
+        <ChartsArea />
+      </div>
     </div>
   )
 }
