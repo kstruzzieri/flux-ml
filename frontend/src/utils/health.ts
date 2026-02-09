@@ -49,13 +49,13 @@ const DIVERGENCE_MIN_SPREAD = 0.1
 export function assessRewardDivergence(components: RewardComponent[]): HealthStatus {
   if (components.length === 0) return 'none'
 
-  const values = components.map((c) => c.value)
-  const max = Math.max(...values)
-  const min = Math.min(...values)
+  const absValues = components.map((c) => Math.abs(c.value))
+  const maxAbs = Math.max(...absValues)
+  const minAbs = Math.min(...absValues)
+  const spread = maxAbs - minAbs
 
-  if (max - min < DIVERGENCE_MIN_SPREAD) return 'healthy'
-  if (min > 0 && max / min > DIVERGENCE_RATIO) return 'warning'
-  if (min <= 0 && max - min > DIVERGENCE_MIN_SPREAD) return 'warning'
+  if (spread < DIVERGENCE_MIN_SPREAD) return 'healthy'
+  if (minAbs > 1e-10 && maxAbs / minAbs > DIVERGENCE_RATIO) return 'warning'
 
   return 'healthy'
 }

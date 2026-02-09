@@ -39,10 +39,10 @@ describe('MetricsGrid', () => {
 
     render(<MetricsGrid experimentId="exp-1" />)
 
-    expect(screen.getByText('LOSS')).toBeInTheDocument()
-    expect(screen.getByText('REWARD')).toBeInTheDocument()
-    expect(screen.getByText('KL DIVERGENCE')).toBeInTheDocument()
-    expect(screen.getByText('LEARNING RATE')).toBeInTheDocument()
+    expect(screen.getByText('Loss')).toBeInTheDocument()
+    expect(screen.getByText('Reward')).toBeInTheDocument()
+    expect(screen.getByText('KL Divergence')).toBeInTheDocument()
+    expect(screen.getByText('Learning Rate')).toBeInTheDocument()
   })
 
   it('renders reward components card', async () => {
@@ -76,7 +76,7 @@ describe('MetricsGrid', () => {
 
     render(<MetricsGrid experimentId="exp-1" />)
 
-    expect(screen.getByText('REWARD COMPONENTS')).toBeInTheDocument()
+    expect(screen.getByText('Reward Components')).toBeInTheDocument()
     expect(screen.getByText('Helpfulness')).toBeInTheDocument()
   })
 

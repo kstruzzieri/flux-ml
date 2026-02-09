@@ -11,14 +11,18 @@ describe('ChartsArea', () => {
 
   it('has Overview tab active by default', () => {
     render(<ChartsArea />)
-    expect(screen.getByText('Overview').closest('button')).toHaveClass('chart-tab--active')
+    expect(screen.getByText('Overview').closest('button')).toHaveClass('charts-area__tab--active')
   })
 
   it('switches active tab on click', () => {
     render(<ChartsArea />)
     fireEvent.click(screen.getByText('Reward Components'))
-    expect(screen.getByText('Reward Components').closest('button')).toHaveClass('chart-tab--active')
-    expect(screen.getByText('Overview').closest('button')).not.toHaveClass('chart-tab--active')
+    expect(screen.getByText('Reward Components').closest('button')).toHaveClass(
+      'charts-area__tab--active'
+    )
+    expect(screen.getByText('Overview').closest('button')).not.toHaveClass(
+      'charts-area__tab--active'
+    )
   })
 
   it('shows placeholder content in chart body', () => {

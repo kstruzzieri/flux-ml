@@ -126,7 +126,7 @@ All failing tests should fail with "module not found" or "function not defined" 
 
 | Suite | Tests | Status |
 |-------|-------|--------|
-| health.test.ts | 17 | PASS |
+| health.test.ts | 19 | PASS |
 | formatting.test.ts | 16 (11 existing + 5 new) | PASS |
 | metricsStore.test.ts | 8 (6 existing + 2 new) | PASS |
 | MetricCard.test.tsx | 10 | PASS |
@@ -134,13 +134,13 @@ All failing tests should fail with "module not found" or "function not defined" 
 | ChartsArea.test.tsx | 4 | PASS |
 | MetricsGrid.test.tsx | 3 | PASS |
 | MainPanel.test.tsx | 9 (5 existing + 4 new) | PASS |
-| **Total new tests** | **52** | **PASS** |
-| **Full suite** | **232 tests, 23 suites** | **ALL PASS** |
+| **Total new tests** | **54** | **PASS** |
+| **Full suite** | **234 tests, 23 suites** | **ALL PASS** |
 
 ## Passing Test Results
 ```
 Test Suites: 23 passed, 23 total
-Tests:       232 passed, 232 total
+Tests:       234 passed, 234 total
 Snapshots:   0 total
 ```
 

@@ -18,14 +18,22 @@ const TREND_ARROWS: Record<Exclude<Trend, 'insufficient'>, string> = {
 
 export function MetricCard({ label, value, metricName, trend, health }: MetricCardProps) {
   const healthClass = health !== 'none' ? `metric-card--${health}` : ''
-  const trendClass = trend !== 'insufficient' ? `metric-card__trend--${trend}` : ''
+  const trendColorClass =
+    trend !== 'insufficient' && health !== 'none' ? `metric-card__trend--${health}` : ''
 
   return (
-    <div className={`metric-card ${healthClass}`}>
-      <span className="metric-card__label">{label.toUpperCase()}</span>
+    <div className={`metric-card ${healthClass}`} aria-label={`${label}: ${health} status`}>
+      {health !== 'none' && (
+        <span className={`metric-card__health-dot metric-card__health-dot--${health}`} />
+      )}
+      <span className="metric-card__label">{label}</span>
       <span className="metric-card__value">{formatMetricValue(metricName, value)}</span>
       {trend !== 'insufficient' && (
-        <span className={`metric-card__trend ${trendClass}`} data-testid="trend-indicator">
+        <span
+          className={`metric-card__trend ${trendColorClass}`}
+          data-testid="trend-indicator"
+          aria-label={`Trend: ${trend}`}
+        >
           {TREND_ARROWS[trend]}
         </span>
       )}

@@ -104,4 +104,18 @@ describe('assessRewardDivergence', () => {
     ]
     expect(assessRewardDivergence(components)).toBe('healthy')
   })
+
+  it('returns "warning" when negative values diverge beyond threshold', () => {
+    const components = [
+      { name: 'helpfulness', value: -0.8 },
+      { name: 'harmlessness', value: -0.3 },
+      { name: 'honesty', value: -0.7 },
+    ]
+    expect(assessRewardDivergence(components)).toBe('warning')
+  })
+
+  it('returns "healthy" for a single component', () => {
+    const components = [{ name: 'helpfulness', value: 0.8 }]
+    expect(assessRewardDivergence(components)).toBe('healthy')
+  })
 })

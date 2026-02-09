@@ -13,7 +13,7 @@ export function ChartsArea() {
         {TABS.map((tab) => (
           <button
             key={tab}
-            className={`chart-tab ${activeTab === tab ? 'chart-tab--active' : ''}`}
+            className={`charts-area__tab ${activeTab === tab ? 'charts-area__tab--active' : ''}`}
             onClick={() => setActiveTab(tab)}
           >
             {tab}

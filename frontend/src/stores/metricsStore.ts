@@ -72,37 +72,27 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
 
   fetchSparklineData: async (experimentId: string) => {
     try {
-      const [lossMetrics, rewardMetrics] = await Promise.all([
-        QueryMetrics(experimentId, 'loss', 0, 0),
-        QueryMetrics(experimentId, 'reward', 0, 0),
-      ])
-
-      if (lossMetrics.length === 0 && rewardMetrics.length === 0) {
-        set((state) => ({
-          sparklineData: {
-            ...state.sparklineData,
-            [experimentId]: {},
-          },
-        }))
-        return
-      }
+      const metricNames = ['loss', 'reward', 'kl', 'learning_rate']
+      const results = await Promise.all(
+        metricNames.map((name) => QueryMetrics(experimentId, name, 0, 0))
+      )
 
       const sparkData: Record<string, Point[]> = {}
+      let hasData = false
 
-      if (lossMetrics.length > 0) {
-        const lossPoints: Point[] = lossMetrics.map((m) => ({ step: m.step, value: m.value }))
-        sparkData['loss'] = downsampleLTTB(lossPoints, 60)
-      }
-
-      if (rewardMetrics.length > 0) {
-        const rewardPoints: Point[] = rewardMetrics.map((m) => ({ step: m.step, value: m.value }))
-        sparkData['reward'] = downsampleLTTB(rewardPoints, 60)
+      for (let i = 0; i < metricNames.length; i++) {
+        const raw = results[i]
+        if (raw.length > 0) {
+          hasData = true
+          const points: Point[] = raw.map((m) => ({ step: m.step, value: m.value }))
+          sparkData[metricNames[i]] = downsampleLTTB(points, 60)
+        }
       }
 
       set((state) => ({
         sparklineData: {
           ...state.sparklineData,
-          [experimentId]: sparkData,
+          [experimentId]: hasData ? sparkData : {},
         },
       }))
     } catch (err) {
@@ -151,26 +141,24 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
 
     const unsubMetrics = EventsOn('metrics:recorded', (data: { experimentId?: string }) => {
       if (!data?.experimentId) return
-      const expId = data.experimentId
+      const key = `metrics:${data.experimentId}`
 
-      if (_debounceTimers[expId]) clearTimeout(_debounceTimers[expId])
-      _debounceTimers[expId] = setTimeout(() => {
-        delete _debounceTimers[expId]
-        get().fetchLatestMetrics(expId)
-        get().fetchSparklineData(expId)
+      if (_debounceTimers[key]) clearTimeout(_debounceTimers[key])
+      _debounceTimers[key] = setTimeout(() => {
+        delete _debounceTimers[key]
+        get().fetchLatestMetrics(data.experimentId!)
+        get().fetchSparklineData(data.experimentId!)
       }, 200)
     })
 
     const unsubRewards = EventsOn('rewards:recorded', (data: { experimentId?: string }) => {
       if (!data?.experimentId) return
-      const expId = data.experimentId
+      const key = `rewards:${data.experimentId}`
 
-      if (_debounceTimers[expId]) clearTimeout(_debounceTimers[expId])
-      _debounceTimers[expId] = setTimeout(() => {
-        delete _debounceTimers[expId]
-        get().fetchLatestMetrics(expId)
-        get().fetchSparklineData(expId)
-        get().fetchLatestRewardSignals(expId)
+      if (_debounceTimers[key]) clearTimeout(_debounceTimers[key])
+      _debounceTimers[key] = setTimeout(() => {
+        delete _debounceTimers[key]
+        get().fetchLatestRewardSignals(data.experimentId!)
       }, 200)
     })
 

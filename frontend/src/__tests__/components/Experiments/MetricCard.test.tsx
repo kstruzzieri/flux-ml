@@ -6,7 +6,7 @@ describe('MetricCard', () => {
     render(
       <MetricCard label="Loss" value={0.2341} metricName="loss" trend="down" health="healthy" />
     )
-    expect(screen.getByText('LOSS')).toBeInTheDocument()
+    expect(screen.getByText('Loss')).toBeInTheDocument()
     expect(screen.getByText('0.2341')).toBeInTheDocument()
   })
 
