@@ -136,7 +136,7 @@
 
 /* Reward Components Card */
 .reward-components-card {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .reward-components-card__header {

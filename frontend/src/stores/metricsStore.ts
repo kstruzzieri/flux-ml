@@ -72,7 +72,14 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
 
   fetchSparklineData: async (experimentId: string) => {
     try {
-      const metricNames = ['loss', 'reward', 'kl', 'learning_rate']
+      const metricNames = [
+        'loss',
+        'reward',
+        'kl',
+        'learning_rate',
+        'reward_variance',
+        'policy_entropy',
+      ]
       const results = await Promise.all(
         metricNames.map((name) => QueryMetrics(experimentId, name, 0, 0))
       )
