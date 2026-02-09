@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useMetricsStore } from '@stores/metricsStore'
-import { computeTrend, assessHealth } from '@utils/health'
+import { computeTrend, assessHealth, deriveDetections } from '@utils/health'
 import { MetricCard } from './MetricCard'
-import { RewardComponentsCard } from './RewardComponentsCard'
+import { RewardHackStatusCard } from './RewardHackStatusCard'
 
 interface MetricsGridProps {
   experimentId: string
@@ -29,6 +29,35 @@ export function MetricsGrid({ experimentId }: MetricsGridProps) {
     fetchLatestRewardSignals(experimentId)
   }, [experimentId, fetchLatestMetrics, fetchSparklineData, fetchLatestRewardSignals])
 
+  // Compute trends for cross-metric detection
+  const trends = {
+    kl: sparklineData?.kl ? computeTrend(sparklineData.kl) : undefined,
+    reward: sparklineData?.reward ? computeTrend(sparklineData.reward) : undefined,
+    reward_variance: sparklineData?.reward_variance
+      ? computeTrend(sparklineData.reward_variance)
+      : undefined,
+    policy_entropy: sparklineData?.policy_entropy
+      ? computeTrend(sparklineData.policy_entropy)
+      : undefined,
+  }
+
+  const rewardComponents = (latestRewardSignals ?? []).map((s) => ({
+    name: s.component,
+    value: s.value,
+  }))
+
+  const detections = deriveDetections(trends, rewardComponents)
+
+  // Derive latest step from sparkline data
+  let latestStep: number | null = null
+  if (sparklineData) {
+    for (const points of Object.values(sparklineData)) {
+      for (const p of points) {
+        if (latestStep === null || p.step > latestStep) latestStep = p.step
+      }
+    }
+  }
+
   return (
     <div className="metrics-grid" data-testid="metrics-grid">
       {METRIC_CARDS.map(({ label, name }) => {
@@ -49,7 +78,7 @@ export function MetricsGrid({ experimentId }: MetricsGridProps) {
           />
         )
       })}
-      <RewardComponentsCard components={latestRewardSignals ?? []} />
+      <RewardHackStatusCard detections={detections} step={latestStep} />
     </div>
   )
 }

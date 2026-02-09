@@ -1,4 +1,4 @@
-import { computeTrend, assessHealth, assessRewardDivergence } from '@utils/health'
+import { computeTrend, assessHealth, assessRewardDivergence, deriveDetections } from '@utils/health'
 import type { Point } from '@utils/downsample'
 
 describe('computeTrend', () => {
@@ -137,5 +137,68 @@ describe('assessRewardDivergence', () => {
   it('returns "healthy" for a single component', () => {
     const components = [{ name: 'helpfulness', value: 0.8 }]
     expect(assessRewardDivergence(components)).toBe('healthy')
+  })
+})
+
+describe('deriveDetections', () => {
+  const balanced = [
+    { name: 'helpfulness', value: 0.8 },
+    { name: 'harmlessness', value: 0.7 },
+    { name: 'honesty', value: 0.75 },
+  ]
+
+  it('returns all clear when trends are healthy', () => {
+    const results = deriveDetections(
+      { kl: 'flat', reward: 'up', reward_variance: 'flat', policy_entropy: 'flat' },
+      balanced
+    )
+    expect(results.every((r) => r.status === 'clear')).toBe(true)
+  })
+
+  it('elevates sycophancy when KL rising and entropy dropping', () => {
+    const results = deriveDetections(
+      { kl: 'up', policy_entropy: 'down', reward: 'flat', reward_variance: 'flat' },
+      balanced
+    )
+    const syc = results.find((r) => r.pattern === 'Sycophancy')
+    expect(syc?.status).toBe('elevated')
+  })
+
+  it('sets KL drift to monitoring when KL is rising', () => {
+    const results = deriveDetections(
+      { kl: 'up', policy_entropy: 'flat', reward: 'flat', reward_variance: 'flat' },
+      balanced
+    )
+    const kl = results.find((r) => r.pattern === 'KL Drift')
+    expect(kl?.status).toBe('monitoring')
+  })
+
+  it('elevates length gaming when reward up and variance down', () => {
+    const results = deriveDetections(
+      { kl: 'flat', reward: 'up', reward_variance: 'down', policy_entropy: 'flat' },
+      balanced
+    )
+    const lg = results.find((r) => r.pattern === 'Length Gaming')
+    expect(lg?.status).toBe('elevated')
+  })
+
+  it('elevates reward collapse when variance down and components diverge', () => {
+    const diverged = [
+      { name: 'helpfulness', value: 0.8 },
+      { name: 'harmlessness', value: 0.3 },
+      { name: 'honesty', value: 0.7 },
+    ]
+    const results = deriveDetections(
+      { kl: 'flat', reward: 'flat', reward_variance: 'down', policy_entropy: 'flat' },
+      diverged
+    )
+    const rc = results.find((r) => r.pattern === 'Reward Collapse')
+    expect(rc?.status).toBe('elevated')
+  })
+
+  it('handles missing trends gracefully', () => {
+    const results = deriveDetections({}, [])
+    expect(results).toHaveLength(4)
+    expect(results.every((r) => r.status === 'clear')).toBe(true)
   })
 })
