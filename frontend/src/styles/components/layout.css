@@ -513,6 +513,11 @@
   color: var(--color-text-secondary);
 }
 
+.experiment-header__step {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+}
+
 .experiment-header__dashboard {
   display: flex;
   flex-direction: column;
@@ -651,6 +656,17 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+/* ========================================
+ * Metrics Grid
+ * ======================================== */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
 }
 
 /* ========================================

@@ -1,4 +1,4 @@
-import { formatDuration, formatMetricValue } from '@utils/formatting'
+import { formatDuration, formatMetricValue, formatStepCount } from '@utils/formatting'
 
 describe('formatDuration', () => {
   // Duration is key experiment metadata shown on every card.
@@ -76,5 +76,29 @@ describe('formatMetricValue', () => {
   // Undefined values also represent missing data — display as em dash.
   it('returns em dash for undefined', () => {
     expect(formatMetricValue('loss', undefined)).toBe('\u2014')
+  })
+})
+
+describe('formatMetricValue — extended metrics', () => {
+  it('formats kl with 6 decimal places', () => {
+    expect(formatMetricValue('kl', 0.0423567)).toBe('0.042357')
+  })
+
+  it('formats learning_rate in scientific notation', () => {
+    expect(formatMetricValue('learning_rate', 0.00003)).toBe('3.00e-5')
+  })
+})
+
+describe('formatStepCount', () => {
+  it('formats step count with comma separators', () => {
+    expect(formatStepCount(12400)).toBe('12,400')
+  })
+
+  it('formats small step counts without commas', () => {
+    expect(formatStepCount(50)).toBe('50')
+  })
+
+  it('formats zero', () => {
+    expect(formatStepCount(0)).toBe('0')
   })
 })
