@@ -126,7 +126,7 @@ describe('MainPanel', () => {
     })
     render(<MainPanel />)
     expect(screen.getByText('Overview')).toBeInTheDocument()
-    expect(screen.getByText('Chart visualization coming soon')).toBeInTheDocument()
+    expect(screen.getByText('No metrics data yet')).toBeInTheDocument()
   })
 
   it('shows step count in header when sparkline data is available', () => {

@@ -132,7 +132,7 @@ export function MainPanel() {
       </div>
       <div className="experiment-header__dashboard">
         <MetricsGrid experimentId={selected.id} />
-        <ChartsArea />
+        <ChartsArea experimentId={selected.id} />
       </div>
     </div>
   )

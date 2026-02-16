@@ -1,11 +1,28 @@
 import { useState } from 'react'
 import { LineChart } from 'lucide-react'
 import './ChartsArea.css'
+import { useMetricsStore } from '@stores'
+import { TimeSeriesChart } from '@components/Experiments/TimeSeriesChart'
+import type { Options } from 'uplot'
 
 const TABS = ['Overview', 'Reward Components', 'Diagnostics'] as const
 
-export function ChartsArea() {
+interface ChartsAreaProps {
+  experimentId: string
+}
+
+export function ChartsArea({ experimentId }: ChartsAreaProps) {
   const [activeTab, setActiveTab] = useState<string>(TABS[0])
+
+  const chartData = useMetricsStore((state) => state.chartData[experimentId])
+
+  const series: Options['series'] = [
+    {},
+    { label: 'Loss', stroke: '#06b6d4' },
+    { label: 'Reward', stroke: '#10b981' },
+  ]
+
+  const hasData = chartData && chartData[0]?.length > 0
 
   return (
     <div className="charts-area">
@@ -20,11 +37,14 @@ export function ChartsArea() {
           </button>
         ))}
       </div>
-      <div className="charts-area__placeholder">
-        <LineChart className="charts-area__placeholder-icon" />
-        <span className="charts-area__placeholder-text">Chart visualization coming soon</span>
-        <span className="charts-area__placeholder-subtext">uPlot integration in Phase 3</span>
-      </div>
+      {activeTab === 'Overview' && hasData ? (
+        <TimeSeriesChart data={chartData} series={series} />
+      ) : (
+        <div className="charts-area__placeholder">
+          <LineChart className="charts-area__placeholder-icon" />
+          <span className="charts-area__placeholder-text">No metrics data yet</span>
+        </div>
+      )}
     </div>
   )
 }
