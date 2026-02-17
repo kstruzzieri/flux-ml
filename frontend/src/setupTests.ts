@@ -12,6 +12,21 @@ if (!globalThis.crypto?.randomUUID) {
   })
 }
 
+// Polyfill window.matchMedia for jsdom (required by uPlot)
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+})
+
 // Reset Wails mock state before each test
 beforeEach(() => {
   __resetMockLayout()

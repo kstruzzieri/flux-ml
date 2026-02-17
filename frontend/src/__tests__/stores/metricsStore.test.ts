@@ -3,6 +3,7 @@ import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
 import { __resetMockState } from '../../__mocks__/wailsjs/go/main/App'
 import { metrics } from '../../__mocks__/wailsjs/go/models'
 import { RecordMetrics, RecordRewardSignals } from '../../__mocks__/wailsjs/go/main/App'
+import { EventsEmit } from '../../__mocks__/wailsjs/runtime/runtime'
 
 beforeEach(() => {
   __resetMockState()
@@ -165,6 +166,159 @@ describe('useMetricsStore', () => {
   })
 })
 
+describe('chart data support', () => {
+  it('fetchChartData populates aligned data for loss and reward', async () => {
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'loss',
+        value: 2.5,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'loss',
+        value: 1.8,
+        timestamp: 2000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 3,
+        name: 'loss',
+        value: 0.9,
+        timestamp: 3000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'reward',
+        value: 0.1,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'reward',
+        value: 0.5,
+        timestamp: 2000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 3,
+        name: 'reward',
+        value: 0.8,
+        timestamp: 3000,
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchChartData('exp-1')
+    })
+
+    const chartData = useMetricsStore.getState().chartData['exp-1']
+    expect(chartData).toBeDefined()
+    // AlignedData: [steps[], loss[], reward[]]
+    expect(chartData).toHaveLength(3)
+    expect(chartData[0]).toEqual([1, 2, 3]) // steps
+    expect(chartData[1]).toEqual([2.5, 1.8, 0.9]) // loss values
+    expect(chartData[2]).toEqual([0.1, 0.5, 0.8]) // reward values
+  })
+
+  it('fetchChartData returns empty arrays when no data exists', async () => {
+    await act(async () => {
+      await useMetricsStore.getState().fetchChartData('exp-empty')
+    })
+
+    const chartData = useMetricsStore.getState().chartData['exp-empty']
+    expect(chartData).toBeDefined()
+    expect(chartData[0]).toEqual([]) // empty steps
+    expect(chartData[1]).toEqual([]) // empty loss
+    expect(chartData[2]).toEqual([]) // empty reward
+  })
+
+  it('fetchChartData handles missing reward data gracefully', async () => {
+    // Only loss data, no reward
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'loss',
+        value: 2.5,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'loss',
+        value: 1.8,
+        timestamp: 2000,
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchChartData('exp-1')
+    })
+
+    const chartData = useMetricsStore.getState().chartData['exp-1']
+    expect(chartData).toBeDefined()
+    expect(chartData[0]).toEqual([1, 2]) // steps from loss
+    expect(chartData[1]).toEqual([2.5, 1.8]) // loss values
+    expect(chartData[2]).toEqual([null, null]) // nulls for missing reward
+  })
+
+  it('fetchChartData aligns loss and reward on shared step axis', async () => {
+    // Loss at steps 1,2,3 — reward only at steps 1,3
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'loss',
+        value: 2.5,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'loss',
+        value: 1.8,
+        timestamp: 2000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 3,
+        name: 'loss',
+        value: 0.9,
+        timestamp: 3000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'reward',
+        value: 0.1,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 3,
+        name: 'reward',
+        value: 0.8,
+        timestamp: 3000,
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchChartData('exp-1')
+    })
+
+    const chartData = useMetricsStore.getState().chartData['exp-1']
+    expect(chartData[0]).toEqual([1, 2, 3]) // union of all steps
+    expect(chartData[1]).toEqual([2.5, 1.8, 0.9]) // loss at all steps
+    expect(chartData[2]).toEqual([0.1, null, 0.8]) // reward: null where missing
+  })
+})
+
 describe('reward signal support', () => {
   it('fetchLatestRewardSignals populates state for an experiment', async () => {
     await RecordRewardSignals('exp-1', [
@@ -220,5 +374,80 @@ describe('reward signal support', () => {
 
     const signals = useMetricsStore.getState().latestRewardSignals['exp-none']
     expect(signals).toEqual([])
+  })
+})
+
+describe('live updates', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('metrics:recorded event triggers chart data re-fetch', async () => {
+    // Seed initial data
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'loss',
+        value: 2.5,
+        timestamp: 1000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 1,
+        name: 'reward',
+        value: 0.1,
+        timestamp: 1000,
+      }),
+    ])
+
+    // Initialize store (sets up event listeners)
+    useMetricsStore.getState().initialize()
+
+    // Fetch initial chart data
+    await act(async () => {
+      await useMetricsStore.getState().fetchChartData('exp-1')
+    })
+
+    const initialData = useMetricsStore.getState().chartData['exp-1']
+    expect(initialData[0]).toEqual([1]) // 1 step
+
+    // Add new metrics
+    await RecordMetrics('exp-1', [
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'loss',
+        value: 1.8,
+        timestamp: 2000,
+      }),
+      new metrics.Metric({
+        experiment_id: 'exp-1',
+        step: 2,
+        name: 'reward',
+        value: 0.5,
+        timestamp: 2000,
+      }),
+    ])
+
+    // Simulate the event
+    EventsEmit('metrics:recorded', { experimentId: 'exp-1' })
+
+    // Advance past the 200ms debounce
+    await act(async () => {
+      jest.advanceTimersByTime(300)
+      // Allow promises to resolve
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    const updatedData = useMetricsStore.getState().chartData['exp-1']
+    expect(updatedData[0]).toEqual([1, 2]) // now 2 steps
+    expect(updatedData[1]).toEqual([2.5, 1.8]) // loss values
+    expect(updatedData[2]).toEqual([0.1, 0.5]) // reward values
   })
 })

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { GetLatestMetrics, QueryMetrics, QueryRewardSignals } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { downsampleLTTB, type Point } from '@utils/downsample'
+import { AlignedData } from 'uplot'
 
 /** Map of metric name to its latest value */
 type MetricMap = Record<string, number>
@@ -19,12 +20,14 @@ interface MetricsState {
   sparklineData: Record<string, Record<string, Point[]>>
   /** experimentId -> LatestRewardSignal[] */
   latestRewardSignals: Record<string, LatestRewardSignal[]>
+  chartData: Record<string, AlignedData>
 
   fetchLatestMetrics: (experimentId: string) => Promise<void>
   fetchAllLatestMetrics: (experimentIds: string[]) => Promise<void>
   fetchSparklineData: (experimentId: string) => Promise<void>
   fetchAllSparklineData: (experimentIds: string[]) => Promise<void>
   fetchLatestRewardSignals: (experimentId: string) => Promise<void>
+  fetchChartData: (experimentId: string) => Promise<void>
   initialize: () => void
 }
 
@@ -40,13 +43,19 @@ export function __resetMetricsStore(): void {
     _unsubscribe()
     _unsubscribe = null
   }
-  useMetricsStore.setState({ latestMetrics: {}, sparklineData: {}, latestRewardSignals: {} })
+  useMetricsStore.setState({
+    latestMetrics: {},
+    sparklineData: {},
+    latestRewardSignals: {},
+    chartData: {},
+  })
 }
 
 export const useMetricsStore = create<MetricsState>((set, get) => ({
   latestMetrics: {},
   sparklineData: {},
   latestRewardSignals: {},
+  chartData: {},
 
   fetchLatestMetrics: async (experimentId: string) => {
     try {
@@ -142,6 +151,46 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     }
   },
 
+  fetchChartData: async (experimentId: string) => {
+    // The method logic:
+    // - Call QueryMetrics(experimentId, 'loss', 0, 0) and QueryMetrics(experimentId, 'reward', 0, 0)
+    const resultsLoss = await QueryMetrics(experimentId, 'loss', 0, 0)
+    const resultsRewardSignals = await QueryMetrics(experimentId, 'reward', 0, 0)
+
+    if (resultsLoss.length === 0 && resultsRewardSignals.length === 0) {
+      set((state) => ({
+        chartData: {
+          ...state.chartData,
+          [experimentId]: [[], [], []],
+        },
+      }))
+      return
+    }
+
+    const uniqueSteps = [
+      ...resultsLoss.map((m) => m.step),
+      ...resultsRewardSignals.map((m) => m.step),
+    ]
+
+    const steps = [...new Set(uniqueSteps)].sort((a, b) => a - b)
+
+    // - Build a lookup map for each metric: step → value
+    const lossMap = new Map<number, number>()
+    for (const m of resultsLoss) lossMap.set(m.step, m.value)
+    const rewardMap = new Map<number, number>()
+    for (const m of resultsRewardSignals) rewardMap.set(m.step, m.value)
+
+    const lossValues = steps.map((s) => lossMap.get(s) ?? null)
+    const rewardValues = steps.map((s) => rewardMap.get(s) ?? null)
+
+    set((state) => ({
+      chartData: {
+        ...state.chartData,
+        [experimentId]: [steps, lossValues, rewardValues],
+      },
+    }))
+  },
+
   initialize: () => {
     if (_initialized) return
     _initialized = true
@@ -155,6 +204,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
         delete _debounceTimers[key]
         get().fetchLatestMetrics(data.experimentId!)
         get().fetchSparklineData(data.experimentId!)
+        get().fetchChartData(data.experimentId!)
       }, 200)
     })
 
