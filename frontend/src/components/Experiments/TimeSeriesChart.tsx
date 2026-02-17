@@ -11,10 +11,12 @@ interface TimeSeriesChartProps {
 export function TimeSeriesChart({ data, series }: TimeSeriesChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<uPlot | null>(null)
+  const dataRef = useRef(data)
+  dataRef.current = data
 
   // Effect 1: create uPlot on mount, destroy on unmount
   useEffect(() => {
-    if (!containerRef.current || data[0].length === 0) return
+    if (!containerRef.current || dataRef.current[0].length === 0) return
 
     const opts: Options = {
       width: 800,
@@ -22,7 +24,7 @@ export function TimeSeriesChart({ data, series }: TimeSeriesChartProps) {
       series: series!,
     }
 
-    chartRef.current = new uPlot(opts, data, containerRef.current)
+    chartRef.current = new uPlot(opts, dataRef.current, containerRef.current)
 
     return () => {
       chartRef.current?.destroy()
