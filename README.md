@@ -3,7 +3,7 @@
 **The ML development environment.**
 *Write code. Watch it learn.*
 
-![Flux Screenshot](docs/screenshots/024-sparkline-charts.png)
+![Flux Screenshot](docs/screenshots/028-basic-chart.png)
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-blue" alt="Status">
@@ -30,8 +30,11 @@ Flux is a lightweight, workspace-focused IDE designed specifically for machine l
 - **Experiment Tracking**: Create, manage, and monitor ML experiments with real-time status updates
 - **Inline Metrics**: Live loss and reward values displayed on each experiment card
 - **Sparkline Charts**: Mini SVG trend charts with LTTB downsampling for at-a-glance metric visualization
+- **Diagnostic Metric Cards**: KL divergence, learning rate, reward variance, and policy entropy with health-colored borders, trend indicators, and inline sparklines
+- **Reward Hack Detection**: Automated cross-metric pattern analysis for length gaming, sycophancy, KL drift, and reward collapse
+- **Loss/Reward Chart**: uPlot-based time-series chart with live updates via event-driven data streaming
 - **Resizable Panel Layout**: Persistent, draggable panel arrangement with collapsible columns
-- **Event-Driven Updates**: Real-time metric streaming via Wails event system — no polling
+- **Event-Driven Updates**: Real-time metric streaming via Wails event system -- no polling
 - **Performance-First**: Cold start < 2-4s, near-zero idle CPU, ~200-450MB RAM
 
 ### Planned
@@ -39,7 +42,7 @@ Flux is a lightweight, workspace-focused IDE designed specifically for machine l
 - **Run Profiles**: First-class support for ML training scripts and deployment commands
 - **Reward Signal Monitoring**: Track helpfulness, harmlessness, and honesty metrics for RLHF workflows
 - **Language Server Support**: TypeScript, Python, and Go via LSP
-- **Integrated Visualizations**: Full-size training metric charts with uPlot
+- **Full Chart Suite**: Reward components and diagnostics tabs with additional uPlot visualizations
 
 ## Tech Stack
 
@@ -79,9 +82,10 @@ This project is in active development. See the [GitHub Issues](https://github.co
 
 ### Completed
 
-- **Phase 1: Foundation** — Wails setup, core UI shell with resizable panels, icon system, design tokens
-- **Phase 2A: Data Layer** — SQLite integration, experiment CRUD, event sourcing, metrics storage (59 Go tests across 4 packages)
-- **Phase 2B: Experiment List** — Wails bindings, experiment list UI, inline metrics display, sparkline charts (171 frontend tests across 17 suites)
+- **Phase 1: Foundation** -- Wails setup, core UI shell with resizable panels, icon system, design tokens
+- **Phase 2A: Data Layer** -- SQLite integration, experiment CRUD, event sourcing, metrics storage (59 Go tests across 4 packages)
+- **Phase 2B: Experiment List** -- Wails bindings, experiment list UI, inline metrics display, sparkline charts
+- **Phase 2C: Experiment Detail** -- Diagnostic metric cards with health indicators, reward hack detection, uPlot chart integration with live updates (277 frontend tests across 25 suites)
 
 ### Phases
 
@@ -124,7 +128,7 @@ Key technical choices and their rationale:
 |----------|--------|-----------|
 | CSS | Vanilla CSS + BEM | Zero runtime overhead, optimal for fixed desktop UI |
 | State | Zustand | Lightweight, minimal boilerplate, scales well with domain stores |
-| Charts | uPlot (planned) | Lightweight Canvas-based, handles 100k+ points |
+| Charts | uPlot | Lightweight Canvas-based, handles 100k+ points |
 | Database | SQLite (`modernc.org/sqlite`) | Embedded, pure Go, no CGo, works offline |
 
 See [`docs/plan/08-frontend-architecture.md`](docs/plan/08-frontend-architecture.md) for detailed documentation.
