@@ -27,6 +27,15 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
+// Polyfill ResizeObserver for jsdom (required by TimeSeriesChart)
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof globalThis.ResizeObserver
+}
+
 // Reset Wails mock state before each test
 beforeEach(() => {
   __resetMockLayout()

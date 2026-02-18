@@ -67,7 +67,7 @@ function ExperimentCardInner({
           {sparklineData.loss && (
             <div className="exp-card__sparkline">
               <span className="exp-card__sparkline-label">loss</span>
-              <Sparkline data={sparklineData.loss} color="var(--color-chart-1)" />
+              <Sparkline data={sparklineData.loss} color="var(--color-chart-3)" />
             </div>
           )}
           {sparklineData.reward && (
