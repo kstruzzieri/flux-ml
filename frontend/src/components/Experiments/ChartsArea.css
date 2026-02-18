@@ -1,8 +1,14 @@
 .charts-area {
   display: flex;
   flex-direction: column;
-  min-height: 200px;
   margin-top: var(--spacing-md);
+}
+
+.timeseries-chart {
+  width: 100%;
+  height: 280px;
+  background: var(--color-bg-content);
+  border-radius: var(--radius-sm);
 }
 
 .charts-area__tabs {
@@ -60,4 +66,33 @@
 .charts-area__placeholder-subtext {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
+}
+
+/* uPlot dark theme overrides */
+.timeseries-chart .u-legend {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.timeseries-chart .u-legend .u-value {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Color legend values to match their series line */
+.timeseries-chart .u-legend .u-series:nth-child(2) .u-value {
+  color: #fbbf24;
+}
+
+.timeseries-chart .u-legend .u-series:nth-child(3) .u-value {
+  color: #34d399;
+}
+
+.timeseries-chart .u-cursor-x,
+.timeseries-chart .u-cursor-y {
+  border-color: rgba(139, 158, 176, 0.5) !important;
+}
+
+.timeseries-chart .u-select {
+  background: rgba(6, 182, 212, 0.1);
 }

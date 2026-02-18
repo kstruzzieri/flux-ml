@@ -10,8 +10,8 @@ const TABS = ['Overview', 'Reward Components', 'Diagnostics'] as const
 // Static series config — defined outside component to keep a stable reference
 const CHART_SERIES: Options['series'] = [
   {},
-  { label: 'Loss', stroke: '#06b6d4' },
-  { label: 'Reward', stroke: '#10b981' },
+  { label: 'Loss', stroke: '#f59e0b', width: 2, points: { show: false }, fill: undefined },
+  { label: 'Reward', stroke: '#10b981', width: 2, points: { show: false }, fill: undefined },
 ]
 
 interface ChartsAreaProps {

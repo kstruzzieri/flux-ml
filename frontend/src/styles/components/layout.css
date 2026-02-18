@@ -425,6 +425,11 @@
 
 .panel--main {
   grid-area: main;
+  min-height: 0;
+}
+
+.panel--main .experiment-header__dashboard {
+  overflow-y: auto;
 }
 
 /* Panels in right column use flex sizing */

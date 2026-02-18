@@ -16,17 +16,54 @@ export function TimeSeriesChart({ data, series }: TimeSeriesChartProps) {
 
   // Effect 1: create uPlot on mount, destroy on unmount
   useEffect(() => {
-    if (!containerRef.current || dataRef.current[0].length === 0) return
+    const el = containerRef.current
+    if (!el || dataRef.current[0].length === 0) return
 
+    const rect = el.getBoundingClientRect()
     const opts: Options = {
-      width: 800,
-      height: 300,
+      width: Math.floor(rect.width) || 800,
+      height: Math.floor(rect.height) || 300,
       series: series!,
+      scales: {
+        x: { time: false },
+      },
+      axes: [
+        {
+          stroke: '#8b9eb0',
+          grid: { stroke: 'rgba(139, 158, 176, 0.35)', width: 1 },
+          ticks: { stroke: 'rgba(139, 158, 176, 0.5)', width: 1 },
+          values: (_self: uPlot, ticks: number[]) => ticks.map((v) => String(Math.round(v))),
+        },
+        {
+          stroke: '#8b9eb0',
+          grid: { stroke: 'rgba(139, 158, 176, 0.35)', width: 1 },
+          ticks: { stroke: 'rgba(139, 158, 176, 0.5)', width: 1 },
+        },
+      ],
+      cursor: {
+        drag: { x: false, y: false },
+        points: {
+          fill: (self: uPlot, si: number) => self.series[si].stroke as string,
+          stroke: (self: uPlot, si: number) => self.series[si].stroke as string,
+          size: 8,
+          width: 2,
+        },
+      },
     }
 
-    chartRef.current = new uPlot(opts, dataRef.current, containerRef.current)
+    chartRef.current = new uPlot(opts, dataRef.current, el)
+
+    // Resize chart when container size changes
+    const observer = new ResizeObserver((entries) => {
+      if (!chartRef.current) return
+      const entry = entries[0]
+      const { width, height } = entry.contentRect
+      chartRef.current.setSize({ width: Math.floor(width), height: Math.floor(height) })
+    })
+    observer.observe(el)
 
     return () => {
+      observer.disconnect()
       chartRef.current?.destroy()
       chartRef.current = null
     }
