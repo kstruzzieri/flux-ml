@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 
 type ResizeDirection = 'horizontal' | 'vertical'
 
@@ -8,6 +8,11 @@ interface UseResizeOptions {
   minSize: number
   maxSize?: number
   onResizeEnd?: (size: number) => void
+  /** Ref to the container element. When provided, the resize max is clamped
+   *  to containerHeight - reserveSpace (measured once at drag start). */
+  containerRef?: RefObject<HTMLElement | null>
+  /** Pixels to reserve in the container for sibling panels (used with containerRef). */
+  reserveSpace?: number
 }
 
 interface UseResizeReturn {
@@ -22,6 +27,8 @@ export function useResize({
   minSize,
   maxSize = Infinity,
   onResizeEnd,
+  containerRef,
+  reserveSpace = 0,
 }: UseResizeOptions): UseResizeReturn {
   const [size, setSize] = useState(initialSize)
   const [isResizing, setIsResizing] = useState(false)
@@ -29,6 +36,7 @@ export function useResize({
   const startSizeRef = useRef(0)
   const currentSizeRef = useRef(size)
   const onResizeEndRef = useRef(onResizeEnd)
+  const dragMaxRef = useRef(maxSize)
 
   // Keep callback ref updated without causing effect re-runs
   onResizeEndRef.current = onResizeEnd
@@ -46,19 +54,29 @@ export function useResize({
       startPosRef.current = direction === 'vertical' ? e.clientX : e.clientY
       startSizeRef.current = size
 
+      // Measure container at drag start to get a stable max
+      if (containerRef?.current && containerRef.current.clientHeight > 0) {
+        const containerSize = containerRef.current.clientHeight
+        dragMaxRef.current = Math.max(minSize, containerSize - reserveSpace)
+      } else {
+        dragMaxRef.current = maxSize
+      }
+
       // Add body class for cursor
       document.body.classList.add(direction === 'vertical' ? 'resizing-col' : 'resizing-row')
     },
-    [direction, size]
+    [direction, size, containerRef, reserveSpace, maxSize, minSize]
   )
 
   useEffect(() => {
     if (!isResizing) return
 
+    const effectiveMax = dragMaxRef.current
+
     const handleMouseMove = (e: MouseEvent) => {
       const currentPos = direction === 'vertical' ? e.clientX : e.clientY
       const delta = currentPos - startPosRef.current
-      const newSize = Math.max(minSize, Math.min(maxSize, startSizeRef.current + delta))
+      const newSize = Math.max(minSize, Math.min(effectiveMax, startSizeRef.current + delta))
 
       currentSizeRef.current = newSize
       setSize(newSize)
@@ -77,7 +95,7 @@ export function useResize({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, direction, minSize, maxSize])
+  }, [isResizing, direction, minSize])
 
   return { size, handleMouseDown, isResizing }
 }

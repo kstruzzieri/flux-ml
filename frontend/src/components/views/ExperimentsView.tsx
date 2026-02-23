@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import { CSSProperties, useRef } from 'react'
 import {
   ExperimentsPanel,
   FilesPanel,
@@ -13,12 +13,17 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } fro
 
 const MIN_PANEL_SIZE = 100
 const MIN_ROW_HEIGHT = 80
+// Reserve space for the bottom panel header + some content
+const MIN_BOTTOM_PANEL_HEIGHT = 120
 
 interface ExperimentsViewProps {
   layout: LayoutPersistence
 }
 
 export function ExperimentsView({ layout }: ExperimentsViewProps) {
+  const leftColumnRef = useRef<HTMLDivElement>(null)
+  const rightColumnRef = useRef<HTMLDivElement>(null)
+
   const leftResize = useResize({
     direction: 'vertical',
     initialSize: layout.leftWidth,
@@ -44,6 +49,8 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
     initialSize: layout.leftTopHeight,
     minSize: MIN_ROW_HEIGHT,
     onResizeEnd: layout.setLeftTopHeight,
+    containerRef: leftColumnRef,
+    reserveSpace: MIN_BOTTOM_PANEL_HEIGHT,
   })
 
   const rightRowResize = useResize({
@@ -51,6 +58,8 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
     initialSize: layout.rightTopHeight,
     minSize: MIN_ROW_HEIGHT,
     onResizeEnd: layout.setRightTopHeight,
+    containerRef: rightColumnRef,
+    reserveSpace: MIN_BOTTOM_PANEL_HEIGHT,
   })
 
   const contentStyle = {
@@ -80,7 +89,7 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
       )}
 
       {/* Left column */}
-      <div className={leftColumnClasses} data-testid="left-column">
+      <div ref={leftColumnRef} className={leftColumnClasses} data-testid="left-column">
         <ExperimentsPanel />
 
         <div
@@ -90,7 +99,10 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         />
 
         <FilesPanel />
+      </div>
 
+      {/* Left collapse button - outside column to avoid overflow clip */}
+      {!layout.leftCollapsed && (
         <button
           className="collapse-btn collapse-btn--left-edge"
           data-testid="collapse-left"
@@ -99,7 +111,7 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         >
           <ChevronLeftIcon />
         </button>
-      </div>
+      )}
 
       {!layout.leftCollapsed && (
         <div
@@ -109,26 +121,28 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         />
       )}
 
-      <MainPanel />
+      <div className="content__center">
+        <MainPanel />
 
-      {!layout.outputCollapsed && (
-        <div
-          className="resize-handle resize-handle--horizontal resize-handle--output"
-          data-testid="resize-handle-output"
-          onMouseDown={outputResize.handleMouseDown}
-        />
-      )}
+        {!layout.outputCollapsed && (
+          <div
+            className="resize-handle resize-handle--horizontal resize-handle--output"
+            data-testid="resize-handle-output"
+            onMouseDown={outputResize.handleMouseDown}
+          />
+        )}
 
-      <div className="content__output-wrapper">
-        <button
-          className="collapse-btn collapse-btn--output-edge"
-          data-testid="collapse-output"
-          onClick={() => layout.setOutputCollapsed(!layout.outputCollapsed)}
-          aria-label={layout.outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
-        >
-          {layout.outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
-        </button>
-        <OutputPanel collapsed={layout.outputCollapsed} className={outputPanelClasses} />
+        <div className="content__output-wrapper">
+          <button
+            className="collapse-btn collapse-btn--output-edge"
+            data-testid="collapse-output"
+            onClick={() => layout.setOutputCollapsed(!layout.outputCollapsed)}
+            aria-label={layout.outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
+          >
+            {layout.outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </button>
+          <OutputPanel collapsed={layout.outputCollapsed} className={outputPanelClasses} />
+        </div>
       </div>
 
       {!layout.rightCollapsed && (
@@ -152,7 +166,7 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
       )}
 
       {/* Right column */}
-      <div className={rightColumnClasses} data-testid="right-column">
+      <div ref={rightColumnRef} className={rightColumnClasses} data-testid="right-column">
         <InspectorPanel />
 
         <div
@@ -162,7 +176,10 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         />
 
         <ConfigPanel />
+      </div>
 
+      {/* Right collapse button - outside column to avoid overflow clip */}
+      {!layout.rightCollapsed && (
         <button
           className="collapse-btn collapse-btn--right-edge"
           data-testid="collapse-right"
@@ -171,7 +188,7 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         >
           <ChevronRightIcon />
         </button>
-      </div>
+      )}
     </div>
   )
 }

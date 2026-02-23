@@ -70,26 +70,28 @@ export function CodeView({ layout }: CodeViewProps) {
         />
       )}
 
-      <CodeEditorPanel />
+      <div className="content__center">
+        <CodeEditorPanel />
 
-      {!layout.outputCollapsed && (
-        <div
-          className="resize-handle resize-handle--horizontal resize-handle--output"
-          data-testid="resize-handle-output"
-          onMouseDown={outputResize.handleMouseDown}
-        />
-      )}
+        {!layout.outputCollapsed && (
+          <div
+            className="resize-handle resize-handle--horizontal resize-handle--output"
+            data-testid="resize-handle-output"
+            onMouseDown={outputResize.handleMouseDown}
+          />
+        )}
 
-      <div className="content__output-wrapper">
-        <button
-          className="collapse-btn collapse-btn--output-edge"
-          data-testid="collapse-output"
-          onClick={() => layout.setOutputCollapsed(!layout.outputCollapsed)}
-          aria-label={layout.outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
-        >
-          {layout.outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
-        </button>
-        <OutputPanel collapsed={layout.outputCollapsed} className={outputPanelClasses} />
+        <div className="content__output-wrapper">
+          <button
+            className="collapse-btn collapse-btn--output-edge"
+            data-testid="collapse-output"
+            onClick={() => layout.setOutputCollapsed(!layout.outputCollapsed)}
+            aria-label={layout.outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
+          >
+            {layout.outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </button>
+          <OutputPanel collapsed={layout.outputCollapsed} className={outputPanelClasses} />
+        </div>
       </div>
     </div>
   )

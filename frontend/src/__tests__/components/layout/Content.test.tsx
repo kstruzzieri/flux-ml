@@ -191,8 +191,8 @@ describe('ExperimentsView', () => {
     fireEvent.mouseMove(document, { clientY: 300 })
     fireEvent.mouseUp(document)
 
-    // Check that CSS variable was updated (default is 200px + 100px drag)
-    expect(content.style.getPropertyValue('--panel-left-top-height')).toBe('300px')
+    // Check that CSS variable was updated (default is 500px + 100px drag)
+    expect(content.style.getPropertyValue('--panel-left-top-height')).toBe('600px')
   })
 
   // Right column row divider allows resizing Inspector vs Config panels.
@@ -209,8 +209,8 @@ describe('ExperimentsView', () => {
     fireEvent.mouseMove(document, { clientY: 350 })
     fireEvent.mouseUp(document)
 
-    // Check that CSS variable was updated (default is 200px + 150px drag)
-    expect(content.style.getPropertyValue('--panel-right-top-height')).toBe('350px')
+    // Check that CSS variable was updated (default is 450px + 150px drag)
+    expect(content.style.getPropertyValue('--panel-right-top-height')).toBe('600px')
   })
 
   // ========================================
