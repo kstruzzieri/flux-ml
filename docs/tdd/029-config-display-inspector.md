@@ -4,7 +4,7 @@
 Add experiment configuration display to the right panel. InspectorPanel (top right) shows experiment metadata — name, status badge, ID, and timestamps. ConfigPanel (bottom right) shows parsed config as a clickable key-value list with a system stats placeholder section below. Both panels read the selected experiment from the experiment store and show placeholder text when nothing is selected.
 
 ## Acceptance Criteria
-- [x] Default panel heights changed to 350px for both left and right top panels
+- [x] Default panel heights changed to 500px (left) and 450px (right) for top panels
 - [x] Seed config data enriched with varied, realistic fields per experiment
 - [x] InspectorPanel shows placeholder when no experiment selected
 - [x] InspectorPanel shows experiment name, status badge, truncated ID, and formatted timestamps when selected
@@ -23,7 +23,7 @@ Add experiment configuration display to the right panel. InspectorPanel (top rig
 3. **Clickable rows** — Visual interactivity (hover/cursor) establishes the pattern for future navigation to Code View.
 4. **Graceful error handling** — Config is stored as a JSON string at creation time. Invalid JSON shouldn't crash the panel.
 5. **System stats placeholder** — Reserves space for GPU/VRAM metrics without blocking on real data integration.
-6. **Larger top panels** — 350px default (up from 200px) gives the inspector and experiments panels more room, roughly 60/40 split.
+6. **Larger top panels** — 500px left / 450px right defaults (up from 200px) give the inspector and experiments panels more room, roughly 60/40 left split and 50/50 right split.
 
 ## Failing Tests
 
@@ -81,12 +81,12 @@ Snapshots:   0 total
 ### Files Modified (7)
 | File | Changes |
 |------|---------|
-| `app.go` | Default panel heights 200→350 (already applied) |
-| `frontend/src/hooks/useLayoutPersistence.ts` | Default heights 200→350 |
-| `frontend/src/__mocks__/wailsjs/go/main/App.ts` | Mock default heights 200→350 |
-| `frontend/src/__mocks__/wailsjs/go/models.ts` | Mock model defaults 200→350 |
+| `app.go` | Default panel heights 200→500 (left) and 200→450 (right) |
+| `frontend/src/hooks/useLayoutPersistence.ts` | Default heights 200→500/450 |
+| `frontend/src/__mocks__/wailsjs/go/main/App.ts` | Mock default heights 200→500/450 |
+| `frontend/src/__mocks__/wailsjs/go/models.ts` | Mock model defaults 200→500/450 |
 | `internal/experiment/seed.go` | Per-experiment config with model, lr, batch_size, kl_coef, optimizer, max_steps, warmup_steps |
 | `frontend/src/components/layout/panels/InspectorPanel.tsx` | Experiment metadata: name, status badge, truncated ID, timestamps |
 | `frontend/src/components/layout/panels/ConfigPanel.tsx` | Parsed config key-value list, system stats placeholder |
 | `frontend/src/styles/components/layout.css` | CSS for config-item, config-list, stats-grid, stat-card |
-| `frontend/src/__tests__/.../Content.test.tsx` | Updated drag-resize expectations for new 350px defaults |
+| `frontend/src/__tests__/.../Content.test.tsx` | Updated drag-resize expectations for new 500/450px defaults |

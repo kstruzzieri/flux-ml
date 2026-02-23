@@ -5,7 +5,7 @@ function parseConfig(config: string): Record<string, unknown> | null {
   if (!config) return null
   try {
     const parsed = JSON.parse(config)
-    if (typeof parsed === 'object' && parsed !== null) {
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
       return parsed as Record<string, unknown>
     }
     return null
@@ -49,18 +49,9 @@ export function ConfigPanel() {
               ) : (
                 <div className="config-list">
                   {configEntries.map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="config-item"
-                      data-testid={`config-item-${key}`}
-                      style={{ cursor: 'pointer' }}
-                    >
+                    <div key={key} className="config-item" data-testid={`config-item-${key}`}>
                       <span className="config-item__key">{key}</span>
-                      <span
-                        className="config-item__value"
-                        data-testid={`config-value-${key}`}
-                        style={{ fontFamily: 'var(--font-mono)' }}
-                      >
+                      <span className="config-item__value" data-testid={`config-value-${key}`}>
                         {formatValue(value)}
                       </span>
                     </div>

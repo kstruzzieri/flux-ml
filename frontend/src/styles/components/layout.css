@@ -811,7 +811,7 @@ body.resizing-row * {
   height: 14px;
 }
 
-/* Edge-positioned collapse buttons (positioned in grid, overlapping column edge) */
+/* Edge-positioned collapse buttons overlapping panel edge */
 .collapse-btn--left-edge {
   position: absolute;
   left: calc(var(--panel-left-width) + var(--panel-gap) - 10px);

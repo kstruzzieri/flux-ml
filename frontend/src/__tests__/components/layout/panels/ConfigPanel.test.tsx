@@ -73,10 +73,10 @@ describe('ConfigPanel', () => {
     })
     render(<ConfigPanel />)
     const valueElement = screen.getByTestId('config-value-model')
-    expect(valueElement.style.fontFamily).toContain('var(--font-mono)')
+    expect(valueElement.className).toContain('config-item__value')
   })
 
-  it('config items have pointer cursor for clickability', () => {
+  it('config items have pointer cursor class', () => {
     const exp = makeExperiment({ config: '{"model": "llama-7b"}' })
     useExperimentStore.setState({
       experiments: [exp],
@@ -84,7 +84,7 @@ describe('ConfigPanel', () => {
     })
     render(<ConfigPanel />)
     const configItem = screen.getByTestId('config-item-model')
-    expect(configItem).toHaveStyle({ cursor: 'pointer' })
+    expect(configItem.className).toContain('config-item')
   })
 
   it('handles invalid JSON gracefully', () => {
