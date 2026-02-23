@@ -1,7 +1,7 @@
 # TDD: Issue #29 - Config Display in Inspector
 
 ## Issue Summary
-Add experiment configuration display to the right panel. InspectorPanel (top right) shows experiment metadata — name, status badge, ID, and timestamps. ConfigPanel (bottom right) shows parsed config as a clickable key-value list with a system stats placeholder section below. Both panels read the selected experiment from the experiment store and show placeholder text when nothing is selected.
+Add experiment configuration display to the right panel. InspectorPanel (top right) shows experiment metadata — name, status badge, ID, and timestamps. ConfigPanel (bottom right) shows parsed config as a clickable key-value list. Both panels read the selected experiment from the experiment store and show placeholder text when nothing is selected.
 
 ## Acceptance Criteria
 - [x] Default panel heights changed to 500px (left) and 450px (right) for top panels
@@ -12,18 +12,16 @@ Add experiment configuration display to the right panel. InspectorPanel (top rig
 - [x] ConfigPanel parses config JSON and renders key-value rows
 - [x] Config values displayed in cyan monospace, keys in secondary text
 - [x] Config rows are clickable with hover highlight (future: navigate to Code View)
-- [x] ConfigPanel handles empty and invalid config JSON gracefully
-- [x] System stats placeholder section rendered below config
-- [x] CSS added for config display and stats grid
+- [x] ConfigPanel handles empty, invalid, and array config JSON gracefully
+- [x] CSS added for config display
 - [x] All existing tests continue to pass
 
 ## Rationale
 1. **Metadata at a glance** — InspectorPanel gives researchers quick context (name, status, age) without navigating away from the dashboard.
 2. **Config as key-value list** — Parsed JSON is easier to scan than raw text. Cyan monospace values match the design system's data display pattern.
 3. **Clickable rows** — Visual interactivity (hover/cursor) establishes the pattern for future navigation to Code View.
-4. **Graceful error handling** — Config is stored as a JSON string at creation time. Invalid JSON shouldn't crash the panel.
-5. **System stats placeholder** — Reserves space for GPU/VRAM metrics without blocking on real data integration.
-6. **Larger top panels** — 500px left / 450px right defaults (up from 200px) give the inspector and experiments panels more room, roughly 60/40 left split and 50/50 right split.
+4. **Graceful error handling** — Config is stored as a JSON string at creation time. Invalid JSON, empty strings, and arrays are all handled without crashing.
+5. **Larger top panels** — 500px left / 450px right defaults (up from 200px) give the inspector and experiments panels more room, roughly 60/40 left split and 50/50 right split.
 
 ## Failing Tests
 
@@ -46,7 +44,7 @@ it('renders config key-value pairs from valid JSON', ...)
 it('config values are displayed in monospace', ...)
 it('config items have pointer cursor for clickability', ...)
 it('handles invalid JSON gracefully', ...)
-it('shows system stats placeholder section', ...)
+it('handles JSON array gracefully', ...)
 ```
 
 ## Expected Output
@@ -87,6 +85,6 @@ Snapshots:   0 total
 | `frontend/src/__mocks__/wailsjs/go/models.ts` | Mock model defaults 200→500/450 |
 | `internal/experiment/seed.go` | Per-experiment config with model, lr, batch_size, kl_coef, optimizer, max_steps, warmup_steps |
 | `frontend/src/components/layout/panels/InspectorPanel.tsx` | Experiment metadata: name, status badge, truncated ID, timestamps |
-| `frontend/src/components/layout/panels/ConfigPanel.tsx` | Parsed config key-value list, system stats placeholder |
-| `frontend/src/styles/components/layout.css` | CSS for config-item, config-list, stats-grid, stat-card |
+| `frontend/src/components/layout/panels/ConfigPanel.tsx` | Parsed config key-value list |
+| `frontend/src/styles/components/layout.css` | CSS for config-item, config-list |
 | `frontend/src/__tests__/.../Content.test.tsx` | Updated drag-resize expectations for new 500/450px defaults |

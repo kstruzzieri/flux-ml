@@ -1,17 +1,26 @@
 import { useExperimentStore } from '@stores'
 
 function capitalize(s: string): string {
+  if (!s) return ''
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+const timestampFormat = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
 function formatTimestamp(unix: number): string {
-  return new Date(unix * 1000).toLocaleString()
+  return timestampFormat.format(new Date(unix * 1000))
 }
 
 export function InspectorPanel() {
-  const selectedId = useExperimentStore((s) => s.selectedId)
-  const experiments = useExperimentStore((s) => s.experiments)
-  const experiment = experiments.find((e) => e.id === selectedId)
+  const experiment = useExperimentStore((s) => s.experiments.find((e) => e.id === s.selectedId))
 
   return (
     <div className="panel panel--inspector">

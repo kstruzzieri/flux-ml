@@ -21,16 +21,15 @@ function formatValue(value: unknown): string {
 }
 
 export function ConfigPanel() {
-  const selectedId = useExperimentStore((s) => s.selectedId)
-  const experiments = useExperimentStore((s) => s.experiments)
-  const experiment = experiments.find((e) => e.id === selectedId)
+  const experiment = useExperimentStore((s) => s.experiments.find((e) => e.id === s.selectedId))
+  const config = experiment?.config
 
   const configEntries = useMemo(() => {
-    if (!experiment) return null
-    const parsed = parseConfig(experiment.config)
+    if (!config) return null
+    const parsed = parseConfig(config)
     if (!parsed) return null
     return Object.entries(parsed)
-  }, [experiment])
+  }, [config])
 
   return (
     <div className="panel panel--config">
@@ -40,47 +39,18 @@ export function ConfigPanel() {
       <div className="panel__content">
         {!experiment ? (
           <div className="panel__placeholder">Select an experiment to view configuration</div>
+        ) : !configEntries || configEntries.length === 0 ? (
+          <div className="panel__placeholder">No configuration data</div>
         ) : (
-          <div className="config-panel-content">
-            <div className="config-section">
-              <div className="config-section__title">Configuration</div>
-              {!configEntries || configEntries.length === 0 ? (
-                <div className="panel__placeholder">No configuration data</div>
-              ) : (
-                <div className="config-list">
-                  {configEntries.map(([key, value]) => (
-                    <div key={key} className="config-item" data-testid={`config-item-${key}`}>
-                      <span className="config-item__key">{key}</span>
-                      <span className="config-item__value" data-testid={`config-value-${key}`}>
-                        {formatValue(value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="stats-section">
-              <div className="config-section__title">System</div>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-card__label">GPU</div>
-                  <div className="stat-card__value">A100 80GB</div>
-                  <div className="stat-card__bar">
-                    <div className="stat-card__bar-fill" style={{ width: '72%' }} />
-                  </div>
-                  <div className="stat-card__percent">72%</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-card__label">VRAM</div>
-                  <div className="stat-card__value">58 / 80 GB</div>
-                  <div className="stat-card__bar">
-                    <div className="stat-card__bar-fill" style={{ width: '73%' }} />
-                  </div>
-                  <div className="stat-card__percent">73%</div>
-                </div>
+          <div className="config-list">
+            {configEntries.map(([key, value]) => (
+              <div key={key} className="config-item" data-testid={`config-item-${key}`}>
+                <span className="config-item__key">{key}</span>
+                <span className="config-item__value" data-testid={`config-value-${key}`}>
+                  {formatValue(value)}
+                </span>
               </div>
-            </div>
+            ))}
           </div>
         )}
       </div>

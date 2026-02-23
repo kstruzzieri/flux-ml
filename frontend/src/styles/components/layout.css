@@ -2874,27 +2874,6 @@ body.resizing-row * {
  * Config Panel
  * ======================================== */
 
-.config-panel-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  min-height: 0;
-}
-
-.config-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.config-section__title {
-  font-size: 10px;
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
 .config-list {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-subtle);
@@ -2929,66 +2908,4 @@ body.resizing-row * {
   font-size: var(--font-size-sm);
   font-family: var(--font-mono);
   color: var(--color-accent);
-}
-
-/* ========================================
- * System Stats Placeholder
- * ======================================== */
-
-.stats-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-sm);
-}
-
-.stat-card {
-  background: var(--color-bg-content);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-md);
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-card__label {
-  font-size: 10px;
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-.stat-card__value {
-  font-size: var(--font-size-sm);
-  font-family: var(--font-mono);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
-.stat-card__bar {
-  height: 4px;
-  background: var(--color-bg-elevated);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 2px;
-}
-
-.stat-card__bar-fill {
-  height: 100%;
-  background: var(--color-accent);
-  border-radius: 2px;
-}
-
-.stat-card__percent {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
 }

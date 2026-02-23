@@ -97,15 +97,13 @@ describe('ConfigPanel', () => {
     expect(screen.getByText('No configuration data')).toBeInTheDocument()
   })
 
-  it('shows system stats placeholder section', () => {
-    const exp = makeExperiment()
+  it('handles JSON array gracefully', () => {
+    const exp = makeExperiment({ config: '[1, 2, 3]' })
     useExperimentStore.setState({
       experiments: [exp],
       selectedId: exp.id,
     })
     render(<ConfigPanel />)
-    expect(screen.getByText('System')).toBeInTheDocument()
-    expect(screen.getByText('GPU')).toBeInTheDocument()
-    expect(screen.getByText('VRAM')).toBeInTheDocument()
+    expect(screen.getByText('No configuration data')).toBeInTheDocument()
   })
 })
