@@ -72,8 +72,8 @@ export namespace main {
     leftWidth: number = 280
     rightWidth: number = 320
     outputHeight: number = 180
-    leftTopHeight: number = 200
-    rightTopHeight: number = 200
+    leftTopHeight: number = 500
+    rightTopHeight: number = 450
     leftCollapsed: boolean = false
     rightCollapsed: boolean = false
     outputCollapsed: boolean = false
