@@ -7,7 +7,9 @@ import type { Options } from 'uplot'
 
 const TABS = ['Overview', 'Reward Components', 'Diagnostics'] as const
 
-// Static series config — defined outside component to keep a stable reference
+// Static series config — defined outside component so the reference never
+// changes. Moving this inline will cause the uPlot useEffect to re-fire
+// on every render, destroying and recreating the chart.
 const CHART_SERIES: Options['series'] = [
   {},
   { label: 'Loss', stroke: '#f59e0b', width: 2, points: { show: false }, fill: undefined },

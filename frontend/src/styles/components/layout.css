@@ -811,7 +811,11 @@ body.resizing-row * {
   height: 14px;
 }
 
-/* Edge-positioned collapse buttons overlapping panel edge */
+/* Edge-positioned collapse buttons overlapping panel edge.
+   These are positioned outside column containers (which have overflow: hidden)
+   using the same CSS variables that size the columns. If the columns ever get
+   min-clamped or animated to a different width, these positions will drift.
+   Consider a portal or edge-wrapper approach if this becomes a problem. */
 .collapse-btn--left-edge {
   position: absolute;
   left: calc(var(--panel-left-width) + var(--panel-gap) - 10px);

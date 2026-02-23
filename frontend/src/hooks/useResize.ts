@@ -95,6 +95,9 @@ export function useResize({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
+    // maxSize intentionally omitted — we snapshot the effective max into
+    // dragMaxRef at drag-start (via containerRef measurement) so that the
+    // limit stays stable for the duration of a single drag gesture.
   }, [isResizing, direction, minSize])
 
   return { size, handleMouseDown, isResizing }

@@ -81,11 +81,11 @@
 
 /* Color legend values to match their series line */
 .timeseries-chart .u-legend .u-series:nth-child(2) .u-value {
-  color: #fbbf24;
+  color: #f59e0b;
 }
 
 .timeseries-chart .u-legend .u-series:nth-child(3) .u-value {
-  color: #34d399;
+  color: #10b981;
 }
 
 .timeseries-chart .u-cursor-x,
