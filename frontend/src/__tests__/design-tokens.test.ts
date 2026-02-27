@@ -89,6 +89,9 @@ describe('Design Tokens', () => {
         '--color-chart-3',
         '--color-chart-4',
         '--color-chart-5',
+        '--color-chart-axis',
+        '--color-chart-grid',
+        '--color-chart-tick',
         // Borders
         '--color-border-default',
         '--color-border-muted',

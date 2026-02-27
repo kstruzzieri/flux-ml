@@ -1,0 +1,27 @@
+/* Shared chart container — used by all Charts/ components */
+.flux-chart {
+  width: 100%;
+  height: 280px;
+  background: var(--color-bg-content);
+  border-radius: var(--radius-sm);
+}
+
+/* uPlot dark-theme overrides */
+.flux-chart .u-legend {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.flux-chart .u-legend .u-value {
+  font-weight: var(--font-weight-semibold);
+}
+
+.flux-chart .u-cursor-x,
+.flux-chart .u-cursor-y {
+  border-color: var(--color-chart-tick) !important;
+}
+
+.flux-chart .u-select {
+  background: var(--color-accent-dim);
+}
