@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { LineChart } from 'lucide-react'
 import './ChartsArea.css'
 import { useMetricsStore } from '@stores'
-import { TimeSeriesChart } from '@components/Experiments/TimeSeriesChart'
+import { TimeSeriesChart, CHART_COLORS } from '@components/Charts'
 import type { Options } from 'uplot'
 
 const TABS = ['Overview', 'Reward Components', 'Diagnostics'] as const
@@ -12,8 +12,14 @@ const TABS = ['Overview', 'Reward Components', 'Diagnostics'] as const
 // on every render, destroying and recreating the chart.
 const CHART_SERIES: Options['series'] = [
   {},
-  { label: 'Loss', stroke: '#f59e0b', width: 2, points: { show: false }, fill: undefined },
-  { label: 'Reward', stroke: '#10b981', width: 2, points: { show: false }, fill: undefined },
+  { label: 'Loss', stroke: CHART_COLORS.loss, width: 2, points: { show: false }, fill: undefined },
+  {
+    label: 'Reward',
+    stroke: CHART_COLORS.reward,
+    width: 2,
+    points: { show: false },
+    fill: undefined,
+  },
 ]
 
 interface ChartsAreaProps {

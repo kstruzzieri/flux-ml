@@ -60,6 +60,9 @@
   --color-chart-3: #f59e0b;
   --color-chart-4: #10b981;
   --color-chart-5: #ec4899;
+  --color-chart-axis: #8b9eb0;
+  --color-chart-grid: rgba(139, 158, 176, 0.35);
+  --color-chart-tick: rgba(139, 158, 176, 0.5);
 
   /* ========================================
    * Colors - Text
