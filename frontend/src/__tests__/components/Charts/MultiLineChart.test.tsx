@@ -74,6 +74,14 @@ describe('MultiLineChart', () => {
     expect(opts.series[3].stroke).toBe('#0000ff')
   })
 
+  it('falls back to palette when seriesColors is an empty array', () => {
+    render(<MultiLineChart data={SAMPLE_DATA} seriesLabels={['a', 'b', 'c']} seriesColors={[]} />)
+    const [opts] = MockUplot.mock.calls[0]
+    expect(opts.series[1].stroke).toBe(CHART_COLORS.palette[0])
+    expect(opts.series[2].stroke).toBe(CHART_COLORS.palette[1])
+    expect(opts.series[3].stroke).toBe(CHART_COLORS.palette[2])
+  })
+
   it('renders empty state without creating uPlot', () => {
     const emptyData: AlignedData = [[], [], []]
     render(<MultiLineChart data={emptyData} seriesLabels={['a', 'b']} />)

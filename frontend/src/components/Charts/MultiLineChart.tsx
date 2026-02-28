@@ -22,7 +22,7 @@ export function MultiLineChart({ data, seriesLabels, seriesColors, height }: Mul
   }
 
   const series = useMemo<Options['series']>(() => {
-    const colors = seriesColors ?? CHART_COLORS.palette
+    const colors = seriesColors?.length ? seriesColors : CHART_COLORS.palette
     return [
       {}, // x-axis placeholder
       ...seriesLabels.map((label, i) => ({
