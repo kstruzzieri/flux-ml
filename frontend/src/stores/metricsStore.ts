@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create, type StoreApi } from 'zustand'
 import { GetLatestMetrics, QueryMetrics, QueryRewardSignals } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { downsampleLTTB, type Point } from '@utils/downsample'
@@ -21,6 +21,7 @@ interface MetricsState {
   /** experimentId -> LatestRewardSignal[] */
   latestRewardSignals: Record<string, LatestRewardSignal[]>
   chartData: Record<string, AlignedData>
+  rewardComponentChartData: Record<string, AlignedData>
 
   fetchLatestMetrics: (experimentId: string) => Promise<void>
   fetchAllLatestMetrics: (experimentIds: string[]) => Promise<void>
@@ -28,12 +29,89 @@ interface MetricsState {
   fetchAllSparklineData: (experimentIds: string[]) => Promise<void>
   fetchLatestRewardSignals: (experimentId: string) => Promise<void>
   fetchChartData: (experimentId: string) => Promise<void>
+  fetchRewardComponentChartData: (experimentId: string) => Promise<void>
   initialize: () => void
 }
 
 let _initialized = false
 let _debounceTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 let _unsubscribe: (() => void) | null = null
+
+const REWARD_COMPONENTS = ['helpfulness', 'harmlessness', 'honesty'] as const
+
+/**
+ * Queries reward signals once and updates both latestRewardSignals and
+ * rewardComponentChartData, avoiding duplicate backend calls.
+ */
+async function _fetchAllRewardData(
+  experimentId: string,
+  set: StoreApi<MetricsState>['setState']
+): Promise<void> {
+  try {
+    const results = await QueryRewardSignals(experimentId, '', 0, 0)
+
+    // --- Derive latestRewardSignals ---
+    const latestByComponent = new Map<string, LatestRewardSignal>()
+    for (const s of results) {
+      const existing = latestByComponent.get(s.component)
+      if (!existing || s.step > existing.step) {
+        latestByComponent.set(s.component, {
+          component: s.component,
+          value: s.value,
+          step: s.step,
+        })
+      }
+    }
+
+    // --- Derive rewardComponentChartData ---
+    let chartData: AlignedData = [[], [], [], []]
+    if (results.length > 0) {
+      const componentMaps = new Map<string, Map<number, number>>()
+      for (const name of REWARD_COMPONENTS) componentMaps.set(name, new Map())
+
+      for (const s of results) {
+        const map = componentMaps.get(s.component)
+        if (map) map.set(s.step, s.value)
+      }
+
+      const stepSet = new Set<number>()
+      for (const map of componentMaps.values()) {
+        for (const step of map.keys()) stepSet.add(step)
+      }
+      const steps = [...stepSet].sort((a, b) => a - b)
+
+      const aligned = REWARD_COMPONENTS.map((name) => {
+        const map = componentMaps.get(name)!
+        return steps.map((s) => map.get(s) ?? null)
+      })
+      chartData = [steps, ...aligned]
+    }
+
+    // --- Set both slices in a single state update ---
+    set((state: MetricsState) => ({
+      latestRewardSignals: {
+        ...state.latestRewardSignals,
+        [experimentId]: [...latestByComponent.values()],
+      },
+      rewardComponentChartData: {
+        ...state.rewardComponentChartData,
+        [experimentId]: chartData,
+      },
+    }))
+  } catch (err) {
+    console.error(`Failed to fetch reward data for ${experimentId}:`, err)
+    set((state: MetricsState) => ({
+      latestRewardSignals: {
+        ...state.latestRewardSignals,
+        [experimentId]: [],
+      },
+      rewardComponentChartData: {
+        ...state.rewardComponentChartData,
+        [experimentId]: [[], [], [], []],
+      },
+    }))
+  }
+}
 
 export function __resetMetricsStore(): void {
   _initialized = false
@@ -48,6 +126,7 @@ export function __resetMetricsStore(): void {
     sparklineData: {},
     latestRewardSignals: {},
     chartData: {},
+    rewardComponentChartData: {},
   })
 }
 
@@ -56,6 +135,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
   sparklineData: {},
   latestRewardSignals: {},
   chartData: {},
+  rewardComponentChartData: {},
 
   fetchLatestMetrics: async (experimentId: string) => {
     try {
@@ -192,6 +272,59 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     }
   },
 
+  fetchRewardComponentChartData: async (experimentId: string) => {
+    try {
+      const results = await QueryRewardSignals(experimentId, '', 0, 0)
+
+      if (results.length === 0) {
+        set((state) => ({
+          rewardComponentChartData: {
+            ...state.rewardComponentChartData,
+            [experimentId]: [[], [], [], []],
+          },
+        }))
+        return
+      }
+
+      // Group by component: Map<component, Map<step, value>>
+      const componentMaps = new Map<string, Map<number, number>>()
+      for (const name of REWARD_COMPONENTS) componentMaps.set(name, new Map())
+
+      for (const s of results) {
+        const map = componentMaps.get(s.component)
+        if (map) map.set(s.step, s.value)
+      }
+
+      // Build union step axis
+      const stepSet = new Set<number>()
+      for (const map of componentMaps.values()) {
+        for (const step of map.keys()) stepSet.add(step)
+      }
+      const steps = [...stepSet].sort((a, b) => a - b)
+
+      // Build aligned arrays with null-fill
+      const aligned = REWARD_COMPONENTS.map((name) => {
+        const map = componentMaps.get(name)!
+        return steps.map((s) => map.get(s) ?? null)
+      })
+
+      set((state) => ({
+        rewardComponentChartData: {
+          ...state.rewardComponentChartData,
+          [experimentId]: [steps, ...aligned],
+        },
+      }))
+    } catch (err) {
+      console.error(`Failed to fetch reward component chart data for ${experimentId}:`, err)
+      set((state) => ({
+        rewardComponentChartData: {
+          ...state.rewardComponentChartData,
+          [experimentId]: [[], [], [], []],
+        },
+      }))
+    }
+  },
+
   initialize: () => {
     if (_initialized) return
     _initialized = true
@@ -216,7 +349,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       if (_debounceTimers[key]) clearTimeout(_debounceTimers[key])
       _debounceTimers[key] = setTimeout(() => {
         delete _debounceTimers[key]
-        get().fetchLatestRewardSignals(data.experimentId!)
+        _fetchAllRewardData(data.experimentId!, set)
       }, 200)
     })
 

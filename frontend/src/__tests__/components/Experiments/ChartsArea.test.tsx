@@ -1,7 +1,11 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { ChartsArea } from '@components/Experiments/ChartsArea'
 import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
-import { __resetMockState, RecordMetrics } from '../../../__mocks__/wailsjs/go/main/App'
+import {
+  __resetMockState,
+  RecordMetrics,
+  RecordRewardSignals,
+} from '../../../__mocks__/wailsjs/go/main/App'
 import { metrics } from '../../../__mocks__/wailsjs/go/models'
 
 // Mock uPlot (same pattern as TimeSeriesChart test)
@@ -117,5 +121,46 @@ describe('ChartsArea', () => {
     render(<ChartsArea experimentId="exp-1" />)
     fireEvent.click(screen.getByText('Reward Components'))
     expect(screen.queryByTestId('timeseries-chart')).not.toBeInTheDocument()
+  })
+
+  it('renders MultiLineChart in Reward Components tab when data available', async () => {
+    await RecordRewardSignals('exp-1', [
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 10,
+        component: 'helpfulness',
+        value: 0.8,
+        distribution: '',
+      }),
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 10,
+        component: 'harmlessness',
+        value: 0.7,
+        distribution: '',
+      }),
+      new metrics.RewardSignal({
+        experiment_id: 'exp-1',
+        step: 10,
+        component: 'honesty',
+        value: 0.75,
+        distribution: '',
+      }),
+    ])
+
+    await act(async () => {
+      await useMetricsStore.getState().fetchRewardComponentChartData('exp-1')
+    })
+
+    render(<ChartsArea experimentId="exp-1" />)
+    fireEvent.click(screen.getByText('Reward Components'))
+    expect(screen.getByTestId('multiline-chart')).toBeInTheDocument()
+  })
+
+  it('shows placeholder in Reward Components tab when no data', () => {
+    render(<ChartsArea experimentId="exp-empty" />)
+    fireEvent.click(screen.getByText('Reward Components'))
+    expect(screen.getByText('No metrics data yet')).toBeInTheDocument()
+    expect(screen.queryByTestId('multiline-chart')).not.toBeInTheDocument()
   })
 })
