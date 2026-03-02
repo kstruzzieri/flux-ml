@@ -21,6 +21,7 @@ interface MetricsState {
   /** experimentId -> LatestRewardSignal[] */
   latestRewardSignals: Record<string, LatestRewardSignal[]>
   chartData: Record<string, AlignedData>
+  rewardComponentChartData: Record<string, AlignedData>
 
   fetchLatestMetrics: (experimentId: string) => Promise<void>
   fetchAllLatestMetrics: (experimentIds: string[]) => Promise<void>
@@ -28,6 +29,7 @@ interface MetricsState {
   fetchAllSparklineData: (experimentIds: string[]) => Promise<void>
   fetchLatestRewardSignals: (experimentId: string) => Promise<void>
   fetchChartData: (experimentId: string) => Promise<void>
+  fetchRewardComponentChartData: (experimentId: string) => Promise<void>
   initialize: () => void
 }
 
@@ -48,6 +50,7 @@ export function __resetMetricsStore(): void {
     sparklineData: {},
     latestRewardSignals: {},
     chartData: {},
+    rewardComponentChartData: {},
   })
 }
 
@@ -56,6 +59,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
   sparklineData: {},
   latestRewardSignals: {},
   chartData: {},
+  rewardComponentChartData: {},
 
   fetchLatestMetrics: async (experimentId: string) => {
     try {
@@ -192,6 +196,54 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     }
   },
 
+  fetchRewardComponentChartData: async (experimentId: string) => {
+    const COMPONENTS = ['helpfulness', 'harmlessness', 'honesty'] as const
+    try {
+      const results = await QueryRewardSignals(experimentId, '', 0, 0)
+
+      if (results.length === 0) {
+        set((state) => ({
+          rewardComponentChartData: {
+            ...state.rewardComponentChartData,
+            [experimentId]: [[], [], [], []],
+          },
+        }))
+        return
+      }
+
+      // Group by component: Map<component, Map<step, value>>
+      const componentMaps = new Map<string, Map<number, number>>()
+      for (const name of COMPONENTS) componentMaps.set(name, new Map())
+
+      for (const s of results) {
+        const map = componentMaps.get(s.component)
+        if (map) map.set(s.step, s.value)
+      }
+
+      // Build union step axis
+      const stepSet = new Set<number>()
+      for (const map of componentMaps.values()) {
+        for (const step of map.keys()) stepSet.add(step)
+      }
+      const steps = [...stepSet].sort((a, b) => a - b)
+
+      // Build aligned arrays with null-fill
+      const aligned = COMPONENTS.map((name) => {
+        const map = componentMaps.get(name)!
+        return steps.map((s) => map.get(s) ?? null)
+      })
+
+      set((state) => ({
+        rewardComponentChartData: {
+          ...state.rewardComponentChartData,
+          [experimentId]: [steps, ...aligned],
+        },
+      }))
+    } catch (err) {
+      console.error(`Failed to fetch reward component chart data for ${experimentId}:`, err)
+    }
+  },
+
   initialize: () => {
     if (_initialized) return
     _initialized = true
@@ -217,6 +269,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       _debounceTimers[key] = setTimeout(() => {
         delete _debounceTimers[key]
         get().fetchLatestRewardSignals(data.experimentId!)
+        get().fetchRewardComponentChartData(data.experimentId!)
       }, 200)
     })
 
