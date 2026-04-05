@@ -1,3 +1,32 @@
+export namespace annotation {
+	
+	export class Annotation {
+	    id: number;
+	    experiment_id: string;
+	    step: number;
+	    type: string;
+	    label: string;
+	    data: string;
+	    created_at: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Annotation(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.experiment_id = source["experiment_id"];
+	        this.step = source["step"];
+	        this.type = source["type"];
+	        this.label = source["label"];
+	        this.data = source["data"];
+	        this.created_at = source["created_at"];
+	    }
+	}
+
+}
+
 export namespace event {
 	
 	export class Event {

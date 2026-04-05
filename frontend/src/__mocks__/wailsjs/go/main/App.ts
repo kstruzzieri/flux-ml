@@ -1,5 +1,5 @@
 // Mock for Wails Go bindings - used in Jest tests
-import { event, experiment, main, metrics } from '../models'
+import { annotation, event, experiment, main, metrics } from '../models'
 
 const DEFAULT_LAYOUT: main.LayoutState = {
   leftWidth: 280,
@@ -17,7 +17,9 @@ let mockExperiments: experiment.Experiment[] = []
 let mockEvents: event.Event[] = []
 let mockMetrics: metrics.Metric[] = []
 let mockRewardSignals: metrics.RewardSignal[] = []
+let mockAnnotations: annotation.Annotation[] = []
 let nextEventId = 1
+let nextAnnotationId = 1
 let listExperimentsOverride: (() => Promise<experiment.Experiment[]>) | null = null
 
 // --- Existing methods ---
@@ -195,6 +197,57 @@ export function QueryRewardSignals(
   return Promise.resolve(results)
 }
 
+// --- Annotation API ---
+
+export function CreateAnnotation(
+  experimentID: string,
+  step: number,
+  annType: string,
+  label: string,
+  data: string,
+): Promise<annotation.Annotation> {
+  const ann = new annotation.Annotation({
+    id: nextAnnotationId++,
+    experiment_id: experimentID,
+    step,
+    type: annType,
+    label,
+    data,
+    created_at: Math.floor(Date.now() / 1000),
+  } as Record<string, unknown>)
+  mockAnnotations.push(ann)
+  return Promise.resolve(ann)
+}
+
+export function QueryAnnotations(
+  experimentID: string,
+  annType: string,
+  startStep: number,
+  endStep: number,
+): Promise<annotation.Annotation[]> {
+  let results = mockAnnotations.filter((a) => a.experiment_id === experimentID)
+  if (annType) results = results.filter((a) => a.type === annType)
+  if (startStep > 0) results = results.filter((a) => a.step >= startStep)
+  if (endStep > 0) results = results.filter((a) => a.step <= endStep)
+  return Promise.resolve(results.sort((a, b) => a.step - b.step))
+}
+
+export function DeleteAnnotation(
+  _experimentID: string,
+  id: number,
+): Promise<void> {
+  const idx = mockAnnotations.findIndex((a) => a.id === id)
+  if (idx === -1) return Promise.reject(new Error(`annotation not found: ${id}`))
+  mockAnnotations.splice(idx, 1)
+  return Promise.resolve()
+}
+
+// --- Window management ---
+
+export function ToggleMaximize(): Promise<void> {
+  return Promise.resolve()
+}
+
 // --- Test helpers ---
 
 export function __resetMockState(): void {
@@ -203,7 +256,9 @@ export function __resetMockState(): void {
   mockEvents = []
   mockMetrics = []
   mockRewardSignals = []
+  mockAnnotations = []
   nextEventId = 1
+  nextAnnotationId = 1
   listExperimentsOverride = null
 }
 

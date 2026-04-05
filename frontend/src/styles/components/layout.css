@@ -23,23 +23,29 @@
 }
 
 /* ========================================
- * Header
+ * Title Bar (transparent macOS title bar)
+ *
+ * Uses flex layout with Wails drag regions.
+ * Content renders under the native title bar
+ * via TitlebarAppearsTransparent + FullSizeContent.
+ * Double-click maximizes via ToggleMaximize() binding.
  * ======================================== */
 
-.header {
+.titlebar {
   grid-area: header;
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  padding: 0 var(--spacing-lg);
+  padding: 0 12px;
+  gap: 12px;
   background-color: var(--color-bg-chrome);
   border-bottom: 1px solid var(--color-border-muted);
   z-index: var(--z-sticky);
+  --wails-draggable: drag;
   position: relative;
 }
 
-/* Center glow - emanating from logo area */
-.header::before {
+/* Radial glow emanating from logo area */
+.titlebar::before {
   content: '';
   position: absolute;
   top: 0;
@@ -54,25 +60,41 @@
   pointer-events: none;
 }
 
-.header__brand {
+/* Only interactive elements should be non-draggable */
+.titlebar button,
+.titlebar a,
+.titlebar input,
+.titlebar [role='button'] {
+  --wails-draggable: no-drag;
+}
+
+/* Traffic lights spacer (macOS) */
+.titlebar__traffic-lights {
+  width: 68px;
+  flex-shrink: 0;
+}
+
+/* Left section: logo + title */
+.titlebar__left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.header__logo {
-  width: 28px;
-  height: 28px;
+.titlebar__logo {
+  width: 32px;
+  height: 32px;
 }
 
-.header__title {
-  font-size: 15px;
+.titlebar__title {
+  font-size: 14px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   letter-spacing: -0.02em;
 }
 
-.header__nav {
+/* Center: workspace tabs (absolutely centered in the window) */
+.titlebar__nav {
   display: flex;
   position: absolute;
   left: 50%;
@@ -82,7 +104,7 @@
   border-right: 1px solid var(--color-border-muted);
 }
 
-.header__nav-item {
+.titlebar__tab {
   width: 130px;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
@@ -97,23 +119,25 @@
   justify-content: center;
   gap: var(--spacing-xs);
   height: 100%;
+  white-space: nowrap;
 }
 
-.header__nav-item:last-child {
+.titlebar__tab:last-child {
   border-right: none;
 }
 
-.header__nav-item:hover {
+.titlebar__tab:hover {
   color: var(--color-text-primary);
+  background-color: var(--color-bg-hover);
 }
 
-.header__nav-item--active {
+.titlebar__tab--active {
   background-color: var(--color-accent-dim);
   color: var(--color-accent);
   box-shadow: inset 0 0 0 0.75px var(--color-accent);
 }
 
-.header__nav-icon {
+.titlebar__tab-icon {
   width: 16px;
   height: 16px;
   display: flex;
@@ -121,43 +145,47 @@
   justify-content: center;
 }
 
-.header__nav-icon svg {
+.titlebar__tab-icon svg {
   width: 100%;
   height: 100%;
 }
 
-.header__spacer {
-  flex: 1;
-}
-
-.header__status {
+/* Right section: status + controls */
+.titlebar__right {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: 5px 10px;
+  margin-left: auto;
+}
+
+.titlebar__status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 3px 8px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-muted);
   border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
 }
 
-.header__status--warning {
+.titlebar__status--warning {
   border-color: var(--color-warning-dim);
 }
 
-.header__status-dot {
-  width: 8px;
-  height: 8px;
+.titlebar__status-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--color-success);
-  box-shadow: 0 0 8px var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
   animation: pulse 2s infinite;
 }
 
-.header__status-dot--warning {
+.titlebar__status-dot--warning {
   background: var(--color-warning);
-  box-shadow: 0 0 8px var(--color-warning);
+  box-shadow: 0 0 6px var(--color-warning);
   animation: pulse-warning 1s infinite;
 }
 
@@ -185,7 +213,7 @@
   }
 }
 
-.header__command-palette {
+.titlebar__cmd {
   display: flex;
   align-items: center;
   background: transparent;
@@ -194,29 +222,26 @@
   padding: 0;
 }
 
-.header__kbd {
+.titlebar__kbd {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-muted);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: 2px 6px;
   font-size: var(--font-size-xs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   transition: all var(--transition-fast);
 }
 
-.header__command-palette:hover .header__kbd {
+.titlebar__cmd:hover .titlebar__kbd {
   border-color: var(--color-border-default);
   color: var(--color-text-secondary);
 }
 
-.header__version {
+.titlebar__version {
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   color: var(--color-text-muted);
-  padding: 4px 8px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-sm);
 }
 
 /* ========================================
@@ -256,18 +281,20 @@
 
 .activity-bar__btn--active {
   color: var(--color-accent);
+  background: radial-gradient(circle at center, var(--color-accent-glow) 0%, transparent 70%);
 }
 
-.activity-bar__btn--active::before {
+.activity-bar__btn--active::after {
   content: '';
   position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 24px;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   background: var(--color-accent);
-  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px var(--color-accent-glow);
 }
 
 .activity-bar__btn svg {
@@ -719,6 +746,17 @@
   z-index: var(--z-sticky);
   background: transparent;
   transition: background-color var(--transition-fast);
+  position: relative;
+}
+
+/* Extended drag zone for easier grabbing on vertical handles */
+.resize-handle--vertical::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  right: -2px;
 }
 
 .resize-handle:hover,
@@ -811,50 +849,40 @@ body.resizing-row * {
   height: 14px;
 }
 
-/* Edge-positioned collapse buttons overlapping panel edge.
-   These are positioned outside column containers (which have overflow: hidden)
-   using the same CSS variables that size the columns. If the columns ever get
-   min-clamped or animated to a different width, these positions will drift.
-   Consider a portal or edge-wrapper approach if this becomes a problem. */
-.collapse-btn--left-edge {
+/* Collapse button embedded in resize handle: hidden until hover */
+.resize-handle .collapse-btn {
   position: absolute;
-  left: calc(var(--panel-left-width) + var(--panel-gap) - 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: var(--z-sticky);
+  opacity: 0;
+  transition:
+    opacity 150ms ease,
+    background 150ms ease;
+  z-index: calc(var(--z-sticky) + 1);
+  pointer-events: none;
 }
 
-.collapse-btn--right-edge {
-  position: absolute;
-  right: calc(var(--panel-right-width) + var(--panel-gap) - 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: var(--z-sticky);
+.resize-handle:hover .collapse-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.collapse-btn--output-edge {
-  position: absolute;
-  top: -11px;
+/* When panel is collapsed, always show the expand button */
+.resize-handle--collapsed .collapse-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Vertical resize handles: center the button vertically */
+.resize-handle--vertical .collapse-btn {
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-sticky);
+  transform: translate(-50%, -50%);
 }
 
-/* Expand button positioned at edge when panel is fully collapsed */
-.collapse-btn--expand-left {
-  position: absolute;
-  left: var(--panel-gap);
+/* Horizontal resize handles: center the button horizontally */
+.resize-handle--horizontal .collapse-btn {
   top: 50%;
-  transform: translateY(-50%);
-  z-index: var(--z-sticky);
-}
-
-.collapse-btn--expand-right {
-  position: absolute;
-  right: var(--panel-gap);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: var(--z-sticky);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Column containers need relative positioning for absolute buttons */

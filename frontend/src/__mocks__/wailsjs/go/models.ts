@@ -1,5 +1,33 @@
 // Mock for Wails Go models - used in Jest tests
 // eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace annotation {
+  export class Annotation {
+    id: number = 0
+    experiment_id: string = ''
+    step: number = 0
+    type: string = ''
+    label: string = ''
+    data: string = ''
+    created_at: number = 0
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new Annotation(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.id = source['id'] as number
+      this.experiment_id = source['experiment_id'] as string
+      this.step = source['step'] as number
+      this.type = source['type'] as string
+      this.label = source['label'] as string
+      this.data = source['data'] as string
+      this.created_at = source['created_at'] as number
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace event {
   export class Event {
     id: number = 0

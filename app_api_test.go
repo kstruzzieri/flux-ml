@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kstruzzieri/flux-ml/internal/annotation"
 	"github.com/kstruzzieri/flux-ml/internal/database"
 	"github.com/kstruzzieri/flux-ml/internal/event"
 	"github.com/kstruzzieri/flux-ml/internal/experiment"
@@ -25,6 +26,7 @@ func newTestApp(t *testing.T) *App {
 		experiments: experiment.NewStore(db),
 		events:      event.NewStore(db),
 		metrics:     metrics.NewStore(db),
+		annotations: annotation.NewStore(db),
 	}
 }
 
@@ -387,6 +389,87 @@ func TestApp_EmitEvent_NilCtx(t *testing.T) {
 	signals := []metrics.RewardSignal{{Step: 1, Component: "test", Value: 0.5}}
 	if err := app.RecordRewardSignals(exp2.ID, signals); err != nil {
 		t.Fatalf("RecordRewardSignals with nil ctx should not fail: %v", err)
+	}
+}
+
+// --- Annotation API Tests ---
+
+func TestApp_CreateAnnotation(t *testing.T) {
+	app := newTestApp(t)
+	exp, err := app.CreateExperiment("test", `{}`)
+	if err != nil {
+		t.Fatalf("CreateExperiment failed: %v", err)
+	}
+	ann, err := app.CreateAnnotation(exp.ID, 100, "checkpoint", "Step 100", `{"path": "/ckpt"}`)
+	if err != nil {
+		t.Fatalf("CreateAnnotation failed: %v", err)
+	}
+	if ann.ID == 0 {
+		t.Error("expected non-zero ID")
+	}
+	if ann.Step != 100 {
+		t.Errorf("Step = %d, want 100", ann.Step)
+	}
+	if ann.Type != "checkpoint" {
+		t.Errorf("Type = %q, want %q", ann.Type, "checkpoint")
+	}
+}
+
+func TestApp_QueryAnnotations(t *testing.T) {
+	app := newTestApp(t)
+	exp, _ := app.CreateExperiment("test", `{}`)
+	app.CreateAnnotation(exp.ID, 100, "checkpoint", "Ckpt 100", "")
+	app.CreateAnnotation(exp.ID, 200, "alert", "Drift", "")
+	app.CreateAnnotation(exp.ID, 300, "checkpoint", "Ckpt 300", "")
+
+	// All annotations
+	all, err := app.QueryAnnotations(exp.ID, "", 0, 0)
+	if err != nil {
+		t.Fatalf("QueryAnnotations failed: %v", err)
+	}
+	if len(all) != 3 {
+		t.Errorf("got %d annotations, want 3", len(all))
+	}
+
+	// Filter by type
+	checkpoints, err := app.QueryAnnotations(exp.ID, "checkpoint", 0, 0)
+	if err != nil {
+		t.Fatalf("QueryAnnotations (checkpoint) failed: %v", err)
+	}
+	if len(checkpoints) != 2 {
+		t.Errorf("got %d checkpoints, want 2", len(checkpoints))
+	}
+}
+
+func TestApp_DeleteAnnotation(t *testing.T) {
+	app := newTestApp(t)
+	exp, _ := app.CreateExperiment("test", `{}`)
+	ann, _ := app.CreateAnnotation(exp.ID, 100, "note", "Delete me", "")
+
+	err := app.DeleteAnnotation(exp.ID, ann.ID)
+	if err != nil {
+		t.Fatalf("DeleteAnnotation failed: %v", err)
+	}
+
+	results, _ := app.QueryAnnotations(exp.ID, "", 0, 0)
+	if len(results) != 0 {
+		t.Errorf("got %d annotations after delete, want 0", len(results))
+	}
+}
+
+func TestApp_NilAnnotationStore(t *testing.T) {
+	app := &App{}
+	_, err := app.CreateAnnotation("id", 100, "checkpoint", "label", "")
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("CreateAnnotation: expected 'database not initialized', got %v", err)
+	}
+	_, err = app.QueryAnnotations("id", "", 0, 0)
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("QueryAnnotations: expected 'database not initialized', got %v", err)
+	}
+	err = app.DeleteAnnotation("id", 1)
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("DeleteAnnotation: expected 'database not initialized', got %v", err)
 	}
 }
 

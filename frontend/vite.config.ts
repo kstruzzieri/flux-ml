@@ -15,9 +15,7 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/assets'),
     },
   },
-  server: {
-    strictPort: true,
-  },
+  server: {},
   build: {
     outDir: 'dist',
     emptyOutDir: true,

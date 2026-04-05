@@ -19,7 +19,7 @@
   --color-bg-active: #21262d;
 
   /* Chrome - header and activity bar */
-  --color-bg-chrome: #131921;
+  --color-bg-chrome: #0d1117;
   --color-bg-chrome-hover: #1c2128;
 
   /* ========================================
@@ -134,7 +134,7 @@
   /* ========================================
    * Layout - Panel Sizes (Island Layout)
    * ======================================== */
-  --header-height: 48px;
+  --header-height: 44px;
   --activity-bar-width: 52px;
   --panel-left-width: 280px;
   --panel-right-width: 320px;

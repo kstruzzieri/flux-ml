@@ -76,18 +76,6 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
 
   return (
     <div className="content" data-testid="experiments-view" style={contentStyle}>
-      {/* Expand button when left is collapsed */}
-      {layout.leftCollapsed && (
-        <button
-          className="collapse-btn collapse-btn--expand-left"
-          data-testid="expand-left"
-          onClick={() => layout.setLeftCollapsed(false)}
-          aria-label="Expand left panel"
-        >
-          <ChevronRightIcon />
-        </button>
-      )}
-
       {/* Left column */}
       <div ref={leftColumnRef} className={leftColumnClasses} data-testid="left-column">
         <ExperimentsPanel />
@@ -101,68 +89,117 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
         <FilesPanel />
       </div>
 
-      {/* Left collapse button - outside column to avoid overflow clip */}
-      {!layout.leftCollapsed && (
-        <button
-          className="collapse-btn collapse-btn--left-edge"
-          data-testid="collapse-left"
-          onClick={() => layout.setLeftCollapsed(true)}
-          aria-label="Collapse left panel"
+      {/* Left ↔ Center resize handle with embedded collapse/expand button */}
+      {layout.leftCollapsed ? (
+        <div
+          className="resize-handle resize-handle--vertical resize-handle--left resize-handle--collapsed"
+          data-testid="resize-handle-left"
         >
-          <ChevronLeftIcon />
-        </button>
-      )}
-
-      {!layout.leftCollapsed && (
+          <button
+            className="collapse-btn"
+            data-testid="expand-left"
+            onClick={() => layout.setLeftCollapsed(false)}
+            aria-label="Expand left panel"
+          >
+            <ChevronRightIcon />
+          </button>
+        </div>
+      ) : (
         <div
           className="resize-handle resize-handle--vertical resize-handle--left"
           data-testid="resize-handle-left"
           onMouseDown={leftResize.handleMouseDown}
-        />
+        >
+          <button
+            className="collapse-btn"
+            data-testid="collapse-left"
+            onClick={(e) => {
+              e.stopPropagation()
+              layout.setLeftCollapsed(true)
+            }}
+            aria-label="Collapse left panel"
+          >
+            <ChevronLeftIcon />
+          </button>
+        </div>
       )}
 
       <div className="content__center">
         <MainPanel />
 
-        {!layout.outputCollapsed && (
+        {/* Main ↔ Output resize handle with embedded collapse/expand button */}
+        {layout.outputCollapsed ? (
+          <div
+            className="resize-handle resize-handle--horizontal resize-handle--output resize-handle--collapsed"
+            data-testid="resize-handle-output"
+          >
+            <button
+              className="collapse-btn"
+              data-testid="collapse-output"
+              onClick={() => layout.setOutputCollapsed(false)}
+              aria-label="Expand output panel"
+            >
+              <ChevronUpIcon />
+            </button>
+          </div>
+        ) : (
           <div
             className="resize-handle resize-handle--horizontal resize-handle--output"
             data-testid="resize-handle-output"
             onMouseDown={outputResize.handleMouseDown}
-          />
+          >
+            <button
+              className="collapse-btn"
+              data-testid="collapse-output"
+              onClick={(e) => {
+                e.stopPropagation()
+                layout.setOutputCollapsed(true)
+              }}
+              aria-label="Collapse output panel"
+            >
+              <ChevronDownIcon />
+            </button>
+          </div>
         )}
 
         <div className="content__output-wrapper">
-          <button
-            className="collapse-btn collapse-btn--output-edge"
-            data-testid="collapse-output"
-            onClick={() => layout.setOutputCollapsed(!layout.outputCollapsed)}
-            aria-label={layout.outputCollapsed ? 'Expand output panel' : 'Collapse output panel'}
-          >
-            {layout.outputCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          </button>
           <OutputPanel collapsed={layout.outputCollapsed} className={outputPanelClasses} />
         </div>
       </div>
 
-      {!layout.rightCollapsed && (
+      {/* Center ↔ Right resize handle with embedded collapse/expand button */}
+      {layout.rightCollapsed ? (
+        <div
+          className="resize-handle resize-handle--vertical resize-handle--right resize-handle--collapsed"
+          data-testid="resize-handle-right"
+        >
+          <button
+            className="collapse-btn"
+            data-testid="expand-right"
+            onClick={() => layout.setRightCollapsed(false)}
+            aria-label="Expand right panel"
+          >
+            <ChevronLeftIcon />
+          </button>
+        </div>
+      ) : (
         <div
           className="resize-handle resize-handle--vertical resize-handle--right"
           data-testid="resize-handle-right"
           onMouseDown={rightResize.handleMouseDown}
-        />
-      )}
-
-      {/* Expand button when right is collapsed */}
-      {layout.rightCollapsed && (
-        <button
-          className="collapse-btn collapse-btn--expand-right"
-          data-testid="expand-right"
-          onClick={() => layout.setRightCollapsed(false)}
-          aria-label="Expand right panel"
         >
-          <ChevronLeftIcon />
-        </button>
+          <button
+            className="collapse-btn"
+            data-testid="collapse-right"
+            onClick={(e) => {
+              e.stopPropagation()
+              layout.setRightCollapsed(true)
+            }}
+            aria-label="Collapse right panel"
+          >
+            <ChevronRightIcon />
+          </button>
+        </div>
       )}
 
       {/* Right column */}
@@ -177,18 +214,6 @@ export function ExperimentsView({ layout }: ExperimentsViewProps) {
 
         <ConfigPanel />
       </div>
-
-      {/* Right collapse button - outside column to avoid overflow clip */}
-      {!layout.rightCollapsed && (
-        <button
-          className="collapse-btn collapse-btn--right-edge"
-          data-testid="collapse-right"
-          onClick={() => layout.setRightCollapsed(true)}
-          aria-label="Collapse right panel"
-        >
-          <ChevronRightIcon />
-        </button>
-      )}
     </div>
   )
 }

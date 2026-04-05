@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart } from 'lucide-react'
 import './ChartsArea.css'
-import { useMetricsStore } from '@stores'
+import { useMetricsStore, useAnnotationStore } from '@stores'
 import { TimeSeriesChart, MultiLineChart, CHART_COLORS } from '@components/Charts'
 import type { Options } from 'uplot'
 
@@ -46,18 +46,28 @@ export function ChartsArea({ experimentId }: ChartsAreaProps) {
     (state) => state.fetchRewardComponentChartData
   )
 
-  // Fetch chart data when experiment changes
+  const annotations = useAnnotationStore((state) => state.annotations[experimentId])
+  const fetchAnnotations = useAnnotationStore((state) => state.fetchAnnotations)
+  const initAnnotations = useAnnotationStore((state) => state.initialize)
+
+  // Wire up annotation event listeners (idempotent, runs once)
+  useEffect(() => {
+    initAnnotations()
+  }, [initAnnotations])
+
+  // Fetch chart data and annotations when experiment changes
   useEffect(() => {
     fetchChartData(experimentId)
     fetchRewardComponentChartData(experimentId)
-  }, [experimentId, fetchChartData, fetchRewardComponentChartData])
+    fetchAnnotations(experimentId)
+  }, [experimentId, fetchChartData, fetchRewardComponentChartData, fetchAnnotations])
 
   const hasOverviewData = chartData && chartData[0]?.length > 0
   const hasRewardComponentData = rewardComponentChartData && rewardComponentChartData[0]?.length > 0
 
   const renderContent = () => {
     if (activeTab === 'Overview' && hasOverviewData) {
-      return <TimeSeriesChart data={chartData} series={CHART_SERIES} />
+      return <TimeSeriesChart data={chartData} series={CHART_SERIES} annotations={annotations} />
     }
     if (activeTab === 'Reward Components' && hasRewardComponentData) {
       return (
@@ -65,6 +75,7 @@ export function ChartsArea({ experimentId }: ChartsAreaProps) {
           data={rewardComponentChartData}
           seriesLabels={REWARD_COMPONENT_LABELS}
           seriesColors={REWARD_COMPONENT_COLORS}
+          annotations={annotations}
         />
       )
     }
