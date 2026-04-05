@@ -37,10 +37,27 @@
   align-items: center;
   padding: 0 12px;
   gap: 12px;
-  background: linear-gradient(180deg, var(--color-accent-dim) 0%, var(--color-bg-chrome) 100%);
-  border-bottom: 1px solid var(--color-accent-glow);
+  background-color: var(--color-bg-chrome);
+  border-bottom: 1px solid var(--color-border-muted);
   z-index: var(--z-sticky);
   --wails-draggable: drag;
+  position: relative;
+}
+
+/* Radial glow emanating from logo area */
+.titlebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 350px;
+  background: radial-gradient(
+    ellipse at 90px center,
+    rgba(255, 255, 255, 0.07) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
 /* Only interactive elements should be non-draggable */
@@ -65,8 +82,8 @@
 }
 
 .titlebar__logo {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 
 .titlebar__title {
@@ -76,21 +93,25 @@
   letter-spacing: -0.02em;
 }
 
-/* Center: workspace tabs */
+/* Center: workspace tabs (absolutely centered in the window) */
 .titlebar__nav {
   display: flex;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   height: 100%;
-  margin-left: auto;
+  border-left: 1px solid var(--color-border-muted);
+  border-right: 1px solid var(--color-border-muted);
 }
 
 .titlebar__tab {
-  padding: 0 var(--spacing-lg);
-  font-size: var(--font-size-sm);
+  width: 130px;
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   background: transparent;
   border: none;
-  border-left: 1px solid var(--color-border-muted);
+  border-right: 1px solid var(--color-border-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
@@ -102,7 +123,7 @@
 }
 
 .titlebar__tab:last-child {
-  border-right: 1px solid var(--color-border-muted);
+  border-right: none;
 }
 
 .titlebar__tab:hover {
@@ -113,12 +134,12 @@
 .titlebar__tab--active {
   background-color: var(--color-accent-dim);
   color: var(--color-accent);
-  box-shadow: inset 0 -2px 0 var(--color-accent);
+  box-shadow: inset 0 0 0 0.75px var(--color-accent);
 }
 
 .titlebar__tab-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;

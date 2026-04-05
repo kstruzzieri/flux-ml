@@ -38,7 +38,7 @@ func (a *App) DeleteAnnotation(experimentID string, id int64) error {
 	if a.annotations == nil {
 		return fmt.Errorf("database not initialized")
 	}
-	if err := a.annotations.Delete(id); err != nil {
+	if err := a.annotations.Delete(experimentID, id); err != nil {
 		return err
 	}
 	a.emitEvent("annotation:deleted", map[string]interface{}{

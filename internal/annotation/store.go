@@ -123,9 +123,12 @@ func (s *Store) Query(experimentID, annType string, startStep, endStep int64) ([
 	return results, nil
 }
 
-// Delete removes an annotation by ID.
-func (s *Store) Delete(id int64) error {
-	result, err := s.db.Exec(`DELETE FROM annotations WHERE id = ?`, id)
+// Delete removes an annotation by ID, scoped to the given experiment.
+func (s *Store) Delete(experimentID string, id int64) error {
+	if experimentID == "" {
+		return fmt.Errorf("experiment ID cannot be empty")
+	}
+	result, err := s.db.Exec(`DELETE FROM annotations WHERE id = ? AND experiment_id = ?`, id, experimentID)
 	if err != nil {
 		return fmt.Errorf("deleting annotation: %w", err)
 	}

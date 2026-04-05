@@ -33,9 +33,6 @@ function FluxIcon() {
         </filter>
       </defs>
 
-      {/* Background */}
-      <rect x="8" y="8" width="84" height="84" rx="18" fill="#0a0e14" />
-
       {/* Helpfulness (green) - trends up */}
       <path
         d="M22 55 Q35 55 45 50 Q55 45 65 30 Q72 22 78 20"

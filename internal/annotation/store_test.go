@@ -207,7 +207,7 @@ func TestDelete(t *testing.T) {
 	store := newTestAnnotationStore(t)
 	ann, _ := store.Create(store.experimentID, 100, "note", "To be deleted", "")
 
-	err := store.Delete(ann.ID)
+	err := store.Delete(store.experimentID, ann.ID)
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
@@ -220,7 +220,7 @@ func TestDelete(t *testing.T) {
 
 func TestDelete_NotFound(t *testing.T) {
 	store := newTestAnnotationStore(t)
-	err := store.Delete(99999)
+	err := store.Delete(store.experimentID, 99999)
 	if err == nil {
 		t.Fatal("expected error for non-existent ID, got nil")
 	}

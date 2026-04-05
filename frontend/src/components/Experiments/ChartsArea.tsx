@@ -48,6 +48,12 @@ export function ChartsArea({ experimentId }: ChartsAreaProps) {
 
   const annotations = useAnnotationStore((state) => state.annotations[experimentId])
   const fetchAnnotations = useAnnotationStore((state) => state.fetchAnnotations)
+  const initAnnotations = useAnnotationStore((state) => state.initialize)
+
+  // Wire up annotation event listeners (idempotent, runs once)
+  useEffect(() => {
+    initAnnotations()
+  }, [initAnnotations])
 
   // Fetch chart data and annotations when experiment changes
   useEffect(() => {

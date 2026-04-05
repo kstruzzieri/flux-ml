@@ -3,7 +3,7 @@
 **The ML development environment.**
 *Write code. Watch it learn.*
 
-![Flux Screenshot](docs/screenshots/028-basic-chart.png)
+![Flux Screenshot](docs/screenshots/033-chart-annotations.png)
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-blue" alt="Status">
