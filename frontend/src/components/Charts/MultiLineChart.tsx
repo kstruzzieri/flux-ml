@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import type { AlignedData, Options } from 'uplot'
 import { useUPlot } from './useUPlot'
 import { buildAxes, buildCursor, buildScales, CHART_COLORS } from './chartTheme'
+import { annotationsPlugin } from './annotationsPlugin'
+import type { Annotation } from '../../types/annotation'
 import './Charts.css'
 
 interface MultiLineChartProps {
@@ -9,9 +11,16 @@ interface MultiLineChartProps {
   seriesLabels: string[]
   seriesColors?: string[]
   height?: number
+  annotations?: Annotation[]
 }
 
-export function MultiLineChart({ data, seriesLabels, seriesColors, height }: MultiLineChartProps) {
+export function MultiLineChart({
+  data,
+  seriesLabels,
+  seriesColors,
+  height,
+  annotations,
+}: MultiLineChartProps) {
   if (process.env.NODE_ENV !== 'production' && data.length > 0) {
     const expectedDataArrays = seriesLabels.length + 1 // +1 for x-axis
     if (data.length !== expectedDataArrays) {
@@ -35,6 +44,11 @@ export function MultiLineChart({ data, seriesLabels, seriesColors, height }: Mul
     ]
   }, [seriesLabels, seriesColors])
 
+  const plugins = useMemo(
+    () => (annotations?.length ? [annotationsPlugin(annotations)] : []),
+    [annotations]
+  )
+
   const containerRef = useUPlot(
     (w, h) => ({
       width: w,
@@ -43,9 +57,10 @@ export function MultiLineChart({ data, seriesLabels, seriesColors, height }: Mul
       scales: buildScales(),
       axes: buildAxes(),
       cursor: buildCursor(),
+      plugins,
     }),
     data,
-    [series]
+    [series, plugins]
   )
 
   return (

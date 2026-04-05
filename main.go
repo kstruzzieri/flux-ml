@@ -28,8 +28,16 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 22, G: 27, B: 34, A: 1},
 		Mac: &mac.Options{
+			TitleBar: &mac.TitleBar{
+				TitlebarAppearsTransparent: true,
+				HideTitle:                 true,
+				HideTitleBar:              false,
+				FullSizeContent:           true,
+				UseToolbar:                false,
+			},
 			Appearance: mac.NSAppearanceNameDarkAqua,
 		},
+		Frameless: false,
 		OnStartup:  app.startup,
 		OnShutdown:       app.shutdown,
 		Bind: []interface{}{

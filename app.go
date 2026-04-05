@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kstruzzieri/flux-ml/internal/annotation"
 	"github.com/kstruzzieri/flux-ml/internal/database"
 	"github.com/kstruzzieri/flux-ml/internal/event"
 	"github.com/kstruzzieri/flux-ml/internal/experiment"
@@ -22,6 +23,7 @@ type App struct {
 	experiments *experiment.Store
 	events      *event.Store
 	metrics     *metrics.Store
+	annotations *annotation.Store
 	dbError     string
 }
 
@@ -74,6 +76,7 @@ func (a *App) startup(ctx context.Context) {
 	a.experiments = experiment.NewStore(db)
 	a.events = event.NewStore(db)
 	a.metrics = metrics.NewStore(db)
+	a.annotations = annotation.NewStore(db)
 
 	// Seed demo data for UI development (no-op if data already exists)
 	if err := a.experiments.SeedDemoExperiments(); err != nil {
@@ -81,6 +84,9 @@ func (a *App) startup(ctx context.Context) {
 	}
 	if err := a.metrics.SeedDemoMetrics(); err != nil {
 		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo metrics: %v", err))
+	}
+	if err := a.annotations.SeedDemoAnnotations(); err != nil {
+		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo annotations: %v", err))
 	}
 }
 
@@ -96,6 +102,11 @@ func (a *App) emitEvent(eventName string, data ...interface{}) {
 	if a.ctx != nil {
 		wailsRuntime.EventsEmit(a.ctx, eventName, data...)
 	}
+}
+
+// ToggleMaximize toggles the window between maximized and restored states.
+func (a *App) ToggleMaximize() {
+	wailsRuntime.WindowToggleMaximise(a.ctx)
 }
 
 // shutdown is called when the app is closing

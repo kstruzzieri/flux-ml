@@ -6,8 +6,16 @@ export function AppendEvent(arg1, arg2, arg3) {
   return window['go']['main']['App']['AppendEvent'](arg1, arg2, arg3);
 }
 
+export function CreateAnnotation(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['CreateAnnotation'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function CreateExperiment(arg1, arg2) {
   return window['go']['main']['App']['CreateExperiment'](arg1, arg2);
+}
+
+export function DeleteAnnotation(arg1, arg2) {
+  return window['go']['main']['App']['DeleteAnnotation'](arg1, arg2);
 }
 
 export function DeleteExperiment(arg1) {
@@ -42,6 +50,10 @@ export function ListExperiments() {
   return window['go']['main']['App']['ListExperiments']();
 }
 
+export function QueryAnnotations(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['QueryAnnotations'](arg1, arg2, arg3, arg4);
+}
+
 export function QueryMetrics(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['QueryMetrics'](arg1, arg2, arg3, arg4);
 }
@@ -64,6 +76,10 @@ export function ReplayEvents(arg1, arg2, arg3, arg4) {
 
 export function SaveLayout(arg1) {
   return window['go']['main']['App']['SaveLayout'](arg1);
+}
+
+export function ToggleMaximize() {
+  return window['go']['main']['App']['ToggleMaximize']();
 }
 
 export function UpdateExperimentStatus(arg1, arg2) {

@@ -217,13 +217,14 @@ describe('ExperimentsView', () => {
   // Panel Collapse/Expand Tests (Issue #8)
   // ========================================
 
-  // Users need a visible control to collapse the left panel.
-  // The button should be accessible in the column area.
-  it('renders collapse button for left column', () => {
+  // Collapse buttons are embedded in resize handles and revealed on hover.
+  // They should be in the DOM even when visually hidden (CSS handles visibility).
+  it('renders collapse button for left column inside resize handle', () => {
     const layout = createMockLayout()
     render(<ExperimentsView layout={layout} />)
 
-    expect(screen.getByTestId('collapse-left')).toBeInTheDocument()
+    const handle = screen.getByTestId('resize-handle-left')
+    expect(handle.querySelector('[data-testid="collapse-left"]')).toBeInTheDocument()
   })
 
   // When collapsed, the experiments and files panels should be hidden,
@@ -242,13 +243,16 @@ describe('ExperimentsView', () => {
     expect(screen.getByTestId('left-column')).toHaveClass('content__left-column--collapsed')
   })
 
-  // When collapsed, users need a way to restore the panels.
-  // An expand button should appear in place of the collapse button.
+  // When collapsed, an expand button should appear in the resize handle
+  // (always visible via resize-handle--collapsed modifier).
   it('shows expand button when left column is collapsed', () => {
     const layout = createMockLayout({ leftCollapsed: true })
     render(<ExperimentsView layout={layout} />)
 
     expect(screen.getByTestId('expand-left')).toBeInTheDocument()
+    // Expand button should be inside a collapsed resize handle
+    const handle = screen.getByTestId('resize-handle-left')
+    expect(handle).toHaveClass('resize-handle--collapsed')
   })
 
   // The right column (Inspector/Config) should collapse to just a thin

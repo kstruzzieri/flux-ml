@@ -38,7 +38,7 @@ func TestMigrate_CreatesSchemaTable(t *testing.T) {
 
 func TestMigrate_AppliesAllMigrations(t *testing.T) {
 	db := openTestDB(t)
-	tables := []string{"experiments", "events", "metrics", "reward_signals", "alerts", "logs"}
+	tables := []string{"experiments", "events", "metrics", "reward_signals", "alerts", "logs", "annotations"}
 	for _, table := range tables {
 		var name string
 		err := db.QueryRow(
@@ -65,7 +65,7 @@ func TestMigrate_RecordsVersions(t *testing.T) {
 		}
 		versions = append(versions, v)
 	}
-	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes"}
+	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes", "004_annotations"}
 	if len(versions) != len(expected) {
 		t.Fatalf("expected %d versions, got %d: %v", len(expected), len(versions), versions)
 	}
@@ -85,8 +85,8 @@ func TestMigrate_Idempotent(t *testing.T) {
 	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count query failed: %v", err)
 	}
-	if count != 3 {
-		t.Errorf("expected 3 migration versions, got %d", count)
+	if count != 4 {
+		t.Errorf("expected 4 migration versions, got %d", count)
 	}
 }
 
@@ -240,6 +240,8 @@ func TestSchema_CascadeDelete(t *testing.T) {
 		VALUES ('exp-001', 1, 'helpfulness', 0.8)`)
 	db.Exec(`INSERT INTO alerts (experiment_id, type, step, confidence, data, created_at)
 		VALUES ('exp-001', 'length_gaming', 1, 0.9, '{}', 1706745600)`)
+	db.Exec(`INSERT INTO annotations (experiment_id, step, type, label, created_at)
+		VALUES ('exp-001', 1, 'checkpoint', 'test', 1706745600)`)
 
 	// Delete the experiment — should cascade to all child tables
 	_, err := db.Exec(`DELETE FROM experiments WHERE id = 'exp-001'`)
@@ -248,7 +250,7 @@ func TestSchema_CascadeDelete(t *testing.T) {
 	}
 
 	// Verify all child rows are gone
-	tables := []string{"events", "metrics", "reward_signals", "alerts"}
+	tables := []string{"events", "metrics", "reward_signals", "alerts", "annotations"}
 	for _, table := range tables {
 		var count int
 		err := db.QueryRow(
