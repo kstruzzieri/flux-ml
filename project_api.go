@@ -199,13 +199,28 @@ func (a *App) seedProjectData(projectID string) {
 			a.logWarning("failed to seed demo experiments: %v", err)
 		}
 	}
+	if a.experiments == nil {
+		return
+	}
+
+	projectExperiments, err := a.experiments.ListByProject(projectID)
+	if err != nil {
+		a.logWarning("failed to list project experiments for seeding: %v", err)
+		return
+	}
+
+	experimentIDs := make([]string, 0, len(projectExperiments))
+	for _, exp := range projectExperiments {
+		experimentIDs = append(experimentIDs, exp.ID)
+	}
+
 	if a.metrics != nil {
-		if err := a.metrics.SeedDemoMetrics(); err != nil {
+		if err := a.metrics.SeedDemoMetricsForExperiments(experimentIDs); err != nil {
 			a.logWarning("failed to seed demo metrics: %v", err)
 		}
 	}
 	if a.annotations != nil {
-		if err := a.annotations.SeedDemoAnnotations(); err != nil {
+		if err := a.annotations.SeedDemoAnnotationsForExperiments(experimentIDs); err != nil {
 			a.logWarning("failed to seed demo annotations: %v", err)
 		}
 	}

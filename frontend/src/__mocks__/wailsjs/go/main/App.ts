@@ -21,6 +21,15 @@ let mockAnnotations: annotation.Annotation[] = []
 let nextEventId = 1
 let nextAnnotationId = 1
 let listExperimentsOverride: (() => Promise<experiment.Experiment[]>) | null = null
+let mockCurrentProject: project.Project | null = null
+let mockRecentProjects: project.RecentProject[] = []
+let mockCurrentProjectStatus = new main.CurrentProjectStatus({
+  project: null,
+  config: null,
+  configError: '',
+  warnings: [],
+  degraded: false,
+} as Record<string, unknown>)
 
 // --- Existing methods ---
 
@@ -250,9 +259,6 @@ export function ToggleMaximize(): Promise<void> {
 
 // --- Project API ---
 
-let mockCurrentProject: project.Project | null = null
-let mockRecentProjects: project.RecentProject[] = []
-
 export function CreateProject(
   name: string,
   _dir: string,
@@ -268,6 +274,13 @@ export function CreateProject(
   } as Record<string, unknown>)
   mockCurrentProject = proj
   mockRecentProjects.unshift({ path: _dir, name } as project.RecentProject)
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: proj,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>)
   return Promise.resolve(proj)
 }
 
@@ -280,6 +293,13 @@ export function OpenProject(dir: string): Promise<project.Project> {
     updatedAt: Math.floor(Date.now() / 1000),
   } as Record<string, unknown>)
   mockCurrentProject = proj
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: proj,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>)
   return Promise.resolve(proj)
 }
 
@@ -296,11 +316,25 @@ export function OpenFolderAsProject(
     updatedAt: Math.floor(Date.now() / 1000),
   } as Record<string, unknown>)
   mockCurrentProject = proj
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: proj,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>)
   return Promise.resolve(proj)
 }
 
 export function CloseProject(): Promise<void> {
   mockCurrentProject = null
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: null,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>)
   return Promise.resolve()
 }
 
@@ -309,13 +343,7 @@ export function GetCurrentProject(): Promise<project.Project | null> {
 }
 
 export function GetCurrentProjectStatus(): Promise<main.CurrentProjectStatus> {
-  return Promise.resolve(new main.CurrentProjectStatus({
-    project: mockCurrentProject,
-    config: null,
-    configError: '',
-    warnings: [],
-    degraded: false,
-  } as Record<string, unknown>))
+  return Promise.resolve(new main.CurrentProjectStatus(mockCurrentProjectStatus))
 }
 
 export function ListRecentProjects(): Promise<project.RecentProject[]> {
@@ -366,12 +394,37 @@ export function __resetMockState(): void {
   listExperimentsOverride = null
   mockCurrentProject = null
   mockRecentProjects = []
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: null,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>)
 }
 
 export function __setListExperimentsOverride(
   fn: (() => Promise<experiment.Experiment[]>) | null,
 ): void {
   listExperimentsOverride = fn
+}
+
+export function __setCurrentProjectStatus(
+  status: Partial<main.CurrentProjectStatus>,
+): void {
+  mockCurrentProjectStatus = new main.CurrentProjectStatus({
+    project: null,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+    ...status,
+  } as Record<string, unknown>)
+  mockCurrentProject = mockCurrentProjectStatus.project ?? null
+}
+
+export function __setRecentProjects(recents: project.RecentProject[]): void {
+  mockRecentProjects = [...recents]
 }
 
 // Keep backward-compatible alias

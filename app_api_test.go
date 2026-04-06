@@ -666,6 +666,50 @@ func TestApp_CreateProject_WithSeed(t *testing.T) {
 	}
 }
 
+func TestApp_CreateProject_WithSeed_MultipleProjectsHaveMetricsAndAnnotations(t *testing.T) {
+	app := newTestApp(t)
+
+	assertSeededProject := func(name string) {
+		t.Helper()
+
+		dir := filepath.Join(t.TempDir(), name)
+		if _, err := app.CreateProject(name, dir, "blank", true); err != nil {
+			t.Fatalf("CreateProject(%q) with seed failed: %v", name, err)
+		}
+
+		exps, err := app.ListExperiments()
+		if err != nil {
+			t.Fatalf("ListExperiments failed: %v", err)
+		}
+		if len(exps) == 0 {
+			t.Fatalf("expected seeded experiments for project %q", name)
+		}
+
+		for _, exp := range exps {
+			metrics, err := app.QueryMetrics(exp.ID, "", 0, 0)
+			if err != nil {
+				t.Fatalf("QueryMetrics(%q) failed: %v", exp.ID, err)
+			}
+			if len(metrics) == 0 {
+				t.Fatalf("expected seeded metrics for experiment %q in project %q", exp.ID, name)
+			}
+
+			annotations, err := app.QueryAnnotations(exp.ID, "", 0, 0)
+			if err != nil {
+				t.Fatalf("QueryAnnotations(%q) failed: %v", exp.ID, err)
+			}
+			if len(annotations) == 0 {
+				t.Fatalf("expected seeded annotations for experiment %q in project %q", exp.ID, name)
+			}
+		}
+
+		app.CloseProject()
+	}
+
+	assertSeededProject("seeded-one")
+	assertSeededProject("seeded-two")
+}
+
 func TestApp_ListExperiments_NoProject(t *testing.T) {
 	app := newTestApp(t)
 	app.CreateExperiment("exp-1", `{}`)

@@ -23,9 +23,23 @@ interface ProjectState {
 }
 
 let _initialized = false
+let _unsubscribe: (() => void) | null = null
 
 export function __resetProjectStoreInitialized(): void {
   _initialized = false
+  if (_unsubscribe) {
+    _unsubscribe()
+    _unsubscribe = null
+  }
+  useProjectStore.setState({
+    currentProject: null,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+    recentProjects: [],
+    loading: false,
+  })
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -92,11 +106,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       'project:closed',
       'project:status',
     ]
-    projectEvents.forEach((eventName) => {
+    const unsubs = projectEvents.map((eventName) =>
       EventsOn(eventName, () => {
         fetchStatus()
         fetchRecentProjects()
       })
-    })
+    )
+    _unsubscribe = () => {
+      unsubs.forEach((unsub) => unsub())
+    }
   },
 }))

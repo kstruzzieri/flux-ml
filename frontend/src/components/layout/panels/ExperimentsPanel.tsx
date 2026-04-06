@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useExperimentStore } from '@stores/experimentStore'
 import { useMetricsStore } from '@stores/metricsStore'
+import { useProjectStore } from '@stores/projectStore'
 import { ExperimentList } from '../../Experiments/ExperimentList'
 
 export function ExperimentsPanel() {
@@ -16,11 +17,13 @@ export function ExperimentsPanel() {
   const fetchAllLatestMetrics = useMetricsStore((s) => s.fetchAllLatestMetrics)
   const fetchAllSparklineData = useMetricsStore((s) => s.fetchAllSparklineData)
   const initializeMetrics = useMetricsStore((s) => s.initialize)
+  const initializeProject = useProjectStore((s) => s.initialize)
 
   useEffect(() => {
     initialize()
     initializeMetrics()
-  }, [initialize, initializeMetrics])
+    initializeProject()
+  }, [initialize, initializeMetrics, initializeProject])
 
   const experimentIds = useMemo(() => experiments.map((e) => e.id), [experiments])
   const experimentIdsKey = JSON.stringify(experimentIds)
