@@ -1,0 +1,17 @@
+model:
+  name: llama-7b
+  path: null
+
+training:
+  learning_rate: 1.0e-5
+  batch_size: 32
+  max_steps: 20000
+  warmup_steps: 500
+  kl_coef: 0.1
+  optimizer: adamw
+
+reward:
+  components:
+    - helpfulness
+    - harmlessness
+    - honesty
