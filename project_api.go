@@ -18,20 +18,25 @@ type CurrentProjectStatus struct {
 }
 
 // CreateProject scaffolds and registers a new project.
+// Registers in the database first (validates name, path, uniqueness) before
+// writing any files, so validation failures don't leave orphaned directories.
 func (a *App) CreateProject(name, dir, template string, seedDemo bool) (*project.Project, error) {
 	if a.projects == nil {
 		return nil, fmt.Errorf("database not initialized")
 	}
 
-	// Scaffold the project directory
-	if err := project.Scaffold(dir, name, template); err != nil {
-		return nil, fmt.Errorf("scaffolding project: %w", err)
-	}
-
-	// Register in database
+	// Register in database first — validates name, path, and uniqueness
+	// before touching the filesystem
 	proj, err := a.projects.Create(name, dir)
 	if err != nil {
 		return nil, fmt.Errorf("registering project: %w", err)
+	}
+
+	// Scaffold the project directory
+	if err := project.Scaffold(dir, name, template); err != nil {
+		// Clean up the DB record since scaffolding failed
+		a.projects.Delete(proj.ID)
+		return nil, fmt.Errorf("scaffolding project: %w", err)
 	}
 
 	// Seed demo data if requested
