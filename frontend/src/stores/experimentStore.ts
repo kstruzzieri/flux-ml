@@ -75,6 +75,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
       'experiment:created',
       'experiment:updated',
       'experiment:deleted',
+      'project:created',
       'project:opened',
       'project:imported',
       'project:closed',
