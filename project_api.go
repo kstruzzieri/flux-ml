@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/kstruzzieri/flux-ml/internal/project"
+	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // CurrentProjectStatus represents the full status of the active project.
@@ -39,9 +40,7 @@ func (a *App) CreateProject(name, dir, template string, seedDemo bool) (*project
 	}
 
 	// Open the newly created project
-	if err := a.setCurrentProject(proj, dir); err != nil {
-		return proj, nil // project created but open failed — not fatal
-	}
+	a.setCurrentProject(proj, dir) // degraded mode is not fatal
 
 	a.emitEvent("project:created", proj)
 	return proj, nil
@@ -78,9 +77,7 @@ func (a *App) OpenProject(dir string) (*project.Project, error) {
 		}
 	}
 
-	if err := a.setCurrentProject(proj, canonical); err != nil {
-		return proj, nil // opened in degraded mode is still success
-	}
+	a.setCurrentProject(proj, canonical) // degraded mode is not fatal
 
 	a.emitEvent("project:opened", proj)
 	return proj, nil
@@ -119,9 +116,7 @@ func (a *App) OpenFolderAsProject(dir, name string, seedDemo bool) (*project.Pro
 		a.seedProjectData(proj.ID)
 	}
 
-	if err := a.setCurrentProject(proj, canonical); err != nil {
-		return proj, nil
-	}
+	a.setCurrentProject(proj, canonical) // degraded mode is not fatal
 
 	a.emitEvent("project:imported", proj)
 	return proj, nil
@@ -219,8 +214,6 @@ func (a *App) seedProjectData(projectID string) {
 // logWarning logs a warning message if the runtime context is available.
 func (a *App) logWarning(format string, args ...interface{}) {
 	if a.ctx != nil {
-		// Import would be circular if we used wailsRuntime here,
-		// so we use emitEvent with a warning event.
-		a.emitEvent("app:warning", fmt.Sprintf(format, args...))
+		wailsRuntime.LogWarning(a.ctx, fmt.Sprintf(format, args...))
 	}
 }

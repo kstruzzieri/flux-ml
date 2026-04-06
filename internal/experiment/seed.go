@@ -24,11 +24,18 @@ func (s *Store) SeedDemoExperiments(projectID ...string) error {
 		pid = projectID[0]
 	}
 
-	experiments, err := s.List()
+	// Check emptiness scoped to the target (project or global)
+	var existing []Experiment
+	var err error
+	if pid != "" {
+		existing, err = s.ListByProject(pid)
+	} else {
+		existing, err = s.List()
+	}
 	if err != nil {
 		return err
 	}
-	if len(experiments) > 0 {
+	if len(existing) > 0 {
 		return nil // already has data
 	}
 
