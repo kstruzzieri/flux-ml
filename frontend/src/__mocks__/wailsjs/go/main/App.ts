@@ -343,7 +343,7 @@ export function GetCurrentProject(): Promise<project.Project | null> {
 }
 
 export function GetCurrentProjectStatus(): Promise<main.CurrentProjectStatus> {
-  return Promise.resolve(new main.CurrentProjectStatus(mockCurrentProjectStatus))
+  return Promise.resolve(mockCurrentProjectStatus)
 }
 
 export function ListRecentProjects(): Promise<project.RecentProject[]> {
