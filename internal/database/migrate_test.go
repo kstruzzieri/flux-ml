@@ -303,6 +303,16 @@ func TestSchema_ProjectsTable(t *testing.T) {
 	if path != "/tmp/my-project" {
 		t.Errorf("path = %q, want %q", path, "/tmp/my-project")
 	}
+
+	// Verify UNIQUE constraint on path
+	_, err = db.Exec(
+		`INSERT INTO projects (id, name, path, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?)`,
+		"proj-002", "duplicate-path", "/tmp/my-project", 1706745600, 1706745600,
+	)
+	if err == nil {
+		t.Fatal("expected UNIQUE constraint violation for duplicate path, got nil")
+	}
 }
 
 func TestSchema_ExperimentProjectID(t *testing.T) {
@@ -354,6 +364,16 @@ func TestSchema_ExperimentProjectID(t *testing.T) {
 	).Scan(&indexName)
 	if err != nil {
 		t.Fatalf("idx_experiments_project index not found: %v", err)
+	}
+
+	// Verify FK violation: non-existent project_id is rejected
+	_, err = db.Exec(
+		`INSERT INTO experiments (id, name, config, status, created_at, updated_at, project_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		"exp-003", "bad-ref", `{}`, "pending", 1706745600, 1706745600, "nonexistent-project",
+	)
+	if err == nil {
+		t.Fatal("expected FK violation for non-existent project_id, got nil")
 	}
 }
 
