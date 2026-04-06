@@ -172,6 +172,11 @@ func (a *App) setCurrentProject(proj *project.Project, dir string) error {
 	a.currentProjectConfigError = ""
 	a.currentProjectWarnings = nil
 
+	// Always update recent projects — even in degraded mode
+	if a.localState != nil {
+		a.localState.AddRecentProject(dir, proj.Name)
+	}
+
 	cfg, warnings, err := project.LoadConfig(dir)
 	if err != nil {
 		// Degraded mode: project opens but config is unavailable
@@ -182,11 +187,6 @@ func (a *App) setCurrentProject(proj *project.Project, dir string) error {
 
 	a.currentProjectConfig = cfg
 	a.currentProjectWarnings = warnings
-
-	// Update recent projects
-	if a.localState != nil {
-		a.localState.AddRecentProject(dir, proj.Name)
-	}
 
 	a.emitEvent("project:status", a.GetCurrentProjectStatus())
 	return nil

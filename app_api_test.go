@@ -569,6 +569,15 @@ func TestApp_OpenProject_MalformedConfig(t *testing.T) {
 	if status.Config != nil {
 		t.Error("config should be nil in degraded mode")
 	}
+
+	// Degraded projects should still appear in recent projects
+	recents, err := app.ListRecentProjects()
+	if err != nil {
+		t.Fatalf("ListRecentProjects failed: %v", err)
+	}
+	if len(recents) != 1 {
+		t.Errorf("expected degraded project in recent list, got %d", len(recents))
+	}
 	_ = proj
 }
 
