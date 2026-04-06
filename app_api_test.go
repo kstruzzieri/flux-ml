@@ -657,6 +657,120 @@ func TestApp_CreateProject_WithSeed(t *testing.T) {
 	}
 }
 
+func TestApp_ListExperiments_NoProject(t *testing.T) {
+	app := newTestApp(t)
+	app.CreateExperiment("exp-1", `{}`)
+	app.CreateExperiment("exp-2", `{}`)
+
+	list, err := app.ListExperiments()
+	if err != nil {
+		t.Fatalf("ListExperiments failed: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("expected 2, got %d", len(list))
+	}
+}
+
+func TestApp_ListExperiments_WithProject(t *testing.T) {
+	app := newTestApp(t)
+
+	// Create unscoped experiment first
+	app.CreateExperiment("unscoped", `{}`)
+
+	// Create and open a project
+	dir := filepath.Join(t.TempDir(), "proj")
+	proj, _ := app.CreateProject("test", dir, "blank", false)
+
+	// Create scoped experiment
+	app.CreateExperiment("scoped", `{}`)
+
+	// ListExperiments should return only scoped
+	list, _ := app.ListExperiments()
+	if len(list) != 1 {
+		t.Fatalf("expected 1 scoped experiment, got %d", len(list))
+	}
+	if list[0].Name != "scoped" {
+		t.Errorf("expected scoped experiment, got %q", list[0].Name)
+	}
+
+	// Close project — should return all
+	app.CloseProject()
+	all, _ := app.ListExperiments()
+	if len(all) != 2 {
+		t.Errorf("expected 2 total experiments after close, got %d", len(all))
+	}
+	_ = proj
+}
+
+func TestApp_CreateExperiment_ScopesAutomatically(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	exp, err := app.CreateExperiment("auto-scoped", `{}`)
+	if err != nil {
+		t.Fatalf("CreateExperiment failed: %v", err)
+	}
+	if exp.ProjectID == nil {
+		t.Fatal("expected projectID to be set when project is open")
+	}
+	if *exp.ProjectID != app.currentProject.ID {
+		t.Errorf("projectID = %q, want %q", *exp.ProjectID, app.currentProject.ID)
+	}
+}
+
+func TestApp_ClaimExperimentToCurrentProject(t *testing.T) {
+	app := newTestApp(t)
+
+	// Create unscoped experiment
+	exp, _ := app.CreateExperiment("unscoped", `{}`)
+
+	// Open a project
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	// Claim the unscoped experiment
+	err := app.ClaimExperimentToCurrentProject(exp.ID)
+	if err != nil {
+		t.Fatalf("ClaimExperimentToCurrentProject failed: %v", err)
+	}
+
+	// Should now appear in project's experiments
+	list, _ := app.ListExperiments()
+	found := false
+	for _, e := range list {
+		if e.ID == exp.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("claimed experiment not found in project list")
+	}
+}
+
+func TestApp_ListUnscopedExperiments(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	// Create one scoped and one unscoped
+	app.CreateExperiment("scoped", `{}`)
+	app.CloseProject()
+	app.CreateExperiment("unscoped", `{}`)
+
+	list, err := app.ListUnscopedExperiments()
+	if err != nil {
+		t.Fatalf("ListUnscopedExperiments failed: %v", err)
+	}
+	if len(list) != 1 {
+		t.Errorf("expected 1 unscoped, got %d", len(list))
+	}
+	if list[0].Name != "unscoped" {
+		t.Errorf("expected 'unscoped', got %q", list[0].Name)
+	}
+}
+
 func TestApp_NilProjectStore(t *testing.T) {
 	app := &App{}
 	_, err := app.CreateProject("test", "/tmp/test", "blank", false)
