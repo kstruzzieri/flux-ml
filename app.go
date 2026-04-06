@@ -12,6 +12,7 @@ import (
 	"github.com/kstruzzieri/flux-ml/internal/event"
 	"github.com/kstruzzieri/flux-ml/internal/experiment"
 	"github.com/kstruzzieri/flux-ml/internal/metrics"
+	"github.com/kstruzzieri/flux-ml/internal/project"
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -19,12 +20,21 @@ import (
 type App struct {
 	ctx         context.Context
 	configPath  string
+	configDir   string
 	db          *database.DB
 	experiments *experiment.Store
 	events      *event.Store
 	metrics     *metrics.Store
 	annotations *annotation.Store
+	projects    *project.Store
+	localState  *project.LocalState
 	dbError     string
+
+	// Active project session state
+	currentProject            *project.Project
+	currentProjectConfig      *project.FluxConfig
+	currentProjectConfigError string
+	currentProjectWarnings    []string
 }
 
 // NewApp creates a new App application struct
@@ -45,6 +55,7 @@ func NewApp() *App {
 	os.MkdirAll(fluxDir, 0755)
 
 	return &App{
+		configDir:  fluxDir,
 		configPath: filepath.Join(fluxDir, "layout.json"),
 	}
 }
@@ -77,16 +88,15 @@ func (a *App) startup(ctx context.Context) {
 	a.events = event.NewStore(db)
 	a.metrics = metrics.NewStore(db)
 	a.annotations = annotation.NewStore(db)
+	a.projects = project.NewStore(db)
 
-	// Seed demo data for UI development (no-op if data already exists)
-	if err := a.experiments.SeedDemoExperiments(); err != nil {
-		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo experiments: %v", err))
-	}
-	if err := a.metrics.SeedDemoMetrics(); err != nil {
-		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo metrics: %v", err))
-	}
-	if err := a.annotations.SeedDemoAnnotations(); err != nil {
-		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to seed demo annotations: %v", err))
+	// Initialize local state for recent projects and per-project state
+	localStateDir := filepath.Join(configDir, "Flux", "state")
+	ls, err := project.NewLocalState(localStateDir)
+	if err != nil {
+		wailsRuntime.LogWarning(ctx, fmt.Sprintf("failed to init local state: %v", err))
+	} else {
+		a.localState = ls
 	}
 }
 
