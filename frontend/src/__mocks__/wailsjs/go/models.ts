@@ -58,6 +58,7 @@ export namespace experiment {
     name: string = ''
     config: string = ''
     parentId?: string
+    projectId?: string
     status: string = ''
     createdAt: number = 0
     updatedAt: number = 0
@@ -72,6 +73,7 @@ export namespace experiment {
       this.name = source['name'] as string
       this.config = source['config'] as string
       this.parentId = source['parentId'] as string | undefined
+      this.projectId = source['projectId'] as string | undefined
       this.status = source['status'] as string
       this.createdAt = source['createdAt'] as number
       this.updatedAt = source['updatedAt'] as number
@@ -93,6 +95,27 @@ export namespace main {
       if ('string' === typeof source) source = JSON.parse(source)
       this.name = source['name'] as string
       this.version = source['version'] as string
+    }
+  }
+
+  export class CurrentProjectStatus {
+    project?: project.Project
+    config?: project.FluxConfig
+    configError: string = ''
+    warnings: string[] = []
+    degraded: boolean = false
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new CurrentProjectStatus(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.project = source['project'] as project.Project | undefined
+      this.config = source['config'] as project.FluxConfig | undefined
+      this.configError = (source['configError'] as string) || ''
+      this.warnings = (source['warnings'] as string[]) || []
+      this.degraded = (source['degraded'] as boolean) || false
     }
   }
 
@@ -165,6 +188,66 @@ export namespace metrics {
       this.component = source['component'] as string
       this.value = source['value'] as number
       this.distribution = source['distribution'] as string
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace project {
+  export class FluxConfig {
+    version: number = 1
+    name: string = ''
+    description?: string
+    ignore?: string[]
+    defaults?: { [key: string]: string }
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new FluxConfig(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.version = (source['version'] as number) || 1
+      this.name = (source['name'] as string) || ''
+      this.description = source['description'] as string | undefined
+      this.ignore = source['ignore'] as string[] | undefined
+      this.defaults = source['defaults'] as { [key: string]: string } | undefined
+    }
+  }
+
+  export class Project {
+    id: string = ''
+    name: string = ''
+    path: string = ''
+    createdAt: number = 0
+    updatedAt: number = 0
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new Project(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.id = source['id'] as string
+      this.name = source['name'] as string
+      this.path = source['path'] as string
+      this.createdAt = source['createdAt'] as number
+      this.updatedAt = source['updatedAt'] as number
+    }
+  }
+
+  export class RecentProject {
+    path: string = ''
+    name: string = ''
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new RecentProject(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.path = source['path'] as string
+      this.name = source['name'] as string
     }
   }
 }

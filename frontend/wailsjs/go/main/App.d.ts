@@ -5,6 +5,7 @@ import {annotation} from '../models';
 import {experiment} from '../models';
 import {main} from '../models';
 import {metrics} from '../models';
+import {project} from '../models';
 
 export function AppendEvent(arg1:string,arg2:string,arg3:string):Promise<event.Event>;
 
@@ -43,6 +44,30 @@ export function RecordRewardSignals(arg1:string,arg2:Array<metrics.RewardSignal>
 export function ReplayEvents(arg1:string,arg2:number,arg3:number,arg4:string):Promise<Array<event.Event>>;
 
 export function SaveLayout(arg1:main.LayoutState):Promise<void>;
+
+export function ClaimExperimentToCurrentProject(arg1:string):Promise<void>;
+
+export function ClaimExperimentToProject(arg1:string,arg2:string):Promise<void>;
+
+export function CloseProject():Promise<void>;
+
+export function CreateProject(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<project.Project>;
+
+export function GetCurrentProject():Promise<project.Project>;
+
+export function GetCurrentProjectStatus():Promise<main.CurrentProjectStatus>;
+
+export function GetProjectConfig(arg1:string):Promise<project.FluxConfig>;
+
+export function IsFluxProject(arg1:string):Promise<boolean>;
+
+export function ListRecentProjects():Promise<Array<project.RecentProject>>;
+
+export function ListUnscopedExperiments():Promise<Array<experiment.Experiment>>;
+
+export function OpenFolderAsProject(arg1:string,arg2:string,arg3:boolean):Promise<project.Project>;
+
+export function OpenProject(arg1:string):Promise<project.Project>;
 
 export function ToggleMaximize():Promise<void>;
 

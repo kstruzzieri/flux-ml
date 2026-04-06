@@ -1,5 +1,5 @@
 // Mock for Wails Go bindings - used in Jest tests
-import { annotation, event, experiment, main, metrics } from '../models'
+import { annotation, event, experiment, main, metrics, project } from '../models'
 
 const DEFAULT_LAYOUT: main.LayoutState = {
   leftWidth: 280,
@@ -248,6 +248,110 @@ export function ToggleMaximize(): Promise<void> {
   return Promise.resolve()
 }
 
+// --- Project API ---
+
+let mockCurrentProject: project.Project | null = null
+let mockRecentProjects: project.RecentProject[] = []
+
+export function CreateProject(
+  name: string,
+  _dir: string,
+  _template: string,
+  _seedDemo: boolean,
+): Promise<project.Project> {
+  const proj = new project.Project({
+    id: crypto.randomUUID(),
+    name,
+    path: _dir,
+    createdAt: Math.floor(Date.now() / 1000),
+    updatedAt: Math.floor(Date.now() / 1000),
+  } as Record<string, unknown>)
+  mockCurrentProject = proj
+  mockRecentProjects.unshift({ path: _dir, name } as project.RecentProject)
+  return Promise.resolve(proj)
+}
+
+export function OpenProject(dir: string): Promise<project.Project> {
+  const proj = new project.Project({
+    id: crypto.randomUUID(),
+    name: 'opened-project',
+    path: dir,
+    createdAt: Math.floor(Date.now() / 1000),
+    updatedAt: Math.floor(Date.now() / 1000),
+  } as Record<string, unknown>)
+  mockCurrentProject = proj
+  return Promise.resolve(proj)
+}
+
+export function OpenFolderAsProject(
+  dir: string,
+  name: string,
+  _seedDemo: boolean,
+): Promise<project.Project> {
+  const proj = new project.Project({
+    id: crypto.randomUUID(),
+    name,
+    path: dir,
+    createdAt: Math.floor(Date.now() / 1000),
+    updatedAt: Math.floor(Date.now() / 1000),
+  } as Record<string, unknown>)
+  mockCurrentProject = proj
+  return Promise.resolve(proj)
+}
+
+export function CloseProject(): Promise<void> {
+  mockCurrentProject = null
+  return Promise.resolve()
+}
+
+export function GetCurrentProject(): Promise<project.Project | null> {
+  return Promise.resolve(mockCurrentProject)
+}
+
+export function GetCurrentProjectStatus(): Promise<main.CurrentProjectStatus> {
+  return Promise.resolve(new main.CurrentProjectStatus({
+    project: mockCurrentProject,
+    config: null,
+    configError: '',
+    warnings: [],
+    degraded: false,
+  } as Record<string, unknown>))
+}
+
+export function ListRecentProjects(): Promise<project.RecentProject[]> {
+  return Promise.resolve([...mockRecentProjects])
+}
+
+export function ListUnscopedExperiments(): Promise<experiment.Experiment[]> {
+  return Promise.resolve(mockExperiments.filter((e) => !e.projectId))
+}
+
+export function ClaimExperimentToProject(
+  experimentID: string,
+  projectID: string,
+): Promise<void> {
+  const exp = mockExperiments.find((e) => e.id === experimentID)
+  if (!exp) return Promise.reject(new Error(`experiment not found: ${experimentID}`))
+  exp.projectId = projectID
+  return Promise.resolve()
+}
+
+export function ClaimExperimentToCurrentProject(experimentID: string): Promise<void> {
+  if (!mockCurrentProject) return Promise.reject(new Error('no project is currently open'))
+  return ClaimExperimentToProject(experimentID, mockCurrentProject.id)
+}
+
+export function GetProjectConfig(_dir: string): Promise<project.FluxConfig> {
+  return Promise.resolve(new project.FluxConfig({
+    version: 1,
+    name: 'mock-project',
+  } as Record<string, unknown>))
+}
+
+export function IsFluxProject(_dir: string): Promise<boolean> {
+  return Promise.resolve(false)
+}
+
 // --- Test helpers ---
 
 export function __resetMockState(): void {
@@ -260,6 +364,8 @@ export function __resetMockState(): void {
   nextEventId = 1
   nextAnnotationId = 1
   listExperimentsOverride = null
+  mockCurrentProject = null
+  mockRecentProjects = []
 }
 
 export function __setListExperimentsOverride(
