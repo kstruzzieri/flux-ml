@@ -48,3 +48,4 @@ coverage/
 
 # FewWord scratch files
 .fewword/
+.worktrees/

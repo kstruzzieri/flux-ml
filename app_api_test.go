@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/kstruzzieri/flux-ml/internal/event"
 	"github.com/kstruzzieri/flux-ml/internal/experiment"
 	"github.com/kstruzzieri/flux-ml/internal/metrics"
+	"github.com/kstruzzieri/flux-ml/internal/project"
 )
 
 // newTestApp creates an App with a real temp SQLite database, nil ctx, and all stores initialized.
@@ -21,12 +23,16 @@ func newTestApp(t *testing.T) *App {
 		t.Fatalf("failed to open test db: %v", err)
 	}
 	t.Cleanup(func() { db.Close() })
+	stateDir := filepath.Join(dir, "state")
+	ls, _ := project.NewLocalState(stateDir)
 	return &App{
 		db:          db,
 		experiments: experiment.NewStore(db),
 		events:      event.NewStore(db),
 		metrics:     metrics.NewStore(db),
 		annotations: annotation.NewStore(db),
+		projects:    project.NewStore(db),
+		localState:  ls,
 	}
 }
 
@@ -485,5 +491,351 @@ func TestApp_GetDBStatus_NoDB(t *testing.T) {
 	status2 := app2.GetDBStatus()
 	if status2 != "" {
 		t.Errorf("GetDBStatus = %q, want empty string", status2)
+	}
+}
+
+// --- Project Lifecycle API Tests ---
+
+func TestApp_CreateProject(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "new-project")
+
+	proj, err := app.CreateProject("my-project", dir, "blank", false)
+	if err != nil {
+		t.Fatalf("CreateProject failed: %v", err)
+	}
+	if proj.Name != "my-project" {
+		t.Errorf("Name = %q, want %q", proj.Name, "my-project")
+	}
+
+	// Project should be the current active project
+	current := app.GetCurrentProject()
+	if current == nil || current.ID != proj.ID {
+		t.Error("expected project to be active after creation")
+	}
+
+	// flux.yaml should exist
+	if !project.IsProject(dir) {
+		t.Error("flux.yaml should exist after scaffold")
+	}
+}
+
+func TestApp_OpenProject_ValidConfig(t *testing.T) {
+	app := newTestApp(t)
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "flux.yaml"), []byte("version: 1\nname: test-project\n"), 0644)
+
+	proj, err := app.OpenProject(dir)
+	if err != nil {
+		t.Fatalf("OpenProject failed: %v", err)
+	}
+
+	status := app.GetCurrentProjectStatus()
+	if status.Project == nil {
+		t.Fatal("expected active project")
+	}
+	if status.Config == nil {
+		t.Fatal("expected config to be loaded")
+	}
+	if status.Config.Name != "test-project" {
+		t.Errorf("config name = %q, want %q", status.Config.Name, "test-project")
+	}
+	if status.Degraded {
+		t.Error("should not be degraded with valid config")
+	}
+	_ = proj
+}
+
+func TestApp_OpenProject_MalformedConfig(t *testing.T) {
+	app := newTestApp(t)
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "flux.yaml"), []byte(":::\ninvalid{yaml"), 0644)
+
+	proj, err := app.OpenProject(dir)
+	if err != nil {
+		t.Fatalf("OpenProject should succeed in degraded mode, got: %v", err)
+	}
+
+	status := app.GetCurrentProjectStatus()
+	if status.Project == nil {
+		t.Fatal("expected active project even in degraded mode")
+	}
+	if status.Degraded != true {
+		t.Error("expected degraded = true for malformed config")
+	}
+	if status.ConfigError == "" {
+		t.Error("expected config error message")
+	}
+	if status.Config != nil {
+		t.Error("config should be nil in degraded mode")
+	}
+
+	// Degraded projects should still appear in recent projects
+	recents, err := app.ListRecentProjects()
+	if err != nil {
+		t.Fatalf("ListRecentProjects failed: %v", err)
+	}
+	if len(recents) != 1 {
+		t.Errorf("expected degraded project in recent list, got %d", len(recents))
+	}
+	_ = proj
+}
+
+func TestApp_OpenProject_NoFluxYaml(t *testing.T) {
+	app := newTestApp(t)
+	dir := t.TempDir()
+
+	_, err := app.OpenProject(dir)
+	if err == nil {
+		t.Fatal("expected error when no flux.yaml exists")
+	}
+}
+
+func TestApp_OpenFolderAsProject(t *testing.T) {
+	app := newTestApp(t)
+	dir := t.TempDir()
+	// No flux.yaml — should create minimal config
+
+	proj, err := app.OpenFolderAsProject(dir, "imported", false)
+	if err != nil {
+		t.Fatalf("OpenFolderAsProject failed: %v", err)
+	}
+	if proj.Name != "imported" {
+		t.Errorf("Name = %q, want %q", proj.Name, "imported")
+	}
+
+	// flux.yaml should now exist
+	if !project.IsProject(dir) {
+		t.Error("flux.yaml should exist after import")
+	}
+
+	// Should be active
+	current := app.GetCurrentProject()
+	if current == nil || current.ID != proj.ID {
+		t.Error("expected imported project to be active")
+	}
+}
+
+func TestApp_CloseProject(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "project")
+	app.CreateProject("test", dir, "blank", false)
+
+	if app.GetCurrentProject() == nil {
+		t.Fatal("project should be active")
+	}
+
+	app.CloseProject()
+
+	if app.GetCurrentProject() != nil {
+		t.Error("project should be nil after close")
+	}
+	status := app.GetCurrentProjectStatus()
+	if status.Project != nil {
+		t.Error("status project should be nil after close")
+	}
+}
+
+func TestApp_RecentProjects(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "project")
+	app.CreateProject("test", dir, "blank", false)
+
+	recents, err := app.ListRecentProjects()
+	if err != nil {
+		t.Fatalf("ListRecentProjects failed: %v", err)
+	}
+	if len(recents) != 1 {
+		t.Errorf("expected 1 recent, got %d", len(recents))
+	}
+}
+
+func TestApp_CreateProject_WithSeed(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "seeded")
+
+	_, err := app.CreateProject("seeded", dir, "blank", true)
+	if err != nil {
+		t.Fatalf("CreateProject with seed failed: %v", err)
+	}
+
+	// Should have seeded experiments
+	exps, _ := app.ListExperiments()
+	if len(exps) == 0 {
+		t.Error("expected seeded experiments")
+	}
+}
+
+func TestApp_CreateProject_WithSeed_MultipleProjectsHaveMetricsAndAnnotations(t *testing.T) {
+	app := newTestApp(t)
+
+	assertSeededProject := func(name string) {
+		t.Helper()
+
+		dir := filepath.Join(t.TempDir(), name)
+		if _, err := app.CreateProject(name, dir, "blank", true); err != nil {
+			t.Fatalf("CreateProject(%q) with seed failed: %v", name, err)
+		}
+
+		exps, err := app.ListExperiments()
+		if err != nil {
+			t.Fatalf("ListExperiments failed: %v", err)
+		}
+		if len(exps) == 0 {
+			t.Fatalf("expected seeded experiments for project %q", name)
+		}
+
+		for _, exp := range exps {
+			metrics, err := app.QueryMetrics(exp.ID, "", 0, 0)
+			if err != nil {
+				t.Fatalf("QueryMetrics(%q) failed: %v", exp.ID, err)
+			}
+			if len(metrics) == 0 {
+				t.Fatalf("expected seeded metrics for experiment %q in project %q", exp.ID, name)
+			}
+
+			annotations, err := app.QueryAnnotations(exp.ID, "", 0, 0)
+			if err != nil {
+				t.Fatalf("QueryAnnotations(%q) failed: %v", exp.ID, err)
+			}
+			if len(annotations) == 0 {
+				t.Fatalf("expected seeded annotations for experiment %q in project %q", exp.ID, name)
+			}
+		}
+
+		app.CloseProject()
+	}
+
+	assertSeededProject("seeded-one")
+	assertSeededProject("seeded-two")
+}
+
+func TestApp_ListExperiments_NoProject(t *testing.T) {
+	app := newTestApp(t)
+	app.CreateExperiment("exp-1", `{}`)
+	app.CreateExperiment("exp-2", `{}`)
+
+	list, err := app.ListExperiments()
+	if err != nil {
+		t.Fatalf("ListExperiments failed: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("expected 2, got %d", len(list))
+	}
+}
+
+func TestApp_ListExperiments_WithProject(t *testing.T) {
+	app := newTestApp(t)
+
+	// Create unscoped experiment first
+	app.CreateExperiment("unscoped", `{}`)
+
+	// Create and open a project
+	dir := filepath.Join(t.TempDir(), "proj")
+	proj, _ := app.CreateProject("test", dir, "blank", false)
+
+	// Create scoped experiment
+	app.CreateExperiment("scoped", `{}`)
+
+	// ListExperiments should return only scoped
+	list, _ := app.ListExperiments()
+	if len(list) != 1 {
+		t.Fatalf("expected 1 scoped experiment, got %d", len(list))
+	}
+	if list[0].Name != "scoped" {
+		t.Errorf("expected scoped experiment, got %q", list[0].Name)
+	}
+
+	// Close project — should return all
+	app.CloseProject()
+	all, _ := app.ListExperiments()
+	if len(all) != 2 {
+		t.Errorf("expected 2 total experiments after close, got %d", len(all))
+	}
+	_ = proj
+}
+
+func TestApp_CreateExperiment_ScopesAutomatically(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	exp, err := app.CreateExperiment("auto-scoped", `{}`)
+	if err != nil {
+		t.Fatalf("CreateExperiment failed: %v", err)
+	}
+	if exp.ProjectID == nil {
+		t.Fatal("expected projectID to be set when project is open")
+	}
+	if *exp.ProjectID != app.currentProject.ID {
+		t.Errorf("projectID = %q, want %q", *exp.ProjectID, app.currentProject.ID)
+	}
+}
+
+func TestApp_ClaimExperimentToCurrentProject(t *testing.T) {
+	app := newTestApp(t)
+
+	// Create unscoped experiment
+	exp, _ := app.CreateExperiment("unscoped", `{}`)
+
+	// Open a project
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	// Claim the unscoped experiment
+	err := app.ClaimExperimentToCurrentProject(exp.ID)
+	if err != nil {
+		t.Fatalf("ClaimExperimentToCurrentProject failed: %v", err)
+	}
+
+	// Should now appear in project's experiments
+	list, _ := app.ListExperiments()
+	found := false
+	for _, e := range list {
+		if e.ID == exp.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("claimed experiment not found in project list")
+	}
+}
+
+func TestApp_ListUnscopedExperiments(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "proj")
+	app.CreateProject("test", dir, "blank", false)
+
+	// Create one scoped and one unscoped
+	app.CreateExperiment("scoped", `{}`)
+	app.CloseProject()
+	app.CreateExperiment("unscoped", `{}`)
+
+	list, err := app.ListUnscopedExperiments()
+	if err != nil {
+		t.Fatalf("ListUnscopedExperiments failed: %v", err)
+	}
+	if len(list) != 1 {
+		t.Errorf("expected 1 unscoped, got %d", len(list))
+	}
+	if list[0].Name != "unscoped" {
+		t.Errorf("expected 'unscoped', got %q", list[0].Name)
+	}
+}
+
+func TestApp_NilProjectStore(t *testing.T) {
+	app := &App{}
+	_, err := app.CreateProject("test", "/tmp/test", "blank", false)
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("CreateProject: expected 'database not initialized', got %v", err)
+	}
+	_, err = app.OpenProject("/tmp/test")
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("OpenProject: expected 'database not initialized', got %v", err)
+	}
+	_, err = app.OpenFolderAsProject("/tmp/test", "test", false)
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("OpenFolderAsProject: expected 'database not initialized', got %v", err)
 	}
 }

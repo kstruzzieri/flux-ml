@@ -71,7 +71,15 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
       }, 100)
     }
 
-    const events = ['experiment:created', 'experiment:updated', 'experiment:deleted']
+    const events = [
+      'experiment:created',
+      'experiment:updated',
+      'experiment:deleted',
+      'project:created',
+      'project:opened',
+      'project:imported',
+      'project:closed',
+    ]
     events.forEach((eventName) => {
       EventsOn(eventName, debouncedFetch)
     })

@@ -17,12 +17,25 @@ type seedExperiment struct {
 
 // SeedDemoExperiments populates the database with sample experiments
 // matching the Experiments view mockup. Only inserts if the table is empty.
-func (s *Store) SeedDemoExperiments() error {
-	experiments, err := s.List()
+// When projectID is non-empty, experiments are scoped to that project.
+func (s *Store) SeedDemoExperiments(projectID ...string) error {
+	var pid string
+	if len(projectID) > 0 {
+		pid = projectID[0]
+	}
+
+	// Check emptiness scoped to the target (project or global)
+	var existing []Experiment
+	var err error
+	if pid != "" {
+		existing, err = s.ListByProject(pid)
+	} else {
+		existing, err = s.List()
+	}
 	if err != nil {
 		return err
 	}
-	if len(experiments) > 0 {
+	if len(existing) > 0 {
 		return nil // already has data
 	}
 
@@ -65,10 +78,14 @@ func (s *Store) SeedDemoExperiments() error {
 			updatedAt = createdAt
 		}
 
+		var pidPtr interface{}
+		if pid != "" {
+			pidPtr = pid
+		}
 		_, err := s.db.Exec(
-			`INSERT INTO experiments (id, name, config, status, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?)`,
-			id, seed.Name, seed.Config, seed.Status, createdAt, updatedAt,
+			`INSERT INTO experiments (id, name, config, status, created_at, updated_at, project_id)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			id, seed.Name, seed.Config, seed.Status, createdAt, updatedAt, pidPtr,
 		)
 		if err != nil {
 			return err

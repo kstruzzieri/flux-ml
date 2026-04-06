@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Data
+*.csv
+*.parquet
+*.arrow
+
+# Models
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# OS
+.DS_Store

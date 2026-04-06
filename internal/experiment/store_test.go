@@ -210,3 +210,148 @@ func TestDelete_NotFound(t *testing.T) {
 		t.Fatal("expected error for nonexistent ID, got nil")
 	}
 }
+
+// --- Project Scoping Tests ---
+
+// helper: create a project directly in the DB for testing
+func createTestProject(t *testing.T, store *Store, id, name, path string) {
+	t.Helper()
+	_, err := store.db.Exec(
+		`INSERT INTO projects (id, name, path, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+		id, name, path, 1706745600, 1706745600,
+	)
+	if err != nil {
+		t.Fatalf("insert test project failed: %v", err)
+	}
+}
+
+func TestExperiment_ProjectID(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "test-project", "/tmp/test")
+
+	exp, err := store.CreateWithProject("scoped-exp", `{}`, "proj-001")
+	if err != nil {
+		t.Fatalf("CreateWithProject failed: %v", err)
+	}
+	if exp.ProjectID == nil || *exp.ProjectID != "proj-001" {
+		t.Errorf("ProjectID = %v, want 'proj-001'", exp.ProjectID)
+	}
+
+	// Regular Create should leave ProjectID nil
+	unscoped, err := store.Create("unscoped", `{}`)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+	if unscoped.ProjectID != nil {
+		t.Errorf("unscoped ProjectID = %v, want nil", unscoped.ProjectID)
+	}
+}
+
+func TestCreateWithProject_EmptyProjectID(t *testing.T) {
+	store := newTestStore(t)
+	_, err := store.CreateWithProject("test", `{}`, "")
+	if err == nil {
+		t.Fatal("expected error for empty projectID, got nil")
+	}
+}
+
+func TestListByProject(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project-a", "/tmp/a")
+	createTestProject(t, store, "proj-002", "project-b", "/tmp/b")
+
+	// Create experiments scoped to different projects
+	store.CreateWithProject("exp-a1", `{}`, "proj-001")
+	store.CreateWithProject("exp-a2", `{}`, "proj-001")
+	store.CreateWithProject("exp-b1", `{}`, "proj-002")
+	store.Create("unscoped", `{}`)
+
+	list, err := store.ListByProject("proj-001")
+	if err != nil {
+		t.Fatalf("ListByProject failed: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("ListByProject returned %d, want 2", len(list))
+	}
+	for _, exp := range list {
+		if exp.ProjectID == nil || *exp.ProjectID != "proj-001" {
+			t.Errorf("experiment %q has wrong project: %v", exp.Name, exp.ProjectID)
+		}
+	}
+}
+
+func TestListUnscoped(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project", "/tmp/proj")
+
+	store.CreateWithProject("scoped", `{}`, "proj-001")
+	store.Create("unscoped-1", `{}`)
+	store.Create("unscoped-2", `{}`)
+
+	list, err := store.ListUnscoped()
+	if err != nil {
+		t.Fatalf("ListUnscoped failed: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("ListUnscoped returned %d, want 2", len(list))
+	}
+	for _, exp := range list {
+		if exp.ProjectID != nil {
+			t.Errorf("experiment %q has project_id: %v", exp.Name, exp.ProjectID)
+		}
+	}
+}
+
+func TestListAll_StillReturnsEverything(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project", "/tmp/proj")
+
+	store.CreateWithProject("scoped", `{}`, "proj-001")
+	store.Create("unscoped", `{}`)
+
+	list, err := store.List()
+	if err != nil {
+		t.Fatalf("List failed: %v", err)
+	}
+	if len(list) != 2 {
+		t.Errorf("List returned %d, want 2 (all experiments)", len(list))
+	}
+}
+
+func TestClaimExperimentToProject_Success(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project", "/tmp/proj")
+
+	exp, _ := store.Create("unscoped", `{}`)
+	err := store.ClaimExperimentToProject(exp.ID, "proj-001")
+	if err != nil {
+		t.Fatalf("ClaimExperimentToProject failed: %v", err)
+	}
+
+	got, _ := store.GetByID(exp.ID)
+	if got.ProjectID == nil || *got.ProjectID != "proj-001" {
+		t.Errorf("after claim, ProjectID = %v, want 'proj-001'", got.ProjectID)
+	}
+}
+
+func TestClaimExperimentToProject_AlreadyScoped(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project-a", "/tmp/a")
+	createTestProject(t, store, "proj-002", "project-b", "/tmp/b")
+
+	exp, _ := store.CreateWithProject("already-scoped", `{}`, "proj-001")
+	err := store.ClaimExperimentToProject(exp.ID, "proj-002")
+	if err == nil {
+		t.Fatal("expected error when claiming already-scoped experiment, got nil")
+	}
+}
+
+func TestClaimExperimentToProject_NotFound(t *testing.T) {
+	store := newTestStore(t)
+	createTestProject(t, store, "proj-001", "project", "/tmp/proj")
+
+	err := store.ClaimExperimentToProject("nonexistent", "proj-001")
+	if err == nil {
+		t.Fatal("expected error for nonexistent experiment, got nil")
+	}
+}
