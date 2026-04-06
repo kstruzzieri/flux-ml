@@ -38,7 +38,7 @@ func TestMigrate_CreatesSchemaTable(t *testing.T) {
 
 func TestMigrate_AppliesAllMigrations(t *testing.T) {
 	db := openTestDB(t)
-	tables := []string{"experiments", "events", "metrics", "reward_signals", "alerts", "logs", "annotations"}
+	tables := []string{"experiments", "events", "metrics", "reward_signals", "alerts", "logs", "annotations", "projects"}
 	for _, table := range tables {
 		var name string
 		err := db.QueryRow(
@@ -65,7 +65,7 @@ func TestMigrate_RecordsVersions(t *testing.T) {
 		}
 		versions = append(versions, v)
 	}
-	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes", "004_annotations"}
+	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes", "004_annotations", "005_projects"}
 	if len(versions) != len(expected) {
 		t.Fatalf("expected %d versions, got %d: %v", len(expected), len(versions), versions)
 	}
@@ -85,8 +85,8 @@ func TestMigrate_Idempotent(t *testing.T) {
 	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count query failed: %v", err)
 	}
-	if count != 4 {
-		t.Errorf("expected 4 migration versions, got %d", count)
+	if count != 5 {
+		t.Errorf("expected 5 migration versions, got %d", count)
 	}
 }
 
@@ -275,6 +275,85 @@ func TestSchema_ForeignKeyEnforcement(t *testing.T) {
 	)
 	if err == nil {
 		t.Fatal("expected foreign key violation error, got nil")
+	}
+}
+
+func TestSchema_ProjectsTable(t *testing.T) {
+	db := openTestDB(t)
+
+	// Verify projects table exists and accepts inserts
+	_, err := db.Exec(
+		`INSERT INTO projects (id, name, path, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?)`,
+		"proj-001", "my-project", "/tmp/my-project", 1706745600, 1706745600,
+	)
+	if err != nil {
+		t.Fatalf("insert into projects failed: %v", err)
+	}
+
+	var name, path string
+	err = db.QueryRow("SELECT name, path FROM projects WHERE id = ?", "proj-001").
+		Scan(&name, &path)
+	if err != nil {
+		t.Fatalf("query projects failed: %v", err)
+	}
+	if name != "my-project" {
+		t.Errorf("name = %q, want %q", name, "my-project")
+	}
+	if path != "/tmp/my-project" {
+		t.Errorf("path = %q, want %q", path, "/tmp/my-project")
+	}
+}
+
+func TestSchema_ExperimentProjectID(t *testing.T) {
+	db := openTestDB(t)
+	db.Exec("PRAGMA foreign_keys = ON")
+
+	// Insert a project
+	db.Exec(
+		`INSERT INTO projects (id, name, path, created_at, updated_at)
+		 VALUES ('proj-001', 'test-project', '/tmp/test', 1706745600, 1706745600)`,
+	)
+
+	// Insert an experiment with project_id
+	_, err := db.Exec(
+		`INSERT INTO experiments (id, name, config, status, created_at, updated_at, project_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		"exp-001", "scoped-exp", `{}`, "pending", 1706745600, 1706745600, "proj-001",
+	)
+	if err != nil {
+		t.Fatalf("insert experiment with project_id failed: %v", err)
+	}
+
+	// Verify project_id is stored
+	var projectID *string
+	err = db.QueryRow(
+		"SELECT project_id FROM experiments WHERE id = ?", "exp-001",
+	).Scan(&projectID)
+	if err != nil {
+		t.Fatalf("query project_id failed: %v", err)
+	}
+	if projectID == nil || *projectID != "proj-001" {
+		t.Errorf("project_id = %v, want 'proj-001'", projectID)
+	}
+
+	// Verify NULL project_id still works (unscoped experiment)
+	_, err = db.Exec(
+		`INSERT INTO experiments (id, name, config, status, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?)`,
+		"exp-002", "unscoped-exp", `{}`, "pending", 1706745600, 1706745600,
+	)
+	if err != nil {
+		t.Fatalf("insert unscoped experiment failed: %v", err)
+	}
+
+	// Verify the index exists
+	var indexName string
+	err = db.QueryRow(
+		"SELECT name FROM sqlite_master WHERE type='index' AND name='idx_experiments_project'",
+	).Scan(&indexName)
+	if err != nil {
+		t.Fatalf("idx_experiments_project index not found: %v", err)
 	}
 }
 
