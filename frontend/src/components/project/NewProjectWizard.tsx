@@ -2,6 +2,8 @@ import { useReducer, useEffect, useCallback } from 'react'
 import { wizardReducer, createInitialState } from './wizardReducer'
 import { WizardStepTemplate } from './WizardStepTemplate'
 import { WizardStepDetails } from './WizardStepDetails'
+import { WizardStepReview } from './WizardStepReview'
+import { WizardSummaryRail } from './WizardSummaryRail'
 import { CreateProject } from '../../../wailsjs/go/main/App'
 import './NewProjectWizard.css'
 
@@ -90,32 +92,45 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
           })}
         </div>
 
-        <div className="wizard__content">
-          {state.step === 1 && (
-            <WizardStepTemplate
-              selectedTemplate={state.template}
-              onSelectTemplate={(t) => dispatch({ type: 'SET_TEMPLATE', template: t })}
-            />
-          )}
+        <div className="wizard__body">
+          <div className="wizard__content">
+            {state.step === 1 && (
+              <WizardStepTemplate
+                selectedTemplate={state.template}
+                onSelectTemplate={(t) => dispatch({ type: 'SET_TEMPLATE', template: t })}
+              />
+            )}
+            {state.step === 2 && (
+              <WizardStepDetails
+                projectName={state.projectName}
+                location={state.location}
+                seedDemo={state.seedDemo}
+                onNameChange={(name) => dispatch({ type: 'SET_PROJECT_NAME', name })}
+                onLocationChange={(location, manual) =>
+                  dispatch({ type: 'SET_LOCATION', location, manual })
+                }
+                onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
+                onBrowseLocation={() => {
+                  // Will integrate OpenFolderDialog in Task 11
+                }}
+              />
+            )}
+            {state.step === 3 && state.template && (
+              <WizardStepReview
+                template={state.template}
+                projectName={state.projectName}
+                location={state.location}
+                seedDemo={state.seedDemo}
+              />
+            )}
+          </div>
           {state.step === 2 && (
-            <WizardStepDetails
+            <WizardSummaryRail
+              template={state.template}
               projectName={state.projectName}
               location={state.location}
               seedDemo={state.seedDemo}
-              onNameChange={(name) => dispatch({ type: 'SET_PROJECT_NAME', name })}
-              onLocationChange={(location, manual) =>
-                dispatch({ type: 'SET_LOCATION', location, manual })
-              }
-              onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
-              onBrowseLocation={() => {
-                // Will integrate OpenFolderDialog in Task 11
-              }}
             />
-          )}
-          {state.step === 3 && (
-            <div className="wizard-step">
-              <h2 className="wizard-step__heading">Review &amp; Create</h2>
-            </div>
           )}
         </div>
 

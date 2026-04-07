@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NewProjectWizard } from '@components/project'
-
-jest.mock('../../../../wailsjs/go/main/App')
+import { __resetMockState, __setCreateProjectError } from '../../../__mocks__/wailsjs/go/main/App'
 
 const defaultProps = {
   onClose: jest.fn(),
@@ -11,6 +10,8 @@ const defaultProps = {
 
 beforeEach(() => {
   jest.clearAllMocks()
+  __resetMockState()
+  __setCreateProjectError(null)
 })
 
 describe('NewProjectWizard', () => {
@@ -138,6 +139,38 @@ describe('NewProjectWizard', () => {
       const nameInput = screen.getByLabelText(/project name/i)
       await user.clear(nameInput)
       expect(screen.getByRole('button', { name: /continue/i })).toBeDisabled()
+    })
+  })
+
+  describe('Step 3: Review & Create', () => {
+    async function advanceToStep3() {
+      const user = userEvent.setup()
+      render(<NewProjectWizard {...defaultProps} />)
+      await user.click(screen.getByRole('button', { name: /reward model/i }))
+      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /continue/i }))
+      return user
+    }
+
+    it('shows summary of all choices', async () => {
+      await advanceToStep3()
+      expect(screen.getByText('Reward Model')).toBeInTheDocument()
+      expect(screen.getByText('reward-model-v1')).toBeInTheDocument()
+    })
+
+    it('calls CreateProject on create and closes on success', async () => {
+      const user = await advanceToStep3()
+      await user.click(screen.getByRole('button', { name: /create project/i }))
+      expect(defaultProps.onCreated).toHaveBeenCalledTimes(1)
+    })
+
+    it('shows inline error on create failure', async () => {
+      __setCreateProjectError(new Error('Directory already exists'))
+      const user = await advanceToStep3()
+      await user.click(screen.getByRole('button', { name: /create project/i }))
+      expect(await screen.findByText(/directory already exists/i)).toBeInTheDocument()
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(defaultProps.onCreated).not.toHaveBeenCalled()
     })
   })
 })

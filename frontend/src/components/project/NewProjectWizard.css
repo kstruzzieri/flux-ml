@@ -79,6 +79,12 @@
   border-color: var(--color-success);
 }
 
+.wizard__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .wizard__content {
   flex: 1;
   overflow-y: auto;
@@ -168,4 +174,123 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+/* Summary Rail */
+.wizard-rail {
+  width: 200px;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-left: 1px solid var(--color-border-muted);
+  background: var(--color-bg-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.wizard-rail__title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  margin: 0;
+}
+
+.wizard-rail__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-rail__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.wizard-rail__value {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+.wizard-rail__value--mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+/* Review summary */
+.wizard-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: 0;
+}
+
+.wizard-review__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-review__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.wizard-review__value {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.wizard-review__value--mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+/* Wizard field layout */
+.wizard-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.wizard-field__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.wizard-field__row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.wizard-field__row .input {
+  flex: 1;
+}
+
+.wizard-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.wizard-toggle input[type='checkbox'] {
+  margin-right: var(--spacing-sm);
+}
+
+.wizard-toggle__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.wizard-toggle__desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  padding-left: calc(14px + var(--spacing-sm));
 }
