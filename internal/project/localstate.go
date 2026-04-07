@@ -103,6 +103,10 @@ func (ls *LocalState) RemoveRecentProject(projectPath string) error {
 		}
 	}
 
+	if len(filtered) == len(recents) {
+		return nil // nothing removed
+	}
+
 	return ls.writeJSON("recent-projects.json", filtered)
 }
 

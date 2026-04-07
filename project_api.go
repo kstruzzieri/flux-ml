@@ -163,7 +163,7 @@ func (a *App) ListRecentProjects() ([]project.RecentProject, error) {
 // RemoveRecentProject removes a stale entry from the recent-projects list.
 func (a *App) RemoveRecentProject(dir string) error {
 	if a.localState == nil {
-		return fmt.Errorf("local state not initialized")
+		return nil
 	}
 	return a.localState.RemoveRecentProject(dir)
 }

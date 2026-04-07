@@ -196,6 +196,18 @@ func TestRemoveRecentProject_NotFound(t *testing.T) {
 	}
 }
 
+func TestRemoveRecentProject_EmptyList(t *testing.T) {
+	ls := newTestLocalState(t)
+	err := ls.RemoveRecentProject(t.TempDir())
+	if err != nil {
+		t.Fatalf("unexpected error on empty list: %v", err)
+	}
+	recents, _ := ls.RecentProjects()
+	if len(recents) != 0 {
+		t.Errorf("expected 0, got %d", len(recents))
+	}
+}
+
 func TestRemoveRecentProject_Canonicalizes(t *testing.T) {
 	ls := newTestLocalState(t)
 	dir := t.TempDir()
