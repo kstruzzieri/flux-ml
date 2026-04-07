@@ -168,6 +168,17 @@ func (a *App) RemoveRecentProject(dir string) error {
 	return a.localState.RemoveRecentProject(dir)
 }
 
+// OpenFolderDialog opens the native OS directory picker and returns the selected path.
+// Returns an empty string if the user cancels.
+func (a *App) OpenFolderDialog() (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("application context not initialized")
+	}
+	return wailsRuntime.OpenDirectoryDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: "Select Folder",
+	})
+}
+
 // GetProjectConfig reads and returns the config for a directory.
 func (a *App) GetProjectConfig(dir string) (*project.FluxConfig, []string, error) {
 	return project.LoadConfig(dir)
