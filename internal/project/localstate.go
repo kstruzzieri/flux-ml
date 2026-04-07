@@ -83,6 +83,29 @@ func (ls *LocalState) AddRecentProject(projectPath, name string) error {
 	return ls.writeJSON("recent-projects.json", filtered)
 }
 
+// RemoveRecentProject removes a project from the recent list by path.
+// The path is canonicalized before matching. No error if not found.
+func (ls *LocalState) RemoveRecentProject(projectPath string) error {
+	canonical, err := CanonicalProjectPath(projectPath)
+	if err != nil {
+		return fmt.Errorf("canonicalizing path: %w", err)
+	}
+
+	recents, err := ls.RecentProjects()
+	if err != nil {
+		return err
+	}
+
+	filtered := make([]RecentProject, 0, len(recents))
+	for _, r := range recents {
+		if r.Path != canonical {
+			filtered = append(filtered, r)
+		}
+	}
+
+	return ls.writeJSON("recent-projects.json", filtered)
+}
+
 // GetProjectState returns the per-project state for the given path.
 // The path is canonicalized before lookup.
 func (ls *LocalState) GetProjectState(projectPath string) (map[string]interface{}, error) {

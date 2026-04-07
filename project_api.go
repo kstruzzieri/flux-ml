@@ -160,6 +160,14 @@ func (a *App) ListRecentProjects() ([]project.RecentProject, error) {
 	return a.localState.RecentProjects()
 }
 
+// RemoveRecentProject removes a stale entry from the recent-projects list.
+func (a *App) RemoveRecentProject(dir string) error {
+	if a.localState == nil {
+		return fmt.Errorf("local state not initialized")
+	}
+	return a.localState.RemoveRecentProject(dir)
+}
+
 // GetProjectConfig reads and returns the config for a directory.
 func (a *App) GetProjectConfig(dir string) (*project.FluxConfig, []string, error) {
 	return project.LoadConfig(dir)
