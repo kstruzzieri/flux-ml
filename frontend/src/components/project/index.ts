@@ -1,3 +1,5 @@
 export { WelcomeScreen } from './WelcomeScreen'
 export { RecentProjectsList } from './RecentProjectsList'
 export type { RecentProjectEntry } from './RecentProjectsList'
+export { ProjectSwitcher } from './ProjectSwitcher'
+export { ProjectSwitcherDropdown } from './ProjectSwitcherDropdown'

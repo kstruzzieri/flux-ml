@@ -5,7 +5,7 @@ import { Content, AppMode } from './Content'
 import { GetAppInfo, OpenProject, RemoveRecentProject } from '../../../wailsjs/go/main/App'
 import { useKeyboardShortcuts, useLayoutPersistence } from '../../hooks'
 import { useProjectStore } from '../../stores/projectStore'
-import type { RecentProjectEntry } from '../project'
+import { ProjectSwitcher, type RecentProjectEntry } from '../project'
 
 interface AppInfo {
   name: string
@@ -27,6 +27,8 @@ export function AppShell() {
   const initialize = useProjectStore((s) => s.initialize)
   const recentProjects = useProjectStore((s) => s.recentProjects)
   const fetchRecentProjects = useProjectStore((s) => s.fetchRecentProjects)
+  const degraded = useProjectStore((s) => s.degraded)
+  const closeProject = useProjectStore((s) => s.closeProject)
 
   const [recentProjectErrors, setRecentProjectErrors] = useState<Record<string, string>>({})
 
@@ -100,6 +102,10 @@ export function AppShell() {
     [fetchRecentProjects]
   )
 
+  const handleCloseProject = useCallback(async () => {
+    await closeProject()
+  }, [closeProject])
+
   // Used by WelcomeScreen (Task 5) and NoProjectBanner (Task 12)
   const handleEnterCompatMode = useCallback(() => {
     setCompatMode(true)
@@ -142,6 +148,22 @@ export function AppShell() {
         alertCount={alertCount}
         onCommandPalette={handleCommandPalette}
         disabledViews={disabledViews}
+        projectSwitcher={
+          currentProject ? (
+            <ProjectSwitcher
+              projectName={currentProject.name}
+              projectPath={currentProject.path}
+              degraded={degraded}
+              recentProjects={recentProjectEntries}
+              onNewProject={handleNewProject}
+              onOpenFolder={handleOpenFolder}
+              onOpenExisting={handleOpenExisting}
+              onCloseProject={handleCloseProject}
+              onSwitchProject={handleOpenRecentProject}
+              onRemoveRecentProject={handleRemoveRecentProject}
+            />
+          ) : undefined
+        }
       />
       <ActivityBar
         activeItem={activeView}
