@@ -18,6 +18,7 @@ const EMPTY_DISABLED = new Set<ViewId>()
 export function AppShell() {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [activeView, setActiveView] = useState<ViewId>('experiments')
+  const [compatMode, setCompatMode] = useState(false)
   const layout = useLayoutPersistence()
 
   const currentProject = useProjectStore((s) => s.currentProject)
@@ -33,10 +34,16 @@ export function AppShell() {
   }, [initialize])
 
   useEffect(() => {
-    Promise.resolve(GetAppInfo())
+    GetAppInfo()
       .then((info) => setAppInfo(info as AppInfo))
       .catch((err) => console.error('Failed to get app info:', err))
   }, [])
+
+  useEffect(() => {
+    if (currentProject) {
+      setCompatMode(false)
+    }
+  }, [currentProject])
 
   const handleViewChange = useCallback((view: ViewId) => {
     setActiveView(view)
@@ -47,8 +54,13 @@ export function AppShell() {
     console.log('Command palette triggered')
   }, [])
 
+  // Used by WelcomeScreen (Task 5) and NoProjectBanner (Task 12)
+  const _handleEnterCompatMode = useCallback(() => {
+    setCompatMode(true)
+  }, [])
+
   // Derive app mode and disabled views (before hooks to maintain consistent hook call order)
-  const appMode: AppMode = hydrated ? (currentProject ? 'project' : 'welcome') : 'welcome'
+  const appMode: AppMode = currentProject ? 'project' : compatMode ? 'no-project-compat' : 'welcome'
 
   const disabledViews: Set<ViewId> =
     !hydrated || appMode === 'welcome'
