@@ -15,6 +15,7 @@ interface ProjectState {
   degraded: boolean
   recentProjects: project.RecentProject[]
   loading: boolean
+  hydrated: boolean
 
   fetchStatus: () => Promise<void>
   fetchRecentProjects: () => Promise<void>
@@ -39,6 +40,7 @@ export function __resetProjectStoreInitialized(): void {
     degraded: false,
     recentProjects: [],
     loading: false,
+    hydrated: false,
   })
 }
 
@@ -50,6 +52,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   degraded: false,
   recentProjects: [],
   loading: false,
+  hydrated: false,
 
   fetchStatus: async () => {
     set({ loading: true })
@@ -62,10 +65,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         warnings: status.warnings || [],
         degraded: status.degraded || false,
         loading: false,
+        hydrated: true,
       })
     } catch (err) {
       set({
         loading: false,
+        hydrated: true,
         configError: err instanceof Error ? err.message : String(err),
       })
     }
@@ -96,8 +101,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     _initialized = true
 
     const { fetchStatus, fetchRecentProjects } = get()
-    fetchStatus()
-    fetchRecentProjects()
+    void Promise.all([fetchStatus(), fetchRecentProjects()])
 
     const projectEvents = [
       'project:created',
@@ -113,7 +117,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       })
     )
     _unsubscribe = () => {
-      unsubs.forEach((unsub) => unsub())
+      unsubs.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub()
+      })
     }
   },
 }))

@@ -47,24 +47,33 @@ const BOTTOM_ITEMS = [
 interface ActivityBarProps {
   activeItem?: ViewId
   onItemClick?: (id: ViewId) => void
+  disabledItems?: Set<ViewId>
 }
 
-export function ActivityBar({ activeItem = 'experiments', onItemClick }: ActivityBarProps) {
+export function ActivityBar({
+  activeItem = 'experiments',
+  onItemClick,
+  disabledItems,
+}: ActivityBarProps) {
   return (
     <aside className="activity-bar" role="navigation" aria-label="Activity bar">
-      {ACTIVITY_ITEMS.map((item) => (
-        <button
-          key={item.id}
-          className={`activity-bar__btn ${item.id === activeItem ? 'activity-bar__btn--active' : ''}`}
-          title={item.label}
-          aria-label={item.label}
-          aria-current={item.id === activeItem ? 'page' : undefined}
-          data-testid={`activity-${item.id}`}
-          onClick={() => onItemClick?.(item.id)}
-        >
-          {item.icon}
-        </button>
-      ))}
+      {ACTIVITY_ITEMS.map((item) => {
+        const isDisabled = disabledItems?.has(item.id) ?? false
+        return (
+          <button
+            key={item.id}
+            className={`activity-bar__btn ${item.id === activeItem ? 'activity-bar__btn--active' : ''}`}
+            title={item.label}
+            aria-label={item.label}
+            aria-current={item.id === activeItem ? 'page' : undefined}
+            data-testid={`activity-${item.id}`}
+            disabled={isDisabled}
+            onClick={() => onItemClick?.(item.id)}
+          >
+            {item.icon}
+          </button>
+        )
+      })}
 
       <div className="activity-bar__divider" />
 

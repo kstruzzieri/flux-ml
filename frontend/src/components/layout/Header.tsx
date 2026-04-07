@@ -11,6 +11,8 @@ interface HeaderProps {
   runningCount?: number
   alertCount?: number
   onCommandPalette?: () => void
+  disabledViews?: Set<ViewId>
+  projectSwitcher?: React.ReactNode
 }
 
 const NAV_ITEMS: { id: ViewId; label: string; icon: React.JSX.Element }[] = [
@@ -81,6 +83,8 @@ export function Header({
   runningCount = 0,
   alertCount = 0,
   onCommandPalette,
+  disabledViews,
+  projectSwitcher,
 }: HeaderProps) {
   const handleDoubleClick = useCallback(() => {
     ToggleMaximize()
@@ -94,20 +98,25 @@ export function Header({
       <div className="titlebar__left">
         <FluxIcon />
         <span className="titlebar__title">Flux</span>
+        {projectSwitcher}
       </div>
 
       <nav className="titlebar__nav" aria-label="Workspace navigation">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            className={`titlebar__tab ${item.id === activeView ? 'titlebar__tab--active' : ''}`}
-            aria-current={item.id === activeView ? 'page' : undefined}
-            onClick={() => onViewChange?.(item.id)}
-          >
-            <span className="titlebar__tab-icon">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const isDisabled = disabledViews?.has(item.id) ?? false
+          return (
+            <button
+              key={item.id}
+              className={`titlebar__tab ${item.id === activeView ? 'titlebar__tab--active' : ''} ${isDisabled ? 'titlebar__tab--disabled' : ''}`}
+              aria-current={item.id === activeView ? 'page' : undefined}
+              disabled={isDisabled}
+              onClick={() => onViewChange?.(item.id)}
+            >
+              <span className="titlebar__tab-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          )
+        })}
       </nav>
 
       <div className="titlebar__right">
