@@ -31,6 +31,16 @@ let mockCurrentProjectStatus = new main.CurrentProjectStatus({
   degraded: false,
 } as Record<string, unknown>)
 
+// --- New Phase A.5 methods ---
+
+let mockOpenFolderDialogResult: string = ''
+let mockOpenFolderDialogError: Error | null = null
+let mockIsFluxProjectResult: boolean = false
+let mockRemoveRecentProjectError: Error | null = null
+let mockCreateProjectError: Error | null = null
+let mockOpenProjectError: Error | null = null
+let mockOpenFolderAsProjectError: Error | null = null
+
 // --- Existing methods ---
 
 export function GetLayout(): Promise<main.LayoutState> {
@@ -265,6 +275,7 @@ export function CreateProject(
   _template: string,
   _seedDemo: boolean,
 ): Promise<project.Project> {
+  if (mockCreateProjectError) return Promise.reject(mockCreateProjectError)
   const proj = new project.Project({
     id: crypto.randomUUID(),
     name,
@@ -285,6 +296,7 @@ export function CreateProject(
 }
 
 export function OpenProject(dir: string): Promise<project.Project> {
+  if (mockOpenProjectError) return Promise.reject(mockOpenProjectError)
   const proj = new project.Project({
     id: crypto.randomUUID(),
     name: 'opened-project',
@@ -308,6 +320,7 @@ export function OpenFolderAsProject(
   name: string,
   _seedDemo: boolean,
 ): Promise<project.Project> {
+  if (mockOpenFolderAsProjectError) return Promise.reject(mockOpenFolderAsProjectError)
   const proj = new project.Project({
     id: crypto.randomUUID(),
     name,
@@ -350,6 +363,17 @@ export function ListRecentProjects(): Promise<project.RecentProject[]> {
   return Promise.resolve([...mockRecentProjects])
 }
 
+export function OpenFolderDialog(): Promise<string> {
+  if (mockOpenFolderDialogError) return Promise.reject(mockOpenFolderDialogError)
+  return Promise.resolve(mockOpenFolderDialogResult)
+}
+
+export function RemoveRecentProject(dir: string): Promise<void> {
+  if (mockRemoveRecentProjectError) return Promise.reject(mockRemoveRecentProjectError)
+  mockRecentProjects = mockRecentProjects.filter((r) => r.path !== dir)
+  return Promise.resolve()
+}
+
 export function ListUnscopedExperiments(): Promise<experiment.Experiment[]> {
   return Promise.resolve(mockExperiments.filter((e) => !e.projectId))
 }
@@ -377,7 +401,7 @@ export function GetProjectConfig(_dir: string): Promise<project.FluxConfig> {
 }
 
 export function IsFluxProject(_dir: string): Promise<boolean> {
-  return Promise.resolve(false)
+  return Promise.resolve(mockIsFluxProjectResult)
 }
 
 // --- Test helpers ---
@@ -401,6 +425,13 @@ export function __resetMockState(): void {
     warnings: [],
     degraded: false,
   } as Record<string, unknown>)
+  mockOpenFolderDialogResult = ''
+  mockOpenFolderDialogError = null
+  mockIsFluxProjectResult = false
+  mockRemoveRecentProjectError = null
+  mockCreateProjectError = null
+  mockOpenProjectError = null
+  mockOpenFolderAsProjectError = null
 }
 
 export function __setListExperimentsOverride(
@@ -425,6 +456,31 @@ export function __setCurrentProjectStatus(
 
 export function __setRecentProjects(recents: project.RecentProject[]): void {
   mockRecentProjects = [...recents]
+}
+
+export function __setOpenFolderDialogResult(result: string, error?: Error): void {
+  mockOpenFolderDialogResult = result
+  mockOpenFolderDialogError = error ?? null
+}
+
+export function __setIsFluxProjectResult(result: boolean): void {
+  mockIsFluxProjectResult = result
+}
+
+export function __setRemoveRecentProjectError(error: Error | null): void {
+  mockRemoveRecentProjectError = error
+}
+
+export function __setCreateProjectError(error: Error | null): void {
+  mockCreateProjectError = error
+}
+
+export function __setOpenProjectError(error: Error | null): void {
+  mockOpenProjectError = error
+}
+
+export function __setOpenFolderAsProjectError(error: Error | null): void {
+  mockOpenFolderAsProjectError = error
 }
 
 // Keep backward-compatible alias
