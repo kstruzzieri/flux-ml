@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Header, ViewId } from './Header'
 import { ActivityBar } from './ActivityBar'
 import { Content, AppMode } from './Content'
-import { GetAppInfo } from '../../../wailsjs/go/main/App'
+import { GetAppInfo, OpenProject, RemoveRecentProject } from '../../../wailsjs/go/main/App'
 import { useKeyboardShortcuts, useLayoutPersistence } from '../../hooks'
 import { useProjectStore } from '../../stores/projectStore'
+import type { RecentProjectEntry } from '../project'
 
 interface AppInfo {
   name: string
@@ -24,6 +25,10 @@ export function AppShell() {
   const currentProject = useProjectStore((s) => s.currentProject)
   const hydrated = useProjectStore((s) => s.hydrated)
   const initialize = useProjectStore((s) => s.initialize)
+  const recentProjects = useProjectStore((s) => s.recentProjects)
+  const fetchRecentProjects = useProjectStore((s) => s.fetchRecentProjects)
+
+  const [recentProjectErrors, setRecentProjectErrors] = useState<Record<string, string>>({})
 
   // TODO: These will be driven by actual experiment state
   const [runningCount] = useState(0)
@@ -54,13 +59,59 @@ export function AppShell() {
     console.log('Command palette triggered')
   }, [])
 
+  // Handler stubs — implemented in future tasks
+  const handleNewProject = useCallback(() => {
+    // TODO: Task 8 — open New Project dialog
+  }, [])
+
+  const handleOpenFolder = useCallback(() => {
+    // TODO: Task 11 — open folder dialog
+  }, [])
+
+  const handleOpenExisting = useCallback(() => {
+    // TODO: Task 11 — open existing project dialog
+  }, [])
+
+  const handleOpenRecentProject = useCallback(async (path: string) => {
+    try {
+      await OpenProject(path)
+      setRecentProjectErrors((prev) => {
+        const next = { ...prev }
+        delete next[path]
+        return next
+      })
+    } catch (err) {
+      setRecentProjectErrors((prev) => ({
+        ...prev,
+        [path]: err instanceof Error ? err.message : String(err),
+      }))
+    }
+  }, [])
+
+  const handleRemoveRecentProject = useCallback(
+    async (path: string) => {
+      try {
+        await RemoveRecentProject(path)
+        await fetchRecentProjects()
+      } catch (err) {
+        console.error('Failed to remove recent project:', err)
+      }
+    },
+    [fetchRecentProjects]
+  )
+
   // Used by WelcomeScreen (Task 5) and NoProjectBanner (Task 12)
-  const _handleEnterCompatMode = useCallback(() => {
+  const handleEnterCompatMode = useCallback(() => {
     setCompatMode(true)
   }, [])
 
   // Derive app mode and disabled views (before hooks to maintain consistent hook call order)
   const appMode: AppMode = currentProject ? 'project' : compatMode ? 'no-project-compat' : 'welcome'
+
+  const recentProjectEntries: RecentProjectEntry[] = recentProjects.map((p) => ({
+    ...p,
+    error: recentProjectErrors[p.path],
+  }))
 
   const disabledViews: Set<ViewId> =
     !hydrated || appMode === 'welcome'
@@ -97,7 +148,18 @@ export function AppShell() {
         onItemClick={handleViewChange}
         disabledItems={disabledViews}
       />
-      <Content activeView={activeView} layout={layout} appMode={appMode} />
+      <Content
+        activeView={activeView}
+        layout={layout}
+        appMode={appMode}
+        recentProjects={recentProjectEntries}
+        onNewProject={handleNewProject}
+        onOpenFolder={handleOpenFolder}
+        onOpenExisting={handleOpenExisting}
+        onBrowseExperiments={handleEnterCompatMode}
+        onOpenRecentProject={handleOpenRecentProject}
+        onRemoveRecentProject={handleRemoveRecentProject}
+      />
     </div>
   )
 }
