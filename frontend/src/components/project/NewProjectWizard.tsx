@@ -1,6 +1,7 @@
 import { useReducer, useEffect, useCallback } from 'react'
 import { wizardReducer, createInitialState } from './wizardReducer'
 import { WizardStepTemplate } from './WizardStepTemplate'
+import { WizardStepDetails } from './WizardStepDetails'
 import { CreateProject } from '../../../wailsjs/go/main/App'
 import './NewProjectWizard.css'
 
@@ -97,17 +98,19 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
             />
           )}
           {state.step === 2 && (
-            <div className="wizard-step">
-              <h2 className="wizard-step__heading">Project details</h2>
-              <label htmlFor="wizard-name">Project Name</label>
-              <input
-                id="wizard-name"
-                type="text"
-                className="input"
-                value={state.projectName}
-                onChange={(e) => dispatch({ type: 'SET_PROJECT_NAME', name: e.target.value })}
-              />
-            </div>
+            <WizardStepDetails
+              projectName={state.projectName}
+              location={state.location}
+              seedDemo={state.seedDemo}
+              onNameChange={(name) => dispatch({ type: 'SET_PROJECT_NAME', name })}
+              onLocationChange={(location, manual) =>
+                dispatch({ type: 'SET_LOCATION', location, manual })
+              }
+              onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
+              onBrowseLocation={() => {
+                // Will integrate OpenFolderDialog in Task 11
+              }}
+            />
           )}
           {state.step === 3 && (
             <div className="wizard-step">

@@ -80,4 +80,64 @@ describe('NewProjectWizard', () => {
       expect(screen.getByLabelText(/project name/i)).toBeInTheDocument()
     })
   })
+
+  describe('Step 2: Details', () => {
+    async function advanceToStep2() {
+      const user = userEvent.setup()
+      render(<NewProjectWizard {...defaultProps} />)
+      await user.click(screen.getByRole('button', { name: /reward model/i }))
+      await user.click(screen.getByRole('button', { name: /continue/i }))
+      return user
+    }
+
+    it('shows project name pre-filled from template', async () => {
+      await advanceToStep2()
+      const nameInput = screen.getByLabelText(/project name/i)
+      expect(nameInput).toHaveValue('reward-model-v1')
+    })
+
+    it('shows location field with auto-generated path', async () => {
+      await advanceToStep2()
+      const locationInput = screen.getByLabelText(/location/i)
+      expect((locationInput as HTMLInputElement).value).toContain('reward-model-v1')
+    })
+
+    it('auto-updates location when name changes (before manual edit)', async () => {
+      const user = await advanceToStep2()
+      const nameInput = screen.getByLabelText(/project name/i)
+      await user.clear(nameInput)
+      await user.type(nameInput, 'my-custom-name')
+      const locationInput = screen.getByLabelText(/location/i)
+      expect((locationInput as HTMLInputElement).value).toContain('my-custom-name')
+    })
+
+    it('stops auto-sync after manual location edit', async () => {
+      const user = await advanceToStep2()
+      const locationInput = screen.getByLabelText(/location/i)
+      await user.clear(locationInput)
+      await user.type(locationInput, '/custom/path')
+      const nameInput = screen.getByLabelText(/project name/i)
+      await user.clear(nameInput)
+      await user.type(nameInput, 'changed-name')
+      expect(locationInput).toHaveValue('/custom/path')
+    })
+
+    it('shows include starter experiments toggle', async () => {
+      await advanceToStep2()
+      expect(screen.getByLabelText(/include starter experiments/i)).toBeInTheDocument()
+    })
+
+    it('has Back button that returns to step 1', async () => {
+      const user = await advanceToStep2()
+      await user.click(screen.getByRole('button', { name: /back/i }))
+      expect(screen.getByText('What kind of project?')).toBeInTheDocument()
+    })
+
+    it('disables Continue when name is empty', async () => {
+      const user = await advanceToStep2()
+      const nameInput = screen.getByLabelText(/project name/i)
+      await user.clear(nameInput)
+      expect(screen.getByRole('button', { name: /continue/i })).toBeDisabled()
+    })
+  })
 })
