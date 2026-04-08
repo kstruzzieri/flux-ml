@@ -86,7 +86,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   closeProject: async () => {
-    await CloseProject()
+    try {
+      await CloseProject()
+    } catch (err) {
+      console.error('Failed to close project:', err)
+    }
+    // Always reset local state — the user intends to close regardless
     set({
       currentProject: null,
       config: null,

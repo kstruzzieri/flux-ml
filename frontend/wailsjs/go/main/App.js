@@ -110,8 +110,20 @@ export function IsFluxProject(arg1) {
   return window['go']['main']['App']['IsFluxProject'](arg1);
 }
 
+export function GetDefaultProjectsDir() {
+  return window['go']['main']['App']['GetDefaultProjectsDir']();
+}
+
 export function ListRecentProjects() {
   return window['go']['main']['App']['ListRecentProjects']();
+}
+
+export function OpenFolderDialog() {
+  return window['go']['main']['App']['OpenFolderDialog']();
+}
+
+export function RemoveRecentProject(arg1) {
+  return window['go']['main']['App']['RemoveRecentProject'](arg1);
 }
 
 export function ListUnscopedExperiments() {

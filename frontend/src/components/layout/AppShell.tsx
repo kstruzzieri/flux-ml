@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Header, ViewId } from './Header'
 import { ActivityBar } from './ActivityBar'
 import { Content, AppMode } from './Content'
@@ -110,8 +110,8 @@ export function AppShell() {
       if (isFlux) {
         await OpenProject(dir)
       } else {
-        const name = dir.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'project'
-        setImportState({ path: dir, name })
+        // TODO: Surface as toast when toast system is available
+        console.warn(`No flux.yaml found in ${dir}. Use "Open Folder" to import.`)
       }
     } catch (err) {
       console.error('Open existing failed:', err)
@@ -175,10 +175,10 @@ export function AppShell() {
   // Derive app mode and disabled views (before hooks to maintain consistent hook call order)
   const appMode: AppMode = currentProject ? 'project' : compatMode ? 'no-project-compat' : 'welcome'
 
-  const recentProjectEntries: RecentProjectEntry[] = recentProjects.map((p) => ({
-    ...p,
-    error: recentProjectErrors[p.path],
-  }))
+  const recentProjectEntries: RecentProjectEntry[] = useMemo(
+    () => recentProjects.map((p) => ({ ...p, error: recentProjectErrors[p.path] })),
+    [recentProjects, recentProjectErrors]
+  )
 
   const disabledViews: Set<ViewId> =
     !hydrated || appMode === 'welcome'
@@ -186,6 +186,13 @@ export function AppShell() {
       : appMode === 'no-project-compat'
         ? NO_PROJECT_COMPAT_DISABLED
         : EMPTY_DISABLED
+
+  // Reset activeView if the current view becomes disabled (e.g. project close, compat mode)
+  useEffect(() => {
+    if (disabledViews.has(activeView)) {
+      setActiveView('experiments')
+    }
+  }, [disabledViews, activeView])
 
   // Must be called unconditionally (no conditional hooks)
   useKeyboardShortcuts({

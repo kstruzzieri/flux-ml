@@ -61,7 +61,13 @@ export function GetProjectConfig(arg1:string):Promise<project.FluxConfig>;
 
 export function IsFluxProject(arg1:string):Promise<boolean>;
 
+export function GetDefaultProjectsDir():Promise<string>;
+
 export function ListRecentProjects():Promise<Array<project.RecentProject>>;
+
+export function OpenFolderDialog():Promise<string>;
+
+export function RemoveRecentProject(arg1:string):Promise<void>;
 
 export function ListUnscopedExperiments():Promise<Array<experiment.Experiment>>;
 

@@ -10,6 +10,7 @@ export interface WizardState {
   template: TemplateId | null
   projectName: string
   location: string
+  defaultProjectsDir: string
   locationManuallyEdited: boolean
   seedDemo: boolean
   creating: boolean
@@ -21,6 +22,7 @@ export type WizardAction =
   | { type: 'SET_PROJECT_NAME'; name: string }
   | { type: 'SET_LOCATION'; location: string; manual: boolean }
   | { type: 'SET_SEED_DEMO'; include: boolean }
+  | { type: 'SET_DEFAULT_DIR'; dir: string }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 }
   | { type: 'CREATE_START' }
   | { type: 'CREATE_ERROR'; error: string }
@@ -39,21 +41,18 @@ function sanitizeForPath(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-function defaultParent(): string {
-  return '~/projects'
-}
-
-function buildLocation(name: string): string {
+function buildLocation(name: string, parentDir: string): string {
   const slug = sanitizeForPath(name) || 'untitled'
-  return `${defaultParent()}/${slug}`
+  return parentDir ? `${parentDir}/${slug}` : slug
 }
 
-export function createInitialState(): WizardState {
+export function createInitialState(defaultProjectsDir = ''): WizardState {
   return {
     step: 1,
     template: null,
     projectName: '',
     location: '',
+    defaultProjectsDir,
     locationManuallyEdited: false,
     seedDemo: true,
     creating: false,
@@ -69,17 +68,19 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         ...state,
         template: action.template,
         projectName: name,
-        location: buildLocation(name),
+        location: buildLocation(name, state.defaultProjectsDir),
         locationManuallyEdited: false,
       }
     }
     case 'SET_PROJECT_NAME': {
       const next: WizardState = { ...state, projectName: action.name }
       if (!state.locationManuallyEdited) {
-        next.location = buildLocation(action.name)
+        next.location = buildLocation(action.name, state.defaultProjectsDir)
       }
       return next
     }
+    case 'SET_DEFAULT_DIR':
+      return { ...state, defaultProjectsDir: action.dir }
     case 'SET_LOCATION':
       return { ...state, location: action.location, locationManuallyEdited: action.manual }
     case 'SET_SEED_DEMO':

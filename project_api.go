@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/kstruzzieri/flux-ml/internal/project"
@@ -166,6 +167,15 @@ func (a *App) RemoveRecentProject(dir string) error {
 		return nil
 	}
 	return a.localState.RemoveRecentProject(dir)
+}
+
+// GetDefaultProjectsDir returns a sensible default parent directory for new projects.
+func (a *App) GetDefaultProjectsDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("getting home directory: %w", err)
+	}
+	return filepath.Join(home, "projects"), nil
 }
 
 // OpenFolderDialog opens the native OS directory picker and returns the selected path.

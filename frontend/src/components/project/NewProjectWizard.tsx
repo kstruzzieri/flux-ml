@@ -4,7 +4,11 @@ import { WizardStepTemplate } from './WizardStepTemplate'
 import { WizardStepDetails } from './WizardStepDetails'
 import { WizardStepReview } from './WizardStepReview'
 import { WizardSummaryRail } from './WizardSummaryRail'
-import { CreateProject, OpenFolderDialog } from '../../../wailsjs/go/main/App'
+import {
+  CreateProject,
+  OpenFolderDialog,
+  GetDefaultProjectsDir,
+} from '../../../wailsjs/go/main/App'
 import './NewProjectWizard.css'
 
 const STEP_LABELS = ['Template', 'Details', 'Review'] as const
@@ -15,7 +19,17 @@ interface NewProjectWizardProps {
 }
 
 export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) {
-  const [state, dispatch] = useReducer(wizardReducer, undefined, createInitialState)
+  const [state, dispatch] = useReducer(wizardReducer, '', createInitialState)
+
+  useEffect(() => {
+    GetDefaultProjectsDir()
+      .then((dir) => {
+        dispatch({ type: 'SET_DEFAULT_DIR', dir })
+      })
+      .catch(() => {
+        // Fall back to empty — user will need to browse
+      })
+  }, [])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -56,7 +70,7 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
         error: err instanceof Error ? err.message : String(err),
       })
     }
-  }, [state, onCreated])
+  }, [state.template, state.projectName, state.location, state.seedDemo, onCreated])
 
   const canContinue =
     (state.step === 1 && state.template !== null) ||

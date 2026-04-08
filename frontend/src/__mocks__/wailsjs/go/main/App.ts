@@ -363,6 +363,10 @@ export function ListRecentProjects(): Promise<project.RecentProject[]> {
   return Promise.resolve([...mockRecentProjects])
 }
 
+export function GetDefaultProjectsDir(): Promise<string> {
+  return Promise.resolve('/tmp/projects')
+}
+
 export function OpenFolderDialog(): Promise<string> {
   if (mockOpenFolderDialogError) return Promise.reject(mockOpenFolderDialogError)
   return Promise.resolve(mockOpenFolderDialogResult)
