@@ -41,7 +41,7 @@ function sanitizeForPath(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-function buildLocation(name: string, parentDir: string): string {
+export function buildLocation(name: string, parentDir: string): string {
   const slug = sanitizeForPath(name) || 'untitled'
   return parentDir ? `${parentDir}/${slug}` : slug
 }
@@ -79,8 +79,13 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       }
       return next
     }
-    case 'SET_DEFAULT_DIR':
-      return { ...state, defaultProjectsDir: action.dir }
+    case 'SET_DEFAULT_DIR': {
+      const next: WizardState = { ...state, defaultProjectsDir: action.dir }
+      if (!state.locationManuallyEdited && state.projectName.trim() !== '') {
+        next.location = buildLocation(state.projectName, action.dir)
+      }
+      return next
+    }
     case 'SET_LOCATION':
       return { ...state, location: action.location, locationManuallyEdited: action.manual }
     case 'SET_SEED_DEMO':

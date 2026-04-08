@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useCallback } from 'react'
-import { wizardReducer, createInitialState } from './wizardReducer'
+import { wizardReducer, createInitialState, buildLocation } from './wizardReducer'
 import { WizardStepTemplate } from './WizardStepTemplate'
 import { WizardStepDetails } from './WizardStepDetails'
 import { WizardStepReview } from './WizardStepReview'
@@ -76,6 +76,22 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
     (state.step === 1 && state.template !== null) ||
     (state.step === 2 && state.projectName.trim() !== '' && state.location.trim() !== '')
 
+  const handleBrowseLocation = useCallback(async () => {
+    try {
+      const dir = await OpenFolderDialog()
+      if (!dir) return
+
+      dispatch({ type: 'SET_DEFAULT_DIR', dir })
+      dispatch({
+        type: 'SET_LOCATION',
+        location: buildLocation(state.projectName, dir),
+        manual: false,
+      })
+    } catch (err) {
+      console.error('Browse location failed:', err)
+    }
+  }, [state.projectName])
+
   return (
     <div className="wizard-overlay">
       <div
@@ -124,16 +140,7 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
                   dispatch({ type: 'SET_LOCATION', location, manual })
                 }
                 onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
-                onBrowseLocation={async () => {
-                  try {
-                    const dir = await OpenFolderDialog()
-                    if (dir) {
-                      dispatch({ type: 'SET_LOCATION', location: dir, manual: true })
-                    }
-                  } catch (err) {
-                    console.error('Browse location failed:', err)
-                  }
-                }}
+                onBrowseLocation={handleBrowseLocation}
               />
             )}
             {state.step === 3 && state.template && (

@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NewProjectWizard } from '@components/project'
-import { __resetMockState, __setCreateProjectError } from '../../../__mocks__/wailsjs/go/main/App'
+import {
+  __resetMockState,
+  __setCreateProjectError,
+  __setOpenFolderDialogResult,
+} from '../../../__mocks__/wailsjs/go/main/App'
 
 const defaultProps = {
   onClose: jest.fn(),
@@ -126,6 +130,22 @@ describe('NewProjectWizard', () => {
     it('shows include starter experiments toggle', async () => {
       await advanceToStep2()
       expect(screen.getByLabelText(/include starter experiments/i)).toBeInTheDocument()
+    })
+
+    it('appends the generated project directory after browsing for a parent folder', async () => {
+      const user = await advanceToStep2()
+      __setOpenFolderDialogResult('/custom/projects')
+
+      await user.click(screen.getByRole('button', { name: /browse/i }))
+
+      const locationInput = screen.getByLabelText(/location/i)
+      expect(locationInput).toHaveValue('/custom/projects/reward-model-v1')
+
+      const nameInput = screen.getByLabelText(/project name/i)
+      await user.clear(nameInput)
+      await user.type(nameInput, 'Renamed Project')
+
+      expect(locationInput).toHaveValue('/custom/projects/renamed-project')
     })
 
     it('has Back button that returns to step 1', async () => {

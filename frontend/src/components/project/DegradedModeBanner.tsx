@@ -10,7 +10,11 @@ export function DegradedModeBanner() {
       <span className="degraded-banner__message">
         flux.yaml has errors. Some features are disabled.
       </span>
-      <button className="degraded-banner__dismiss" onClick={() => setDismissed(true)} aria-label="Dismiss">
+      <button
+        className="degraded-banner__dismiss"
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss"
+      >
         ✕
       </button>
     </div>

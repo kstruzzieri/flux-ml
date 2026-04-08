@@ -1,7 +1,12 @@
 import { ViewId } from './Header'
 import { ExperimentsView, CompareView, DataView, CodeView } from '../views'
 import { LayoutPersistence } from '../../hooks/useLayoutPersistence'
-import { WelcomeScreen, DegradedModeBanner, NoProjectBanner, type RecentProjectEntry } from '../project'
+import {
+  WelcomeScreen,
+  DegradedModeBanner,
+  NoProjectBanner,
+  type RecentProjectEntry,
+} from '../project'
 import { useProjectStore } from '../../stores/projectStore'
 
 export type AppMode = 'welcome' | 'project' | 'no-project-compat'
@@ -68,9 +73,7 @@ export function Content({
   return (
     <>
       {degraded && appMode === 'project' && <DegradedModeBanner />}
-      {appMode === 'no-project-compat' && (
-        <NoProjectBanner onOpenProject={onOpenExisting} />
-      )}
+      {appMode === 'no-project-compat' && <NoProjectBanner onOpenProject={onOpenExisting} />}
       {viewContent}
     </>
   )
