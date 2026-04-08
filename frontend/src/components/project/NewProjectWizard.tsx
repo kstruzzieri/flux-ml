@@ -4,7 +4,7 @@ import { WizardStepTemplate } from './WizardStepTemplate'
 import { WizardStepDetails } from './WizardStepDetails'
 import { WizardStepReview } from './WizardStepReview'
 import { WizardSummaryRail } from './WizardSummaryRail'
-import { CreateProject } from '../../../wailsjs/go/main/App'
+import { CreateProject, OpenFolderDialog } from '../../../wailsjs/go/main/App'
 import './NewProjectWizard.css'
 
 const STEP_LABELS = ['Template', 'Details', 'Review'] as const
@@ -69,7 +69,7 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
         data-testid="wizard-backdrop"
         onClick={handleBackdropClick}
       />
-      <div className="wizard" role="dialog" aria-label="New Project">
+      <div className="wizard" role="dialog" aria-modal="true" aria-label="New Project">
         <div className="wizard__steps">
           {STEP_LABELS.map((label, idx) => {
             const stepNum = idx + 1
@@ -110,8 +110,15 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
                   dispatch({ type: 'SET_LOCATION', location, manual })
                 }
                 onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
-                onBrowseLocation={() => {
-                  // Will integrate OpenFolderDialog in Task 11
+                onBrowseLocation={async () => {
+                  try {
+                    const dir = await OpenFolderDialog()
+                    if (dir) {
+                      dispatch({ type: 'SET_LOCATION', location: dir, manual: true })
+                    }
+                  } catch (err) {
+                    console.error('Browse location failed:', err)
+                  }
                 }}
               />
             )}

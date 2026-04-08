@@ -32,6 +32,18 @@ export function useKeyboardShortcuts({
 
       if (!isMod) return
 
+      // Don't fire project shortcuts (N, O) when typing in form fields
+      if (event.key === 'n' || event.key === 'o') {
+        const target = event.target as HTMLElement
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        ) {
+          return
+        }
+      }
+
       // View switching: Cmd/Ctrl + 1-4
       if (event.key in VIEW_SHORTCUTS && onViewChange) {
         const view = VIEW_SHORTCUTS[event.key]

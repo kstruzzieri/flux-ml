@@ -72,7 +72,6 @@ export function AppShell() {
 
   const handleCommandPalette = useCallback(() => {
     // TODO: Open command palette modal
-    console.log('Command palette triggered')
   }, [])
 
   const handleNewProject = useCallback(() => {
@@ -95,7 +94,7 @@ export function AppShell() {
       if (isFlux) {
         await OpenProject(dir)
       } else {
-        const basename = dir.split('/').pop() || dir.split('\\').pop() || 'project'
+        const basename = dir.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'project'
         setImportState({ path: dir, name: basename })
       }
     } catch (err) {
@@ -111,7 +110,8 @@ export function AppShell() {
       if (isFlux) {
         await OpenProject(dir)
       } else {
-        console.error('No flux.yaml found in', dir)
+        const name = dir.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'project'
+        setImportState({ path: dir, name })
       }
     } catch (err) {
       console.error('Open existing failed:', err)

@@ -1,9 +1,5 @@
+import { TEMPLATE_LABELS } from './wizardReducer'
 import type { TemplateId } from './wizardReducer'
-
-const TEMPLATE_LABELS: Record<TemplateId, string> = {
-  'reward-model': 'Reward Model',
-  blank: 'Blank',
-}
 
 interface WizardStepReviewProps {
   template: TemplateId

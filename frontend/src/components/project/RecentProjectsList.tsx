@@ -17,7 +17,7 @@ function shortenPath(fullPath: string): string {
   return fullPath
     .replace(/^\/Users\/[^/]+/, '~')
     .replace(/^\/home\/[^/]+/, '~')
-    .replace(/^C:\\Users\\[^\\]+/, '~')
+    .replace(/^[A-Z]:\\Users\\[^\\]+/i, '~')
 }
 
 export function RecentProjectsList({

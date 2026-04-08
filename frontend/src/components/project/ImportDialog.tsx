@@ -15,7 +15,7 @@ export function ImportDialog({ folderPath, folderName, onConfirm, onCancel }: Im
   return (
     <div className="import-overlay">
       <div className="import-overlay__backdrop" onClick={onCancel} />
-      <div className="import-dialog" role="dialog" aria-label="Import folder">
+      <div className="import-dialog" role="dialog" aria-modal="true" aria-label="Import folder">
         <p className="import-dialog__message">
           <code>{folderPath}</code> doesn't have a <code>flux.yaml</code>. Flux will create one.
         </p>

@@ -1,5 +1,10 @@
 export type TemplateId = 'reward-model' | 'blank'
 
+export const TEMPLATE_LABELS: Record<TemplateId, string> = {
+  'reward-model': 'Reward Model',
+  blank: 'Blank',
+}
+
 export interface WizardState {
   step: 1 | 2 | 3
   template: TemplateId | null
