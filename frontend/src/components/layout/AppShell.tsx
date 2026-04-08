@@ -2,10 +2,22 @@ import { useCallback, useEffect, useState } from 'react'
 import { Header, ViewId } from './Header'
 import { ActivityBar } from './ActivityBar'
 import { Content, AppMode } from './Content'
-import { GetAppInfo, OpenProject, RemoveRecentProject } from '../../../wailsjs/go/main/App'
+import {
+  GetAppInfo,
+  OpenProject,
+  RemoveRecentProject,
+  OpenFolderDialog,
+  IsFluxProject,
+  OpenFolderAsProject,
+} from '../../../wailsjs/go/main/App'
 import { useKeyboardShortcuts, useLayoutPersistence } from '../../hooks'
 import { useProjectStore } from '../../stores/projectStore'
-import { ProjectSwitcher, type RecentProjectEntry } from '../project'
+import {
+  ProjectSwitcher,
+  type RecentProjectEntry,
+  NewProjectWizard,
+  ImportDialog,
+} from '../project'
 
 interface AppInfo {
   name: string
@@ -31,6 +43,8 @@ export function AppShell() {
   const closeProject = useProjectStore((s) => s.closeProject)
 
   const [recentProjectErrors, setRecentProjectErrors] = useState<Record<string, string>>({})
+  const [showWizard, setShowWizard] = useState(false)
+  const [importState, setImportState] = useState<{ path: string; name: string } | null>(null)
 
   // TODO: These will be driven by actual experiment state
   const [runningCount] = useState(0)
@@ -61,17 +75,64 @@ export function AppShell() {
     console.log('Command palette triggered')
   }, [])
 
-  // Handler stubs — implemented in future tasks
   const handleNewProject = useCallback(() => {
-    // TODO: Task 8 — open New Project dialog
+    setShowWizard(true)
   }, [])
 
-  const handleOpenFolder = useCallback(() => {
-    // TODO: Task 11 — open folder dialog
+  const handleWizardClose = useCallback(() => {
+    setShowWizard(false)
   }, [])
 
-  const handleOpenExisting = useCallback(() => {
-    // TODO: Task 11 — open existing project dialog
+  const handleWizardCreated = useCallback(() => {
+    setShowWizard(false)
+  }, [])
+
+  const handleOpenFolder = useCallback(async () => {
+    try {
+      const dir = await OpenFolderDialog()
+      if (!dir) return
+      const isFlux = await IsFluxProject(dir)
+      if (isFlux) {
+        await OpenProject(dir)
+      } else {
+        const basename = dir.split('/').pop() || dir.split('\\').pop() || 'project'
+        setImportState({ path: dir, name: basename })
+      }
+    } catch (err) {
+      console.error('Open folder failed:', err)
+    }
+  }, [])
+
+  const handleOpenExisting = useCallback(async () => {
+    try {
+      const dir = await OpenFolderDialog()
+      if (!dir) return
+      const isFlux = await IsFluxProject(dir)
+      if (isFlux) {
+        await OpenProject(dir)
+      } else {
+        console.error('No flux.yaml found in', dir)
+      }
+    } catch (err) {
+      console.error('Open existing failed:', err)
+    }
+  }, [])
+
+  const handleImportConfirm = useCallback(
+    async (name: string, seedDemo: boolean) => {
+      if (!importState) return
+      try {
+        await OpenFolderAsProject(importState.path, name, seedDemo)
+        setImportState(null)
+      } catch (err) {
+        console.error('Import failed:', err)
+      }
+    },
+    [importState]
+  )
+
+  const handleImportCancel = useCallback(() => {
+    setImportState(null)
   }, [])
 
   const handleOpenRecentProject = useCallback(async (path: string) => {
@@ -131,6 +192,9 @@ export function AppShell() {
     onViewChange: handleViewChange,
     onCommandPalette: handleCommandPalette,
     disabledViews,
+    onNewProject: handleNewProject,
+    onOpenFolder: handleOpenFolder,
+    onOpenExisting: handleOpenExisting,
   })
 
   // Bootstrap gate: show nothing until hydration is complete
@@ -139,49 +203,62 @@ export function AppShell() {
   }
 
   return (
-    <div className="app-shell">
-      <Header
-        version={appInfo?.version}
-        activeView={activeView}
-        onViewChange={handleViewChange}
-        runningCount={runningCount}
-        alertCount={alertCount}
-        onCommandPalette={handleCommandPalette}
-        disabledViews={disabledViews}
-        projectSwitcher={
-          currentProject ? (
-            <ProjectSwitcher
-              projectName={currentProject.name}
-              projectPath={currentProject.path}
-              degraded={degraded}
-              recentProjects={recentProjectEntries}
-              onNewProject={handleNewProject}
-              onOpenFolder={handleOpenFolder}
-              onOpenExisting={handleOpenExisting}
-              onCloseProject={handleCloseProject}
-              onSwitchProject={handleOpenRecentProject}
-              onRemoveRecentProject={handleRemoveRecentProject}
-            />
-          ) : undefined
-        }
-      />
-      <ActivityBar
-        activeItem={activeView}
-        onItemClick={handleViewChange}
-        disabledItems={disabledViews}
-      />
-      <Content
-        activeView={activeView}
-        layout={layout}
-        appMode={appMode}
-        recentProjects={recentProjectEntries}
-        onNewProject={handleNewProject}
-        onOpenFolder={handleOpenFolder}
-        onOpenExisting={handleOpenExisting}
-        onBrowseExperiments={handleEnterCompatMode}
-        onOpenRecentProject={handleOpenRecentProject}
-        onRemoveRecentProject={handleRemoveRecentProject}
-      />
-    </div>
+    <>
+      <div className="app-shell">
+        <Header
+          version={appInfo?.version}
+          activeView={activeView}
+          onViewChange={handleViewChange}
+          runningCount={runningCount}
+          alertCount={alertCount}
+          onCommandPalette={handleCommandPalette}
+          disabledViews={disabledViews}
+          projectSwitcher={
+            currentProject ? (
+              <ProjectSwitcher
+                projectName={currentProject.name}
+                projectPath={currentProject.path}
+                degraded={degraded}
+                recentProjects={recentProjectEntries}
+                onNewProject={handleNewProject}
+                onOpenFolder={handleOpenFolder}
+                onOpenExisting={handleOpenExisting}
+                onCloseProject={handleCloseProject}
+                onSwitchProject={handleOpenRecentProject}
+                onRemoveRecentProject={handleRemoveRecentProject}
+              />
+            ) : undefined
+          }
+        />
+        <ActivityBar
+          activeItem={activeView}
+          onItemClick={handleViewChange}
+          disabledItems={disabledViews}
+        />
+        <Content
+          activeView={activeView}
+          layout={layout}
+          appMode={appMode}
+          recentProjects={recentProjectEntries}
+          onNewProject={handleNewProject}
+          onOpenFolder={handleOpenFolder}
+          onOpenExisting={handleOpenExisting}
+          onBrowseExperiments={handleEnterCompatMode}
+          onOpenRecentProject={handleOpenRecentProject}
+          onRemoveRecentProject={handleRemoveRecentProject}
+        />
+      </div>
+      {showWizard && (
+        <NewProjectWizard onClose={handleWizardClose} onCreated={handleWizardCreated} />
+      )}
+      {importState && (
+        <ImportDialog
+          folderPath={importState.path}
+          folderName={importState.name}
+          onConfirm={handleImportConfirm}
+          onCancel={handleImportCancel}
+        />
+      )}
+    </>
   )
 }
