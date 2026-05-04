@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/kstruzzieri/flux-ml/internal/project"
@@ -158,6 +159,34 @@ func (a *App) ListRecentProjects() ([]project.RecentProject, error) {
 		return []project.RecentProject{}, nil
 	}
 	return a.localState.RecentProjects()
+}
+
+// RemoveRecentProject removes a stale entry from the recent-projects list.
+func (a *App) RemoveRecentProject(dir string) error {
+	if a.localState == nil {
+		return nil
+	}
+	return a.localState.RemoveRecentProject(dir)
+}
+
+// GetDefaultProjectsDir returns a sensible default parent directory for new projects.
+func (a *App) GetDefaultProjectsDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("getting home directory: %w", err)
+	}
+	return filepath.Join(home, "projects"), nil
+}
+
+// OpenFolderDialog opens the native OS directory picker and returns the selected path.
+// Returns an empty string if the user cancels.
+func (a *App) OpenFolderDialog() (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("application context not initialized")
+	}
+	return wailsRuntime.OpenDirectoryDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: "Select Folder",
+	})
 }
 
 // GetProjectConfig reads and returns the config for a directory.

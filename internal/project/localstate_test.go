@@ -155,3 +155,72 @@ func TestRecentProjects_Empty(t *testing.T) {
 		t.Errorf("expected 0, got %d", len(recents))
 	}
 }
+
+func TestRemoveRecentProject(t *testing.T) {
+	ls := newTestLocalState(t)
+	dir1 := t.TempDir()
+	dir2 := t.TempDir()
+
+	ls.AddRecentProject(dir1, "project-1")
+	ls.AddRecentProject(dir2, "project-2")
+
+	err := ls.RemoveRecentProject(dir1)
+	if err != nil {
+		t.Fatalf("RemoveRecentProject failed: %v", err)
+	}
+
+	recents, _ := ls.RecentProjects()
+	if len(recents) != 1 {
+		t.Fatalf("expected 1 recent project after removal, got %d", len(recents))
+	}
+	canonical2, _ := CanonicalProjectPath(dir2)
+	if recents[0].Path != canonical2 {
+		t.Errorf("remaining project = %q, want %q", recents[0].Path, canonical2)
+	}
+}
+
+func TestRemoveRecentProject_NotFound(t *testing.T) {
+	ls := newTestLocalState(t)
+	dir := t.TempDir()
+	ls.AddRecentProject(dir, "project")
+
+	// Remove a path that doesn't exist in recents — should succeed silently
+	err := ls.RemoveRecentProject(t.TempDir())
+	if err != nil {
+		t.Fatalf("RemoveRecentProject for non-existent entry should not error: %v", err)
+	}
+
+	recents, _ := ls.RecentProjects()
+	if len(recents) != 1 {
+		t.Errorf("expected 1 (unchanged), got %d", len(recents))
+	}
+}
+
+func TestRemoveRecentProject_EmptyList(t *testing.T) {
+	ls := newTestLocalState(t)
+	err := ls.RemoveRecentProject(t.TempDir())
+	if err != nil {
+		t.Fatalf("unexpected error on empty list: %v", err)
+	}
+	recents, _ := ls.RecentProjects()
+	if len(recents) != 0 {
+		t.Errorf("expected 0, got %d", len(recents))
+	}
+}
+
+func TestRemoveRecentProject_Canonicalizes(t *testing.T) {
+	ls := newTestLocalState(t)
+	dir := t.TempDir()
+	ls.AddRecentProject(dir, "project")
+
+	// Remove using trailing-slash variant
+	err := ls.RemoveRecentProject(dir + "/")
+	if err != nil {
+		t.Fatalf("RemoveRecentProject failed: %v", err)
+	}
+
+	recents, _ := ls.RecentProjects()
+	if len(recents) != 0 {
+		t.Errorf("expected 0 after removal via trailing-slash path, got %d", len(recents))
+	}
+}

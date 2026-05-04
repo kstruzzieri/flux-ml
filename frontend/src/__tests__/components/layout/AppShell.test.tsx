@@ -1,32 +1,39 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import { AppShell } from '@components/layout'
+import { __resetMockState, __setCurrentProjectStatus } from '../../../__mocks__/wailsjs/go/main/App'
+import { __resetListeners } from '../../../__mocks__/wailsjs/runtime/runtime'
+import { __resetProjectStoreInitialized } from '@stores/projectStore'
+import { project } from '../../../__mocks__/wailsjs/go/models'
 
-// Mock Wails bindings
-jest.mock('../../../../wailsjs/go/main/App', () => ({
-  GetAppInfo: jest.fn().mockResolvedValue({
-    name: 'Flux',
-    version: '0.1.0',
-  }),
-  GetLayout: jest.fn().mockResolvedValue({
-    leftWidth: 280,
-    rightWidth: 320,
-    outputHeight: 180,
-    leftTopHeight: 200,
-    rightTopHeight: 200,
-    leftCollapsed: false,
-    rightCollapsed: false,
-    outputCollapsed: false,
-  }),
-  SaveLayout: jest.fn().mockResolvedValue(undefined),
-}))
+function makeProject() {
+  return new project.Project({
+    id: 'shell-proj',
+    name: 'shell-test',
+    path: '/tmp/shell-test',
+    createdAt: 1000,
+    updatedAt: 1000,
+  })
+}
+
+beforeEach(() => {
+  __resetMockState()
+  __resetListeners()
+  __resetProjectStoreInitialized()
+  // Set a project so AppShell shows the full shell
+  __setCurrentProjectStatus({ project: makeProject() })
+})
+
+async function renderAndWaitForShell() {
+  render(<AppShell />)
+  // Wait for hydration — experiments-view appears once hydrated with a project
+  await waitFor(() => {
+    expect(screen.getByTestId('experiments-view')).toBeInTheDocument()
+  })
+}
 
 describe('AppShell', () => {
   it('renders all layout regions', async () => {
-    render(<AppShell />)
-
-    await waitFor(() => {
-      expect(screen.getByText('v0.1.0')).toBeInTheDocument()
-    })
+    await renderAndWaitForShell()
 
     // Title bar with workspace tabs
     expect(screen.getByRole('banner')).toBeInTheDocument()
@@ -42,7 +49,7 @@ describe('AppShell', () => {
   })
 
   it('displays Flux branding and workspace tabs in title bar', async () => {
-    render(<AppShell />)
+    await renderAndWaitForShell()
 
     const header = screen.getByRole('banner')
     expect(within(header).getByText('Flux')).toBeInTheDocument()
@@ -57,7 +64,7 @@ describe('AppShell', () => {
   })
 
   it('displays activity bar with navigation items', async () => {
-    render(<AppShell />)
+    await renderAndWaitForShell()
 
     const activityBar = screen.getByRole('navigation', { name: /activity bar/i })
     expect(within(activityBar).getByRole('button', { name: /experiments/i })).toBeInTheDocument()
@@ -65,10 +72,6 @@ describe('AppShell', () => {
     expect(within(activityBar).getByRole('button', { name: /data/i })).toBeInTheDocument()
     expect(within(activityBar).getByRole('button', { name: /code/i })).toBeInTheDocument()
     expect(within(activityBar).getByRole('button', { name: /settings/i })).toBeInTheDocument()
-
-    await waitFor(() => {
-      expect(screen.getByText('v0.1.0')).toBeInTheDocument()
-    })
   })
 
   it('fetches and displays app version from Go backend', async () => {
@@ -80,15 +83,11 @@ describe('AppShell', () => {
   })
 
   it('displays output panel tabs', async () => {
-    render(<AppShell />)
+    await renderAndWaitForShell()
 
     expect(screen.getByRole('button', { name: /^output$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^logs$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^terminal$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /new terminal/i })).toBeInTheDocument()
-
-    await waitFor(() => {
-      expect(screen.getByText('v0.1.0')).toBeInTheDocument()
-    })
   })
 })

@@ -32,7 +32,7 @@ export function useLayoutPersistence() {
 
   // Load layout from Go backend on mount
   useEffect(() => {
-    GetLayout()
+    Promise.resolve(GetLayout())
       .then((savedLayout) => {
         const merged = { ...DEFAULT_LAYOUT, ...savedLayout }
         setLayout(merged)
