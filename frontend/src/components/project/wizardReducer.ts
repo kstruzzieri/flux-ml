@@ -33,6 +33,11 @@ const DEFAULT_NAMES: Record<TemplateId, string> = {
   blank: 'my-project',
 }
 
+const DEFAULT_SEED_DEMO: Record<TemplateId, boolean> = {
+  'reward-model': true,
+  blank: false,
+}
+
 function sanitizeForPath(name: string): string {
   return name
     .toLowerCase()
@@ -54,7 +59,7 @@ export function createInitialState(defaultProjectsDir = ''): WizardState {
     location: '',
     defaultProjectsDir,
     locationManuallyEdited: false,
-    seedDemo: true,
+    seedDemo: false,
     creating: false,
     error: null,
   }
@@ -70,6 +75,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         projectName: name,
         location: buildLocation(name, state.defaultProjectsDir),
         locationManuallyEdited: false,
+        seedDemo: DEFAULT_SEED_DEMO[action.template],
       }
     }
     case 'SET_PROJECT_NAME': {

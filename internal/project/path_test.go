@@ -68,6 +68,11 @@ func TestCanonicalProjectPath_ResolvesSymlinks(t *testing.T) {
 func TestCanonicalProjectPath_NonExistentFallback(t *testing.T) {
 	dir := t.TempDir()
 	nonExistent := filepath.Join(dir, "does-not-exist")
+	resolvedDir, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatalf("resolving temp dir: %v", err)
+	}
+	expected := filepath.Join(resolvedDir, "does-not-exist")
 
 	got, err := CanonicalProjectPath(nonExistent)
 	if err != nil {
@@ -76,8 +81,32 @@ func TestCanonicalProjectPath_NonExistentFallback(t *testing.T) {
 	if !filepath.IsAbs(got) {
 		t.Errorf("result %q is not absolute", got)
 	}
-	if got != nonExistent {
-		t.Errorf("got %q, want %q (cleaned absolute path)", got, nonExistent)
+	if got != expected {
+		t.Errorf("got %q, want %q (resolved parent plus missing leaf)", got, expected)
+	}
+}
+
+func TestCanonicalProjectPath_ResolvesSymlinkParentForNonExistentLeaf(t *testing.T) {
+	dir := t.TempDir()
+	real := filepath.Join(dir, "real")
+	link := filepath.Join(dir, "link")
+	if err := os.Mkdir(real, 0755); err != nil {
+		t.Fatalf("mkdir real: %v", err)
+	}
+	if err := os.Symlink(real, link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	gotReal, err := CanonicalProjectPath(filepath.Join(real, "new-project"))
+	if err != nil {
+		t.Fatalf("canonical real child: %v", err)
+	}
+	gotLink, err := CanonicalProjectPath(filepath.Join(link, "new-project"))
+	if err != nil {
+		t.Fatalf("canonical link child: %v", err)
+	}
+	if gotReal != gotLink {
+		t.Errorf("real child=%q link child=%q — should be identical after canonicalization", gotReal, gotLink)
 	}
 }
 

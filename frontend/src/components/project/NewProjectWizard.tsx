@@ -45,6 +45,10 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
     if (!state.creating) onClose()
   }, [onClose, state.creating])
 
+  const handleCancel = useCallback(() => {
+    if (!state.creating) onClose()
+  }, [onClose, state.creating])
+
   const handleContinue = useCallback(() => {
     if (state.step < 3) {
       dispatch({ type: 'GO_TO_STEP', step: (state.step + 1) as 1 | 2 | 3 })
@@ -58,7 +62,7 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
   }, [state.step])
 
   const handleCreate = useCallback(async () => {
-    if (!state.template) return
+    if (!state.template || !state.location.trim()) return
     dispatch({ type: 'CREATE_START' })
     try {
       await CreateProject(state.projectName, state.location, state.template, state.seedDemo)
@@ -74,7 +78,10 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
 
   const canContinue =
     (state.step === 1 && state.template !== null) ||
-    (state.step === 2 && state.projectName.trim() !== '' && state.location.trim() !== '')
+    (state.step === 2 &&
+      state.projectName.trim() !== '' &&
+      state.defaultProjectsDir.trim() !== '' &&
+      state.location.trim() !== '')
 
   const handleBrowseLocation = useCallback(async () => {
     try {
@@ -133,12 +140,11 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
             {state.step === 2 && (
               <WizardStepDetails
                 projectName={state.projectName}
+                projectsDir={state.defaultProjectsDir}
                 location={state.location}
                 seedDemo={state.seedDemo}
                 onNameChange={(name) => dispatch({ type: 'SET_PROJECT_NAME', name })}
-                onLocationChange={(location, manual) =>
-                  dispatch({ type: 'SET_LOCATION', location, manual })
-                }
+                onProjectsDirChange={(dir) => dispatch({ type: 'SET_DEFAULT_DIR', dir })}
                 onIncludeStarterChange={(include) => dispatch({ type: 'SET_SEED_DEMO', include })}
                 onBrowseLocation={handleBrowseLocation}
               />
@@ -163,11 +169,20 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
         </div>
 
         <div className="wizard__footer">
+          <button
+            className="button button--secondary button--md"
+            onClick={handleCancel}
+            disabled={state.creating}
+            type="button"
+          >
+            Cancel
+          </button>
           {state.step > 1 && (
             <button
               className="button button--secondary button--md"
               onClick={handleBack}
               disabled={state.creating}
+              type="button"
             >
               Back
             </button>
@@ -178,6 +193,7 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
               className="button button--primary button--md"
               onClick={handleContinue}
               disabled={!canContinue}
+              type="button"
             >
               Continue
             </button>
@@ -185,7 +201,8 @@ export function NewProjectWizard({ onClose, onCreated }: NewProjectWizardProps) 
             <button
               className="button button--primary button--md"
               onClick={handleCreate}
-              disabled={state.creating || !state.projectName.trim()}
+              disabled={state.creating || !state.projectName.trim() || !state.location.trim()}
+              type="button"
             >
               {state.creating ? 'Creating...' : 'Create Project'}
             </button>

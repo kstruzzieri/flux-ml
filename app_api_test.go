@@ -666,6 +666,35 @@ func TestApp_CreateProject_WithSeed(t *testing.T) {
 	}
 }
 
+func TestApp_OpenProject_ReopensSeededProjectExperiments(t *testing.T) {
+	app := newTestApp(t)
+	dir := filepath.Join(t.TempDir(), "seeded")
+
+	if _, err := app.CreateProject("seeded", dir, "blank", true); err != nil {
+		t.Fatalf("CreateProject with seed failed: %v", err)
+	}
+	createdExperiments, err := app.ListExperiments()
+	if err != nil {
+		t.Fatalf("ListExperiments after create failed: %v", err)
+	}
+	if len(createdExperiments) == 0 {
+		t.Fatal("expected seeded experiments after create")
+	}
+
+	app.CloseProject()
+
+	if _, err := app.OpenProject(dir); err != nil {
+		t.Fatalf("OpenProject failed: %v", err)
+	}
+	reopenedExperiments, err := app.ListExperiments()
+	if err != nil {
+		t.Fatalf("ListExperiments after reopen failed: %v", err)
+	}
+	if len(reopenedExperiments) != len(createdExperiments) {
+		t.Fatalf("expected %d seeded experiments after reopen, got %d", len(createdExperiments), len(reopenedExperiments))
+	}
+}
+
 func TestApp_CreateProject_WithSeed_MultipleProjectsHaveMetricsAndAnnotations(t *testing.T) {
 	app := newTestApp(t)
 

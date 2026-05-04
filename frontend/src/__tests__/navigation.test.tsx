@@ -3,6 +3,10 @@ import App from '../components/App'
 import { __resetMockState, __setCurrentProjectStatus } from '../__mocks__/wailsjs/go/main/App'
 import { __resetListeners } from '../__mocks__/wailsjs/runtime/runtime'
 import { __resetProjectStoreInitialized } from '@stores/projectStore'
+import {
+  useExperimentStore,
+  __resetInitialized as __resetExperimentStoreInitialized,
+} from '@stores/experimentStore'
 import { project } from '../__mocks__/wailsjs/go/models'
 
 function makeProject() {
@@ -19,6 +23,13 @@ beforeEach(() => {
   __resetMockState()
   __resetListeners()
   __resetProjectStoreInitialized()
+  __resetExperimentStoreInitialized()
+  useExperimentStore.setState({
+    experiments: [],
+    selectedId: null,
+    loading: false,
+    error: null,
+  })
   // Set a project so AppShell shows the project view (not welcome)
   __setCurrentProjectStatus({ project: makeProject() })
 })
@@ -116,6 +127,21 @@ describe('Navigation', () => {
       await renderAndWait()
       fireEvent.keyDown(document, { key: '2', ctrlKey: true })
       expect(screen.getByTestId('compare-view')).toBeInTheDocument()
+    })
+
+    it('does not switch views while typing in a form field', async () => {
+      await renderAndWait()
+
+      const input = document.createElement('input')
+      document.body.appendChild(input)
+      input.focus()
+
+      fireEvent.keyDown(input, { key: '2', metaKey: true })
+
+      expect(screen.getByTestId('experiments-view')).toBeInTheDocument()
+      expect(screen.queryByTestId('compare-view')).not.toBeInTheDocument()
+
+      input.remove()
     })
   })
 

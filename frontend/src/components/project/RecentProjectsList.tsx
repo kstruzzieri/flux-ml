@@ -1,3 +1,4 @@
+import { FolderIcon } from '@components/ui/Icon'
 import './RecentProjectsList.css'
 
 export interface RecentProjectEntry {
@@ -11,6 +12,7 @@ interface RecentProjectsListProps {
   onOpen: (path: string) => void
   onRemove: (path: string) => void
   excludePaths?: Set<string>
+  itemRole?: string
 }
 
 function shortenPath(fullPath: string): string {
@@ -25,6 +27,7 @@ export function RecentProjectsList({
   onOpen,
   onRemove,
   excludePaths,
+  itemRole,
 }: RecentProjectsListProps) {
   const filtered = excludePaths ? projects.filter((p) => !excludePaths.has(p.path)) : projects
 
@@ -46,14 +49,22 @@ export function RecentProjectsList({
                 className="recent-projects__remove-btn"
                 onClick={() => onRemove(project.path)}
                 aria-label="Remove from list"
+                role={itemRole}
               >
                 Remove from list
               </button>
             </div>
           ) : (
-            <button className="recent-projects__row" onClick={() => onOpen(project.path)}>
-              <span className="recent-projects__name">{project.name}</span>
-              <span className="recent-projects__path">{shortenPath(project.path)}</span>
+            <button
+              className="recent-projects__row"
+              onClick={() => onOpen(project.path)}
+              role={itemRole}
+            >
+              <FolderIcon className="recent-projects__icon icon icon--md" aria-hidden="true" />
+              <span className="recent-projects__info">
+                <span className="recent-projects__name">{project.name}</span>
+                <span className="recent-projects__path">{shortenPath(project.path)}</span>
+              </span>
             </button>
           )}
         </li>

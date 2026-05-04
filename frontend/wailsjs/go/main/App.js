@@ -6,12 +6,28 @@ export function AppendEvent(arg1, arg2, arg3) {
   return window['go']['main']['App']['AppendEvent'](arg1, arg2, arg3);
 }
 
+export function ClaimExperimentToCurrentProject(arg1) {
+  return window['go']['main']['App']['ClaimExperimentToCurrentProject'](arg1);
+}
+
+export function ClaimExperimentToProject(arg1, arg2) {
+  return window['go']['main']['App']['ClaimExperimentToProject'](arg1, arg2);
+}
+
+export function CloseProject() {
+  return window['go']['main']['App']['CloseProject']();
+}
+
 export function CreateAnnotation(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['CreateAnnotation'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function CreateExperiment(arg1, arg2) {
   return window['go']['main']['App']['CreateExperiment'](arg1, arg2);
+}
+
+export function CreateProject(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['CreateProject'](arg1, arg2, arg3, arg4);
 }
 
 export function DeleteAnnotation(arg1, arg2) {
@@ -26,8 +42,20 @@ export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
 
+export function GetCurrentProject() {
+  return window['go']['main']['App']['GetCurrentProject']();
+}
+
+export function GetCurrentProjectStatus() {
+  return window['go']['main']['App']['GetCurrentProjectStatus']();
+}
+
 export function GetDBStatus() {
   return window['go']['main']['App']['GetDBStatus']();
+}
+
+export function GetDefaultProjectsDir() {
+  return window['go']['main']['App']['GetDefaultProjectsDir']();
 }
 
 export function GetExperiment(arg1) {
@@ -42,12 +70,40 @@ export function GetLayout() {
   return window['go']['main']['App']['GetLayout']();
 }
 
+export function GetProjectConfig(arg1) {
+  return window['go']['main']['App']['GetProjectConfig'](arg1);
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function IsFluxProject(arg1) {
+  return window['go']['main']['App']['IsFluxProject'](arg1);
+}
+
 export function ListExperiments() {
   return window['go']['main']['App']['ListExperiments']();
+}
+
+export function ListRecentProjects() {
+  return window['go']['main']['App']['ListRecentProjects']();
+}
+
+export function ListUnscopedExperiments() {
+  return window['go']['main']['App']['ListUnscopedExperiments']();
+}
+
+export function OpenFolderAsProject(arg1, arg2, arg3) {
+  return window['go']['main']['App']['OpenFolderAsProject'](arg1, arg2, arg3);
+}
+
+export function OpenFolderDialog() {
+  return window['go']['main']['App']['OpenFolderDialog']();
+}
+
+export function OpenProject(arg1) {
+  return window['go']['main']['App']['OpenProject'](arg1);
 }
 
 export function QueryAnnotations(arg1, arg2, arg3, arg4) {
@@ -70,72 +126,16 @@ export function RecordRewardSignals(arg1, arg2) {
   return window['go']['main']['App']['RecordRewardSignals'](arg1, arg2);
 }
 
+export function RemoveRecentProject(arg1) {
+  return window['go']['main']['App']['RemoveRecentProject'](arg1);
+}
+
 export function ReplayEvents(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['ReplayEvents'](arg1, arg2, arg3, arg4);
 }
 
 export function SaveLayout(arg1) {
   return window['go']['main']['App']['SaveLayout'](arg1);
-}
-
-export function ClaimExperimentToCurrentProject(arg1) {
-  return window['go']['main']['App']['ClaimExperimentToCurrentProject'](arg1);
-}
-
-export function ClaimExperimentToProject(arg1, arg2) {
-  return window['go']['main']['App']['ClaimExperimentToProject'](arg1, arg2);
-}
-
-export function CloseProject() {
-  return window['go']['main']['App']['CloseProject']();
-}
-
-export function CreateProject(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['CreateProject'](arg1, arg2, arg3, arg4);
-}
-
-export function GetCurrentProject() {
-  return window['go']['main']['App']['GetCurrentProject']();
-}
-
-export function GetCurrentProjectStatus() {
-  return window['go']['main']['App']['GetCurrentProjectStatus']();
-}
-
-export function GetProjectConfig(arg1) {
-  return window['go']['main']['App']['GetProjectConfig'](arg1);
-}
-
-export function IsFluxProject(arg1) {
-  return window['go']['main']['App']['IsFluxProject'](arg1);
-}
-
-export function GetDefaultProjectsDir() {
-  return window['go']['main']['App']['GetDefaultProjectsDir']();
-}
-
-export function ListRecentProjects() {
-  return window['go']['main']['App']['ListRecentProjects']();
-}
-
-export function OpenFolderDialog() {
-  return window['go']['main']['App']['OpenFolderDialog']();
-}
-
-export function RemoveRecentProject(arg1) {
-  return window['go']['main']['App']['RemoveRecentProject'](arg1);
-}
-
-export function ListUnscopedExperiments() {
-  return window['go']['main']['App']['ListUnscopedExperiments']();
-}
-
-export function OpenFolderAsProject(arg1, arg2, arg3) {
-  return window['go']['main']['App']['OpenFolderAsProject'](arg1, arg2, arg3);
-}
-
-export function OpenProject(arg1) {
-  return window['go']['main']['App']['OpenProject'](arg1);
 }
 
 export function ToggleMaximize() {

@@ -1,19 +1,21 @@
 interface WizardStepDetailsProps {
   projectName: string
+  projectsDir: string
   location: string
   seedDemo: boolean
   onNameChange: (name: string) => void
-  onLocationChange: (location: string, manual: boolean) => void
+  onProjectsDirChange: (dir: string) => void
   onIncludeStarterChange: (include: boolean) => void
   onBrowseLocation: () => void
 }
 
 export function WizardStepDetails({
   projectName,
+  projectsDir,
   location,
   seedDemo,
   onNameChange,
-  onLocationChange,
+  onProjectsDirChange,
   onIncludeStarterChange,
   onBrowseLocation,
 }: WizardStepDetailsProps) {
@@ -37,15 +39,15 @@ export function WizardStepDetails({
 
       <div className="wizard-field">
         <label htmlFor="wizard-location" className="wizard-field__label">
-          Location
+          Projects Folder
         </label>
         <div className="wizard-field__row">
           <input
             id="wizard-location"
             type="text"
             className="input"
-            value={location}
-            onChange={(e) => onLocationChange(e.target.value, true)}
+            value={projectsDir}
+            onChange={(e) => onProjectsDirChange(e.target.value)}
           />
           <button
             className="button button--secondary button--md"
@@ -55,6 +57,11 @@ export function WizardStepDetails({
             Browse...
           </button>
         </div>
+        {location && (
+          <div className="wizard-field__hint">
+            Project path: <code>{location}</code>
+          </div>
+        )}
       </div>
 
       <div className="wizard-field wizard-field--toggle">
@@ -63,11 +70,11 @@ export function WizardStepDetails({
             type="checkbox"
             checked={seedDemo}
             onChange={(e) => onIncludeStarterChange(e.target.checked)}
-            aria-label="Include starter experiments"
+            aria-label="Add demo experiments to Flux"
           />
-          <span className="wizard-toggle__label">Include starter experiments</span>
+          <span className="wizard-toggle__label">Add demo experiments to Flux</span>
           <span className="wizard-toggle__desc">
-            Populates charts with sample training runs matching your project type.
+            Seeds Flux's local database with sample runs for this project.
           </span>
         </label>
       </div>

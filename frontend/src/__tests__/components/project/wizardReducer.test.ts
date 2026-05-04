@@ -1,6 +1,22 @@
 import { createInitialState, wizardReducer } from '../../../components/project/wizardReducer'
 
 describe('wizardReducer', () => {
+  it('defaults blank projects to no demo experiments', () => {
+    let state = createInitialState()
+
+    state = wizardReducer(state, { type: 'SET_TEMPLATE', template: 'blank' })
+
+    expect(state.seedDemo).toBe(false)
+  })
+
+  it('defaults reward-model projects to demo experiments enabled', () => {
+    let state = createInitialState()
+
+    state = wizardReducer(state, { type: 'SET_TEMPLATE', template: 'reward-model' })
+
+    expect(state.seedDemo).toBe(true)
+  })
+
   it('recomputes the generated location when the default projects dir loads later', () => {
     let state = createInitialState()
 

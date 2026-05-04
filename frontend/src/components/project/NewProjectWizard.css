@@ -272,6 +272,17 @@
   flex: 1;
 }
 
+.wizard-field__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.wizard-field__hint code {
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+}
+
 .wizard-toggle {
   display: flex;
   flex-direction: column;
