@@ -9,11 +9,17 @@ jest.mock('../../../../../wailsjs/runtime/runtime', () => ({
   EventsOn: jest.fn(),
 }))
 
-jest.mock('../../../../../wailsjs/go/main/App', () => ({
-  ListExperiments: jest.fn().mockResolvedValue([]),
-  GetLatestMetrics: jest.fn().mockResolvedValue([]),
-  QueryMetrics: jest.fn().mockResolvedValue([]),
-  QueryRewardSignals: jest.fn().mockResolvedValue([]),
+jest.mock('@components/Experiments/MetricsGrid', () => ({
+  MetricsGrid: () => <div data-testid="metrics-grid">Mock Metrics Grid</div>,
+}))
+
+jest.mock('@components/Experiments/ChartsArea', () => ({
+  ChartsArea: () => (
+    <div>
+      <div>Overview</div>
+      <div>No metrics data yet</div>
+    </div>
+  ),
 }))
 
 function makeExperiment(overrides: Partial<Record<string, unknown>> = {}): experiment.Experiment {
@@ -35,6 +41,13 @@ beforeEach(() => {
     selectedId: null,
     loading: false,
     error: null,
+  })
+  useMetricsStore.setState({
+    latestMetrics: {},
+    sparklineData: {},
+    latestRewardSignals: {},
+    chartData: {},
+    rewardComponentChartData: {},
   })
 })
 

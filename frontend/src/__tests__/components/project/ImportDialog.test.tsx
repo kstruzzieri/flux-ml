@@ -24,9 +24,9 @@ describe('ImportDialog', () => {
     expect(screen.getByLabelText(/project name/i)).toHaveValue('ml-project')
   })
 
-  it('shows starter experiments toggle defaulting to off', () => {
+  it('shows demo experiments toggle defaulting to off', () => {
     render(<ImportDialog {...defaultProps} />)
-    const toggle = screen.getByLabelText(/include starter experiments/i)
+    const toggle = screen.getByLabelText(/add demo experiments to flux/i)
     expect(toggle).not.toBeChecked()
   })
 
@@ -52,5 +52,17 @@ describe('ImportDialog', () => {
     render(<ImportDialog {...defaultProps} />)
     await user.click(screen.getByRole('button', { name: /cancel/i }))
     expect(defaultProps.onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows inline error text when provided', () => {
+    render(<ImportDialog {...defaultProps} error="Folder is read-only" />)
+    expect(screen.getByText(/folder is read-only/i)).toBeInTheDocument()
+  })
+
+  it('shows loading state while submitting', () => {
+    render(<ImportDialog {...defaultProps} submitting={true} />)
+    expect(screen.getByRole('button', { name: /creating/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled()
+    expect(screen.getByLabelText(/project name/i)).toBeDisabled()
   })
 })

@@ -40,7 +40,6 @@ func (a *App) CreateProject(name, dir, template string, seedDemo bool) (*project
 		return nil, fmt.Errorf("scaffolding project: %w", err)
 	}
 
-	// Seed demo data if requested
 	if seedDemo {
 		a.seedProjectData(proj.ID)
 	}
@@ -185,7 +184,8 @@ func (a *App) OpenFolderDialog() (string, error) {
 		return "", fmt.Errorf("application context not initialized")
 	}
 	return wailsRuntime.OpenDirectoryDialog(a.ctx, wailsRuntime.OpenDialogOptions{
-		Title: "Select Folder",
+		Title:                "Select Folder",
+		CanCreateDirectories: true,
 	})
 }
 
@@ -227,6 +227,8 @@ func (a *App) setCurrentProject(proj *project.Project, dir string) error {
 }
 
 // seedProjectData seeds demo experiments and metrics for a project.
+// TODO: Move demo project data into project-folder artifacts so sample
+// experiments travel with the folder instead of only living in Flux's DB.
 func (a *App) seedProjectData(projectID string) {
 	if a.experiments != nil {
 		if err := a.experiments.SeedDemoExperiments(projectID); err != nil {

@@ -12,6 +12,7 @@ export interface WizardState {
   location: string
   defaultProjectsDir: string
   locationManuallyEdited: boolean
+  projectsDirManuallyEdited: boolean
   seedDemo: boolean
   creating: boolean
   error: string | null
@@ -23,6 +24,7 @@ export type WizardAction =
   | { type: 'SET_LOCATION'; location: string; manual: boolean }
   | { type: 'SET_SEED_DEMO'; include: boolean }
   | { type: 'SET_DEFAULT_DIR'; dir: string }
+  | { type: 'SET_PROJECTS_DIR'; dir: string; manual: boolean }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 }
   | { type: 'CREATE_START' }
   | { type: 'CREATE_ERROR'; error: string }
@@ -31,6 +33,11 @@ export type WizardAction =
 const DEFAULT_NAMES: Record<TemplateId, string> = {
   'reward-model': 'reward-model-v1',
   blank: 'my-project',
+}
+
+const DEFAULT_SEED_DEMO: Record<TemplateId, boolean> = {
+  'reward-model': true,
+  blank: false,
 }
 
 function sanitizeForPath(name: string): string {
@@ -54,7 +61,8 @@ export function createInitialState(defaultProjectsDir = ''): WizardState {
     location: '',
     defaultProjectsDir,
     locationManuallyEdited: false,
-    seedDemo: true,
+    projectsDirManuallyEdited: false,
+    seedDemo: false,
     creating: false,
     error: null,
   }
@@ -70,6 +78,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         projectName: name,
         location: buildLocation(name, state.defaultProjectsDir),
         locationManuallyEdited: false,
+        seedDemo: DEFAULT_SEED_DEMO[action.template],
       }
     }
     case 'SET_PROJECT_NAME': {
@@ -80,7 +89,19 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return next
     }
     case 'SET_DEFAULT_DIR': {
+      if (state.projectsDirManuallyEdited) return state
       const next: WizardState = { ...state, defaultProjectsDir: action.dir }
+      if (!state.locationManuallyEdited && state.projectName.trim() !== '') {
+        next.location = buildLocation(state.projectName, action.dir)
+      }
+      return next
+    }
+    case 'SET_PROJECTS_DIR': {
+      const next: WizardState = {
+        ...state,
+        defaultProjectsDir: action.dir,
+        projectsDirManuallyEdited: action.manual || state.projectsDirManuallyEdited,
+      }
       if (!state.locationManuallyEdited && state.projectName.trim() !== '') {
         next.location = buildLocation(state.projectName, action.dir)
       }

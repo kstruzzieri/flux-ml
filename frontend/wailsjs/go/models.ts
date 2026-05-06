@@ -1,5 +1,5 @@
 export namespace annotation {
-	
+
 	export class Annotation {
 	    id: number;
 	    experiment_id: string;
@@ -8,11 +8,11 @@ export namespace annotation {
 	    label: string;
 	    data: string;
 	    created_at: number;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Annotation(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -28,18 +28,18 @@ export namespace annotation {
 }
 
 export namespace event {
-	
+
 	export class Event {
 	    id: number;
 	    experiment_id: string;
 	    timestamp: number;
 	    type: string;
 	    data: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Event(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -53,7 +53,7 @@ export namespace event {
 }
 
 export namespace experiment {
-	
+
 	export class Experiment {
 	    id: string;
 	    name: string;
@@ -84,15 +84,15 @@ export namespace experiment {
 }
 
 export namespace main {
-	
+
 	export class AppInfo {
 	    name: string;
 	    version: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new AppInfo(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
@@ -102,8 +102,8 @@ export namespace main {
 	export class CurrentProjectStatus {
 	    project?: project.Project;
 	    config?: project.FluxConfig;
-	    configError: string;
-	    warnings: string[];
+	    configError?: string;
+	    warnings?: string[];
 	    degraded: boolean;
 
 	    static createFrom(source: any = {}) {
@@ -112,12 +112,30 @@ export namespace main {
 
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.project = source["project"] ? project.Project.createFrom(source["project"]) : undefined;
-	        this.config = source["config"] ? project.FluxConfig.createFrom(source["config"]) : undefined;
+	        this.project = this.convertValues(source["project"], project.Project);
+	        this.config = this.convertValues(source["config"], project.FluxConfig);
 	        this.configError = source["configError"];
-	        this.warnings = source["warnings"] || [];
+	        this.warnings = source["warnings"];
 	        this.degraded = source["degraded"];
 	    }
+
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class LayoutState {
 	    leftWidth: number;
@@ -128,11 +146,11 @@ export namespace main {
 	    leftCollapsed: boolean;
 	    rightCollapsed: boolean;
 	    outputCollapsed: boolean;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new LayoutState(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.leftWidth = source["leftWidth"];
@@ -149,18 +167,18 @@ export namespace main {
 }
 
 export namespace metrics {
-	
+
 	export class Metric {
 	    experiment_id: string;
 	    step: number;
 	    name: string;
 	    value: number;
 	    timestamp: number;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Metric(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.experiment_id = source["experiment_id"];
@@ -176,11 +194,11 @@ export namespace metrics {
 	    component: string;
 	    value: number;
 	    distribution: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new RewardSignal(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.experiment_id = source["experiment_id"];
@@ -200,7 +218,7 @@ export namespace project {
 	    name: string;
 	    description?: string;
 	    ignore?: string[];
-	    defaults?: {[key: string]: string};
+	    defaults?: Record<string, string>;
 
 	    static createFrom(source: any = {}) {
 	        return new FluxConfig(source);

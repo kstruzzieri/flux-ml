@@ -121,6 +121,7 @@ export function ProjectSwitcherDropdown({
             projects={filteredRecents}
             onOpen={(path) => handleAction(() => onSwitchProject(path))}
             onRemove={(path) => handleAction(() => onRemoveRecentProject(path))}
+            itemRole="menuitem"
           />
         </>
       )}

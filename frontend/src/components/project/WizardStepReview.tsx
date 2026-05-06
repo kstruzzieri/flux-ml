@@ -31,7 +31,7 @@ export function WizardStepReview({
           <dd className="wizard-review__value wizard-review__value--mono">{location}</dd>
         </div>
         <div className="wizard-review__row">
-          <dt className="wizard-review__label">Starter Experiments</dt>
+          <dt className="wizard-review__label">Flux Demo Experiments</dt>
           <dd className="wizard-review__value">{seedDemo ? 'Yes' : 'No'}</dd>
         </div>
       </dl>

@@ -34,7 +34,7 @@ export function WizardSummaryRail({
         </div>
       )}
       <div className="wizard-rail__item">
-        <span className="wizard-rail__label">Starter data</span>
+        <span className="wizard-rail__label">Flux demo data</span>
         <span className="wizard-rail__value">{seedDemo ? 'Yes' : 'No'}</span>
       </div>
     </aside>

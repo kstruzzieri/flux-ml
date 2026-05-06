@@ -6,15 +6,29 @@ interface ImportDialogProps {
   folderName: string
   onConfirm: (name: string, seedDemo: boolean) => void
   onCancel: () => void
+  error?: string | null
+  submitting?: boolean
 }
 
-export function ImportDialog({ folderPath, folderName, onConfirm, onCancel }: ImportDialogProps) {
+export function ImportDialog({
+  folderPath,
+  folderName,
+  onConfirm,
+  onCancel,
+  error = null,
+  submitting = false,
+}: ImportDialogProps) {
   const [name, setName] = useState(folderName)
   const [seedDemo, setSeedDemo] = useState(false)
 
   return (
     <div className="import-overlay">
-      <div className="import-overlay__backdrop" onClick={onCancel} />
+      <div
+        className="import-overlay__backdrop"
+        onClick={() => {
+          if (!submitting) onCancel()
+        }}
+      />
       <div className="import-dialog" role="dialog" aria-modal="true" aria-label="Import folder">
         <p className="import-dialog__message">
           <code>{folderPath}</code> doesn't have a <code>flux.yaml</code>. Flux will create one.
@@ -31,6 +45,7 @@ export function ImportDialog({ folderPath, folderName, onConfirm, onCancel }: Im
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
+            disabled={submitting}
           />
         </div>
 
@@ -39,21 +54,32 @@ export function ImportDialog({ folderPath, folderName, onConfirm, onCancel }: Im
             type="checkbox"
             checked={seedDemo}
             onChange={(e) => setSeedDemo(e.target.checked)}
-            aria-label="Include starter experiments"
+            aria-label="Add demo experiments to Flux"
+            disabled={submitting}
           />
-          <span>Include starter experiments</span>
+          <span>Add demo experiments to Flux</span>
         </label>
 
+        {error && (
+          <div className="import-dialog__error" role="alert">
+            {error}
+          </div>
+        )}
+
         <div className="import-dialog__actions">
-          <button className="button button--secondary button--md" onClick={onCancel}>
+          <button
+            className="button button--secondary button--md"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             Cancel
           </button>
           <button
             className="button button--primary button--md"
-            onClick={() => onConfirm(name, seedDemo)}
-            disabled={!name.trim()}
+            onClick={() => onConfirm(name.trim(), seedDemo)}
+            disabled={!name.trim() || submitting}
           >
-            Create &amp; Open
+            {submitting ? 'Creating...' : 'Create & Open'}
           </button>
         </div>
       </div>

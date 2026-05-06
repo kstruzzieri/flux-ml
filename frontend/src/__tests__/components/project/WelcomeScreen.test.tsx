@@ -17,10 +17,10 @@ beforeEach(() => {
 })
 
 describe('WelcomeScreen', () => {
-  it('renders the Flux branding and tagline', () => {
+  it('renders the Flux branding prominently', () => {
     render(<WelcomeScreen {...defaultProps} />)
-    expect(screen.getByText('Flux')).toBeInTheDocument()
-    expect(screen.getByText('The ML development environment')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /flux/i })).toBeInTheDocument()
+    expect(screen.getByText('Write code. Watch it learn.')).toBeInTheDocument()
   })
 
   it('renders all action buttons', () => {

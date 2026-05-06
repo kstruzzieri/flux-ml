@@ -1,36 +1,33 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MetricsGrid } from '@components/Experiments/MetricsGrid'
 import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
-import { __resetMockState, RecordMetrics } from '../../../__mocks__/wailsjs/go/main/App'
-import { metrics } from '../../../__mocks__/wailsjs/go/models'
+import { __resetMockState } from '../../../__mocks__/wailsjs/go/main/App'
 
 beforeEach(() => {
   __resetMockState()
   __resetMetricsStore()
+  useMetricsStore.setState({
+    fetchLatestMetrics: jest.fn(async () => {}),
+    fetchSparklineData: jest.fn(async () => {}),
+    fetchLatestRewardSignals: jest.fn(async () => {}),
+  })
 })
 
 describe('MetricsGrid', () => {
-  it('renders four metric cards', async () => {
-    await RecordMetrics('exp-1', [
-      new metrics.Metric({
-        experiment_id: 'exp-1',
-        step: 1,
-        name: 'kl',
-        value: 0.045,
-        timestamp: 1000,
-      }),
-      new metrics.Metric({
-        experiment_id: 'exp-1',
-        step: 1,
-        name: 'learning_rate',
-        value: 0.0003,
-        timestamp: 1000,
-      }),
-    ])
-
-    await act(async () => {
-      await useMetricsStore.getState().fetchLatestMetrics('exp-1')
-      await useMetricsStore.getState().fetchSparklineData('exp-1')
+  it('renders four metric cards', () => {
+    useMetricsStore.setState({
+      latestMetrics: {
+        'exp-1': {
+          kl: 0.045,
+          learning_rate: 0.0003,
+        },
+      },
+      sparklineData: {
+        'exp-1': {
+          kl: [{ step: 1, value: 0.045 }],
+          learning_rate: [{ step: 1, value: 0.0003 }],
+        },
+      },
     })
 
     render(<MetricsGrid experimentId="exp-1" />)

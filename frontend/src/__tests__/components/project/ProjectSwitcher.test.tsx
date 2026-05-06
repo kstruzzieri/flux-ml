@@ -95,4 +95,14 @@ describe('ProjectSwitcher', () => {
     await user.click(screen.getByText('other-proj'))
     expect(defaultProps.onSwitchProject).toHaveBeenCalledWith('/tmp/other-proj')
   })
+
+  it('includes recent projects in keyboard menu navigation', async () => {
+    const user = userEvent.setup()
+    render(<ProjectSwitcher {...defaultProps} />)
+
+    await user.click(screen.getByRole('button', { name: /project menu/i }))
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}')
+
+    expect(screen.getByRole('menuitem', { name: /other-proj/i })).toHaveFocus()
+  })
 })

@@ -15,7 +15,11 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/assets'),
     },
   },
-  server: {},
+  server: {
+    fs: {
+      allow: [path.resolve(__dirname, '..')],
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

@@ -36,10 +36,24 @@ let mockCurrentProjectStatus = new main.CurrentProjectStatus({
 let mockOpenFolderDialogResult: string = ''
 let mockOpenFolderDialogError: Error | null = null
 let mockIsFluxProjectResult: boolean = false
+let mockDefaultProjectsDirResult: string | Promise<string> = '/tmp/projects'
 let mockRemoveRecentProjectError: Error | null = null
 let mockCreateProjectError: Error | null = null
-let mockOpenProjectError: Error | null = null
-let mockOpenFolderAsProjectError: Error | null = null
+let mockOpenProjectError: unknown = null
+let mockOpenFolderAsProjectError: unknown = null
+let lastCreateProjectCall: {
+  name: string
+  dir: string
+  template: string
+  seedDemo: boolean
+} | null = null
+
+function addRecentProject(path: string, name: string): void {
+  mockRecentProjects = [
+    { path, name } as project.RecentProject,
+    ...mockRecentProjects.filter((r) => r.path !== path),
+  ]
+}
 
 // --- Existing methods ---
 
@@ -276,6 +290,12 @@ export function CreateProject(
   _seedDemo: boolean,
 ): Promise<project.Project> {
   if (mockCreateProjectError) return Promise.reject(mockCreateProjectError)
+  lastCreateProjectCall = {
+    name,
+    dir: _dir,
+    template: _template,
+    seedDemo: _seedDemo,
+  }
   const proj = new project.Project({
     id: crypto.randomUUID(),
     name,
@@ -284,7 +304,7 @@ export function CreateProject(
     updatedAt: Math.floor(Date.now() / 1000),
   } as Record<string, unknown>)
   mockCurrentProject = proj
-  mockRecentProjects.unshift({ path: _dir, name } as project.RecentProject)
+  addRecentProject(_dir, name)
   mockCurrentProjectStatus = new main.CurrentProjectStatus({
     project: proj,
     config: null,
@@ -305,6 +325,7 @@ export function OpenProject(dir: string): Promise<project.Project> {
     updatedAt: Math.floor(Date.now() / 1000),
   } as Record<string, unknown>)
   mockCurrentProject = proj
+  addRecentProject(dir, proj.name)
   mockCurrentProjectStatus = new main.CurrentProjectStatus({
     project: proj,
     config: null,
@@ -329,6 +350,7 @@ export function OpenFolderAsProject(
     updatedAt: Math.floor(Date.now() / 1000),
   } as Record<string, unknown>)
   mockCurrentProject = proj
+  addRecentProject(dir, name)
   mockCurrentProjectStatus = new main.CurrentProjectStatus({
     project: proj,
     config: null,
@@ -364,7 +386,7 @@ export function ListRecentProjects(): Promise<project.RecentProject[]> {
 }
 
 export function GetDefaultProjectsDir(): Promise<string> {
-  return Promise.resolve('/tmp/projects')
+  return Promise.resolve(mockDefaultProjectsDirResult)
 }
 
 export function OpenFolderDialog(): Promise<string> {
@@ -432,10 +454,12 @@ export function __resetMockState(): void {
   mockOpenFolderDialogResult = ''
   mockOpenFolderDialogError = null
   mockIsFluxProjectResult = false
+  mockDefaultProjectsDirResult = '/tmp/projects'
   mockRemoveRecentProjectError = null
   mockCreateProjectError = null
   mockOpenProjectError = null
   mockOpenFolderAsProjectError = null
+  lastCreateProjectCall = null
 }
 
 export function __setListExperimentsOverride(
@@ -471,6 +495,10 @@ export function __setIsFluxProjectResult(result: boolean): void {
   mockIsFluxProjectResult = result
 }
 
+export function __setDefaultProjectsDirResult(result: string | Promise<string>): void {
+  mockDefaultProjectsDirResult = result
+}
+
 export function __setRemoveRecentProjectError(error: Error | null): void {
   mockRemoveRecentProjectError = error
 }
@@ -479,11 +507,20 @@ export function __setCreateProjectError(error: Error | null): void {
   mockCreateProjectError = error
 }
 
-export function __setOpenProjectError(error: Error | null): void {
+export function __getLastCreateProjectCall(): {
+  name: string
+  dir: string
+  template: string
+  seedDemo: boolean
+} | null {
+  return lastCreateProjectCall ? { ...lastCreateProjectCall } : null
+}
+
+export function __setOpenProjectError(error: unknown): void {
   mockOpenProjectError = error
 }
 
-export function __setOpenFolderAsProjectError(error: Error | null): void {
+export function __setOpenFolderAsProjectError(error: unknown): void {
   mockOpenFolderAsProjectError = error
 }
 

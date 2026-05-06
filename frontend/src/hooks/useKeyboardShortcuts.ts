@@ -15,6 +15,12 @@ interface UseKeyboardShortcutsOptions {
   onNewProject?: () => void
   onOpenFolder?: () => void
   onOpenExisting?: () => void
+  projectActionsDisabled?: boolean
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
 }
 
 export function useKeyboardShortcuts({
@@ -24,25 +30,18 @@ export function useKeyboardShortcuts({
   onNewProject,
   onOpenFolder,
   onOpenExisting,
+  projectActionsDisabled,
 }: UseKeyboardShortcutsOptions) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       // Check for Cmd (Mac) or Ctrl (Windows/Linux)
       const isMod = event.metaKey || event.ctrlKey
+      const normalizedKey = event.key.toLowerCase()
 
       if (!isMod) return
 
-      // Don't fire project shortcuts (N, O) when typing in form fields
-      if (event.key === 'n' || event.key === 'o') {
-        const target = event.target as HTMLElement
-        if (
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable
-        ) {
-          return
-        }
-      }
+      // Don't fire app shortcuts while typing or when a modal owns the interaction.
+      if (isEditableTarget(event.target) || projectActionsDisabled) return
 
       // View switching: Cmd/Ctrl + 1-4
       if (event.key in VIEW_SHORTCUTS && onViewChange) {
@@ -61,21 +60,21 @@ export function useKeyboardShortcuts({
       }
 
       // New project: Cmd/Ctrl + N
-      if (event.key === 'n' && !event.shiftKey && onNewProject) {
+      if (normalizedKey === 'n' && !event.shiftKey && onNewProject) {
         event.preventDefault()
         onNewProject()
         return
       }
 
       // Open folder: Cmd/Ctrl + O
-      if (event.key === 'o' && !event.shiftKey && onOpenFolder) {
+      if (normalizedKey === 'o' && !event.shiftKey && onOpenFolder) {
         event.preventDefault()
         onOpenFolder()
         return
       }
 
       // Open existing project: Cmd/Ctrl + Shift + O
-      if (event.key === 'O' && event.shiftKey && onOpenExisting) {
+      if (normalizedKey === 'o' && event.shiftKey && onOpenExisting) {
         event.preventDefault()
         onOpenExisting()
         return
@@ -84,5 +83,13 @@ export function useKeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onViewChange, onCommandPalette, disabledViews, onNewProject, onOpenFolder, onOpenExisting])
+  }, [
+    onViewChange,
+    onCommandPalette,
+    disabledViews,
+    onNewProject,
+    onOpenFolder,
+    onOpenExisting,
+    projectActionsDisabled,
+  ])
 }
