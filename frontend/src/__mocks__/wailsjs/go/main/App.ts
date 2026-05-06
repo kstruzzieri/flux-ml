@@ -38,8 +38,8 @@ let mockOpenFolderDialogError: Error | null = null
 let mockIsFluxProjectResult: boolean = false
 let mockRemoveRecentProjectError: Error | null = null
 let mockCreateProjectError: Error | null = null
-let mockOpenProjectError: Error | null = null
-let mockOpenFolderAsProjectError: Error | null = null
+let mockOpenProjectError: unknown = null
+let mockOpenFolderAsProjectError: unknown = null
 let lastCreateProjectCall: {
   name: string
   dir: string
@@ -510,11 +510,11 @@ export function __getLastCreateProjectCall(): {
   return lastCreateProjectCall ? { ...lastCreateProjectCall } : null
 }
 
-export function __setOpenProjectError(error: Error | null): void {
+export function __setOpenProjectError(error: unknown): void {
   mockOpenProjectError = error
 }
 
-export function __setOpenFolderAsProjectError(error: Error | null): void {
+export function __setOpenFolderAsProjectError(error: unknown): void {
   mockOpenFolderAsProjectError = error
 }
 

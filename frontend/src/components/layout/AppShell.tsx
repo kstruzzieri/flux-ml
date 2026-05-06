@@ -30,7 +30,9 @@ const NO_PROJECT_COMPAT_DISABLED = new Set<ViewId>(['compare', 'data', 'code'])
 const EMPTY_DISABLED = new Set<ViewId>()
 
 function getErrorMessage(err: unknown, fallback: string): string {
-  return err instanceof Error ? err.message : fallback
+  if (err instanceof Error) return err.message
+  if (err == null) return fallback
+  return String(err)
 }
 
 function clearPaths(

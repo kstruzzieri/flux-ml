@@ -115,7 +115,7 @@ describe('AppShell view mode', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     __setOpenFolderDialogResult('/tmp/raw-data')
     __setIsFluxProjectResult(false)
-    __setOpenFolderAsProjectError(new Error('Folder is read-only'))
+    __setOpenFolderAsProjectError('Folder is read-only')
 
     render(<AppShell />)
 
