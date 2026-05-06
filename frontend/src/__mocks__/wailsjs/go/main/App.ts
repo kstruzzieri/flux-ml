@@ -36,6 +36,7 @@ let mockCurrentProjectStatus = new main.CurrentProjectStatus({
 let mockOpenFolderDialogResult: string = ''
 let mockOpenFolderDialogError: Error | null = null
 let mockIsFluxProjectResult: boolean = false
+let mockDefaultProjectsDirResult: string | Promise<string> = '/tmp/projects'
 let mockRemoveRecentProjectError: Error | null = null
 let mockCreateProjectError: Error | null = null
 let mockOpenProjectError: unknown = null
@@ -385,7 +386,7 @@ export function ListRecentProjects(): Promise<project.RecentProject[]> {
 }
 
 export function GetDefaultProjectsDir(): Promise<string> {
-  return Promise.resolve('/tmp/projects')
+  return Promise.resolve(mockDefaultProjectsDirResult)
 }
 
 export function OpenFolderDialog(): Promise<string> {
@@ -453,6 +454,7 @@ export function __resetMockState(): void {
   mockOpenFolderDialogResult = ''
   mockOpenFolderDialogError = null
   mockIsFluxProjectResult = false
+  mockDefaultProjectsDirResult = '/tmp/projects'
   mockRemoveRecentProjectError = null
   mockCreateProjectError = null
   mockOpenProjectError = null
@@ -491,6 +493,10 @@ export function __setOpenFolderDialogResult(result: string, error?: Error): void
 
 export function __setIsFluxProjectResult(result: boolean): void {
   mockIsFluxProjectResult = result
+}
+
+export function __setDefaultProjectsDirResult(result: string | Promise<string>): void {
+  mockDefaultProjectsDirResult = result
 }
 
 export function __setRemoveRecentProjectError(error: Error | null): void {

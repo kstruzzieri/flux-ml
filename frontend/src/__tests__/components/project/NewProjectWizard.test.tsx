@@ -4,6 +4,7 @@ import { NewProjectWizard } from '@components/project'
 import {
   __resetMockState,
   __getLastCreateProjectCall,
+  __setDefaultProjectsDirResult,
   __setCreateProjectError,
   __setOpenFolderDialogResult,
 } from '../../../__mocks__/wailsjs/go/main/App'
@@ -28,6 +29,14 @@ async function renderWizard() {
 
 function expectProjectPath(path: string) {
   expect(screen.getAllByText(path).length).toBeGreaterThan(0)
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
 }
 
 describe('NewProjectWizard', () => {
@@ -145,6 +154,28 @@ describe('NewProjectWizard', () => {
       await user.type(nameInput, 'changed-name')
       expect(projectsFolderInput).toHaveValue('/custom/projects')
       expectProjectPath('/custom/projects/changed-name')
+    })
+
+    it('preserves a typed projects folder when the default folder loads later', async () => {
+      const user = userEvent.setup()
+      const defaultDir = deferred<string>()
+      __setDefaultProjectsDirResult(defaultDir.promise)
+
+      render(<NewProjectWizard {...defaultProps} />)
+      await user.click(screen.getByRole('button', { name: /reward model/i }))
+      await user.click(screen.getByRole('button', { name: /continue/i }))
+
+      const projectsFolderInput = screen.getByLabelText(/projects folder/i)
+      await user.type(projectsFolderInput, '/custom/projects')
+      expectProjectPath('/custom/projects/reward-model-v1')
+
+      await act(async () => {
+        defaultDir.resolve('/tmp/projects')
+        await defaultDir.promise
+      })
+
+      expect(projectsFolderInput).toHaveValue('/custom/projects')
+      expectProjectPath('/custom/projects/reward-model-v1')
     })
 
     it('shows add demo experiments toggle', async () => {
