@@ -27,22 +27,24 @@ Flux is a lightweight, workspace-focused IDE designed specifically for machine l
 
 ### Features
 
+- **Project Workspaces**: Create, import, reopen, and switch Flux projects with `flux.yaml` configuration and recent-project state
 - **Experiment Tracking**: Create, manage, and monitor ML experiments with real-time status updates
 - **Inline Metrics**: Live loss and reward values displayed on each experiment card
 - **Sparkline Charts**: Mini SVG trend charts with LTTB downsampling for at-a-glance metric visualization
 - **Diagnostic Metric Cards**: KL divergence, learning rate, reward variance, and policy entropy with health-colored borders, trend indicators, and inline sparklines
 - **Reward Hack Detection**: Automated cross-metric pattern analysis for length gaming, sycophancy, KL drift, and reward collapse
-- **Loss/Reward Chart**: uPlot-based time-series chart with live updates via event-driven data streaming
+- **Chart Foundation**: uPlot-based time-series, reward-component, annotation, and histogram chart components
 - **Resizable Panel Layout**: Persistent, draggable panel arrangement with collapsible columns
 - **Event-Driven Updates**: Real-time metric streaming via Wails event system -- no polling
 - **Performance-First**: Cold start < 2-4s, near-zero idle CPU, ~200-450MB RAM
 
 ### Planned
 
+- **Chart Interactions**: Zoom/pan, click-to-inspect, anomaly zones, distribution views, and baseline overlays
+- **Chart Scalability**: Backend downsampling/windowing for large metric histories
 - **Run Profiles**: First-class support for ML training scripts and deployment commands
-- **Reward Signal Monitoring**: Track helpfulness, harmlessness, and honesty metrics for RLHF workflows
-- **Language Server Support**: TypeScript, Python, and Go via LSP
-- **Full Chart Suite**: Reward components and diagnostics tabs with additional uPlot visualizations
+- **Alert Engine**: Persistent alert patterns, evidence display, and alert actions
+- **File System Views**: Project file tree, config editing, and click-to-source navigation
 
 ## Tech Stack
 
@@ -76,6 +78,19 @@ wails dev
 wails build
 ```
 
+### Verification
+
+```bash
+# Backend
+go test ./...
+
+# Frontend
+cd frontend
+npm test -- --runInBand
+npm run typecheck
+npm run lint
+```
+
 ## Project Status
 
 This project is in active development. See the [GitHub Issues](https://github.com/kstruzzieri/flux-ml/issues) for the roadmap.
@@ -83,34 +98,44 @@ This project is in active development. See the [GitHub Issues](https://github.co
 ### Completed
 
 - **Phase 1: Foundation** -- Wails setup, core UI shell with resizable panels, icon system, design tokens
-- **Phase 2A: Data Layer** -- SQLite integration, experiment CRUD, event sourcing, metrics storage (59 Go tests across 4 packages)
+- **Phase 2A: Data Layer** -- SQLite integration, experiment CRUD, event sourcing, metrics storage
 - **Phase 2B: Experiment List** -- Wails bindings, experiment list UI, inline metrics display, sparkline charts
-- **Phase 2C: Experiment Detail** -- Diagnostic metric cards with health indicators, reward hack detection, uPlot chart integration with live updates (277 frontend tests across 25 suites)
+- **Phase 2C: Experiment Detail** -- Diagnostic metric cards with health indicators, reward hack detection, uPlot chart integration with live updates
+- **Phase 2D: Project Model & UI** -- `flux.yaml`, project-scoped experiments, new/import/open flows, recent projects, and degraded mode
+
+### In Progress
+
+- **Phase 3: Charts & Visualization** -- uPlot integration, reusable chart components, live updates, annotations, reward components, and histogram component are complete. Remaining work is focused on chart scalability, zoom/pan, click-to-inspect, divergence/anomaly highlighting, distribution views, and baseline overlays.
 
 ### Phases
 
 1. **Foundation** - Wails setup, core infrastructure
-2. **Data Layer & Experiment List** - SQLite, experiment management, metrics storage, experiment UI
-3. **File System** - File explorer, editor, workspace management
-4. **Editor Core** - CodeMirror integration, syntax highlighting
-5. **Run System** - Run profiles, terminal integration
-6. **ML Features** - Full visualizations, reward hack detection
-7. **Polish** - Performance optimization, packaging
+2. **Experiments Core & Projects** - SQLite, experiment management, metrics storage, experiment UI, project model
+3. **Charts & Visualization** - Interactive charts, reward-component analysis, distributions, overlays
+4. **Alert System** - Alert detection engine, storage, evidence UI, alert actions
+5. **Integration** - Training logs/processes, file system views, comparison workflows
+6. **Polish** - Performance optimization, keyboard UX, exports, documentation
 
 ## Architecture
 
 ```
 flux-ml/
-├── main.go              # Application entry point
-├── app.go               # Wails application logic / Go backend
+├── main.go              # Wails application entry point
+├── app.go               # App lifecycle, stores, layout persistence
+├── *_api.go             # Wails API surface grouped by domain
 ├── internal/            # Go backend packages
+│   ├── annotation/      # Chart annotations and events
 │   ├── database/        # SQLite infrastructure, migrations
 │   ├── experiment/      # Experiment CRUD store
 │   ├── event/           # Event sourcing store
-│   └── metrics/         # Metrics and reward signal storage
+│   ├── metrics/         # Metrics and reward signal storage
+│   └── project/         # Project model, config, scaffold, local state
 ├── frontend/            # React + TypeScript frontend
 │   ├── src/
 │   │   ├── components/  # React components
+│   │   ├── components/Charts/
+│   │   ├── components/Experiments/
+│   │   ├── components/project/
 │   │   ├── stores/      # Zustand state management
 │   │   ├── utils/       # Shared utilities (formatting, downsampling)
 │   │   ├── hooks/       # Custom React hooks
