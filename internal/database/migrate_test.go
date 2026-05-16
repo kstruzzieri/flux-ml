@@ -65,7 +65,7 @@ func TestMigrate_RecordsVersions(t *testing.T) {
 		}
 		versions = append(versions, v)
 	}
-	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes", "004_annotations", "005_projects", "006_alert_upsert_key"}
+	expected := []string{"001_initial_schema", "002_logs_fts5", "003_cascade_deletes", "004_annotations", "005_projects", "006_alert_upsert_key", "007_alert_resolution"}
 	if len(versions) != len(expected) {
 		t.Fatalf("expected %d versions, got %d: %v", len(expected), len(versions), versions)
 	}
@@ -85,8 +85,8 @@ func TestMigrate_Idempotent(t *testing.T) {
 	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("count query failed: %v", err)
 	}
-	if count != 6 {
-		t.Errorf("expected 6 migration versions, got %d", count)
+	if count != 7 {
+		t.Errorf("expected 7 migration versions, got %d", count)
 	}
 }
 

@@ -12,6 +12,7 @@ export namespace alerts {
 	    data: string;
 	    acknowledged: boolean;
 	    created_at: number;
+	    resolved_at?: number;
 
 	    static createFrom(source: any = {}) {
 	        return new Alert(source);
@@ -30,6 +31,7 @@ export namespace alerts {
 	        this.data = source["data"];
 	        this.acknowledged = source["acknowledged"];
 	        this.created_at = source["created_at"];
+	        this.resolved_at = source["resolved_at"];
 	    }
 	}
 	export class DetectionResult {

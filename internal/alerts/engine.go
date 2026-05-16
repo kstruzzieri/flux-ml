@@ -132,7 +132,16 @@ func (e *Engine) EvaluateExperiment(experimentID string) ([]DetectionResult, err
 	results := e.detectSnapshot(snapshot)
 
 	for _, result := range results {
-		if result.Status == LevelClear || result.Confidence == nil || e.store == nil {
+		if e.store == nil {
+			continue
+		}
+		if result.Status == LevelClear {
+			if err := e.store.ResolveOpenAlert(experimentID, result.Type, snapshot.EvaluatedAtUnix); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if result.Confidence == nil {
 			continue
 		}
 		if _, err := e.store.UpsertAlert(Alert{
@@ -183,7 +192,7 @@ func (e *Engine) loadSnapshot(experimentID string) (Snapshot, error) {
 		}
 	}
 
-	signals, err := e.metrics.QueryRewardSignals(experimentID, "", 0, 0)
+	signals, err := e.metrics.LatestRewardSignals(experimentID)
 	if err != nil {
 		return Snapshot{}, err
 	}

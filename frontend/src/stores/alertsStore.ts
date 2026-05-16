@@ -91,6 +91,7 @@ function normalizeAlert(source: {
   data?: string
   acknowledged?: boolean
   created_at?: number
+  resolved_at?: number
 }): PersistedAlert {
   return {
     id: source.id ?? 0,
@@ -104,6 +105,7 @@ function normalizeAlert(source: {
     data: source.data ?? '',
     acknowledged: source.acknowledged ?? false,
     created_at: source.created_at ?? 0,
+    resolved_at: source.resolved_at,
   }
 }
 

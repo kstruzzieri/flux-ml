@@ -31,6 +31,8 @@ func (a *App) evaluateAlertsForExperiment(experimentID string) {
 	engine := alerts.NewEngine(a.metrics, a.alerts)
 	detections, err := engine.EvaluateExperiment(experimentID)
 	if err != nil {
+		a.logWarning("failed to evaluate alerts for experiment %s: %v", experimentID, err)
+		a.emitEvent("alerts:error", map[string]interface{}{"experimentId": experimentID, "error": err.Error()})
 		return
 	}
 	active := 0

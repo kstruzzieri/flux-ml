@@ -146,6 +146,43 @@ func TestEngineReadOnlyDetectionsDoNotPersistAlerts(t *testing.T) {
 	}
 }
 
+func TestEngineResolvesOpenAlertWhenDetectionClears(t *testing.T) {
+	env := newTestEngine(t)
+	inserted, err := env.alerts.UpsertAlert(Alert{
+		ExperimentID: env.experimentID,
+		Type:         TypeKLDrift,
+		Step:         10,
+		Confidence:   0.72,
+		CreatedAt:    1000,
+	})
+	if err != nil {
+		t.Fatalf("UpsertAlert failed: %v", err)
+	}
+
+	results, err := env.engine.EvaluateExperiment(env.experimentID)
+	if err != nil {
+		t.Fatalf("EvaluateExperiment failed: %v", err)
+	}
+	kl := findDetection(t, results, TypeKLDrift)
+	if kl.Status != LevelClear {
+		t.Fatalf("KL Drift status = %q, want clear", kl.Status)
+	}
+
+	alerts, err := env.alerts.ListByExperiment(env.experimentID)
+	if err != nil {
+		t.Fatalf("ListByExperiment failed: %v", err)
+	}
+	if len(alerts) != 1 {
+		t.Fatalf("expected resolved alert history, got %d alerts", len(alerts))
+	}
+	if alerts[0].ID != inserted.ID {
+		t.Errorf("resolved alert ID = %d, want %d", alerts[0].ID, inserted.ID)
+	}
+	if alerts[0].ResolvedAt == nil {
+		t.Fatal("expected open alert to be resolved")
+	}
+}
+
 func TestEngineDetectsSycophancy(t *testing.T) {
 	env := newTestEngine(t)
 	recordMetricSeries(t, env.metrics, env.experimentID, "kl", []float64{0.01, 0.012, 0.014, 0.025, 0.04, 0.06})

@@ -18,8 +18,8 @@ func NewStore(db *database.DB) *Store {
 	return &Store{db: db}
 }
 
-// UpsertAlert persists a non-clear alert, replacing the confidence/evidence for
-// the same experiment, alert type, and step.
+// UpsertAlert persists a non-clear alert, refreshing the current unresolved
+// episode for the same experiment and alert type.
 func (s *Store) UpsertAlert(alert Alert) (*Alert, error) {
 	if alert.ExperimentID == "" {
 		return nil, fmt.Errorf("experiment ID cannot be empty")
@@ -38,9 +38,9 @@ func (s *Store) UpsertAlert(alert Alert) (*Alert, error) {
 	}
 
 	_, err := s.db.Exec(
-		`INSERT INTO alerts (experiment_id, type, step, confidence, data, acknowledged, created_at)
-		 VALUES (?, ?, ?, ?, ?, 0, ?)
-		 ON CONFLICT(experiment_id, type) WHERE acknowledged = 0 DO UPDATE SET
+		`INSERT INTO alerts (experiment_id, type, step, confidence, data, acknowledged, created_at, resolved_at)
+		 VALUES (?, ?, ?, ?, ?, 0, ?, NULL)
+		 ON CONFLICT(experiment_id, type) WHERE acknowledged = 0 AND resolved_at IS NULL DO UPDATE SET
 		   step = excluded.step,
 		   confidence = excluded.confidence,
 		   data = excluded.data`,
@@ -53,7 +53,31 @@ func (s *Store) UpsertAlert(alert Alert) (*Alert, error) {
 	return s.GetOpenByType(alert.ExperimentID, alert.Type)
 }
 
-// GetOpenByType returns the current unacknowledged alert for an experiment/type.
+// ResolveOpenAlert marks the current unresolved alert episode as resolved. It is
+// intentionally a no-op when no open alert exists.
+func (s *Store) ResolveOpenAlert(experimentID, alertType string, resolvedAt int64) error {
+	if experimentID == "" {
+		return fmt.Errorf("experiment ID cannot be empty")
+	}
+	if alertType == "" {
+		return fmt.Errorf("alert type cannot be empty")
+	}
+	if resolvedAt == 0 {
+		resolvedAt = time.Now().Unix()
+	}
+
+	if _, err := s.db.Exec(
+		`UPDATE alerts
+		 SET resolved_at = ?
+		 WHERE experiment_id = ? AND type = ? AND acknowledged = 0 AND resolved_at IS NULL`,
+		resolvedAt, experimentID, alertType,
+	); err != nil {
+		return fmt.Errorf("resolving alert: %w", err)
+	}
+	return nil
+}
+
+// GetOpenByType returns the current unresolved alert for an experiment/type.
 func (s *Store) GetOpenByType(experimentID, alertType string) (*Alert, error) {
 	if experimentID == "" {
 		return nil, fmt.Errorf("experiment ID cannot be empty")
@@ -63,9 +87,9 @@ func (s *Store) GetOpenByType(experimentID, alertType string) (*Alert, error) {
 	}
 
 	row := s.db.QueryRow(
-		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at
+		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at, resolved_at
 		 FROM alerts
-		 WHERE experiment_id = ? AND type = ? AND acknowledged = 0
+		 WHERE experiment_id = ? AND type = ? AND acknowledged = 0 AND resolved_at IS NULL
 		 ORDER BY id DESC
 		 LIMIT 1`,
 		experimentID, alertType,
@@ -87,7 +111,7 @@ func (s *Store) GetByKey(experimentID, alertType string, step int64) (*Alert, er
 	}
 
 	row := s.db.QueryRow(
-		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at
+		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at, resolved_at
 		 FROM alerts
 		 WHERE experiment_id = ? AND type = ? AND step = ?
 		 ORDER BY id DESC
@@ -108,7 +132,7 @@ func (s *Store) ListByExperiment(experimentID string) ([]Alert, error) {
 	}
 
 	rows, err := s.db.Query(
-		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at
+		`SELECT id, experiment_id, type, step, confidence, data, acknowledged, created_at, resolved_at
 		 FROM alerts
 		 WHERE experiment_id = ?
 		 ORDER BY step DESC, created_at DESC, id DESC`,
@@ -141,6 +165,7 @@ type alertScanner interface {
 func scanAlert(scanner alertScanner) (*Alert, error) {
 	var alert Alert
 	var data sql.NullString
+	var resolvedAt sql.NullInt64
 	var acknowledged int
 	if err := scanner.Scan(
 		&alert.ID,
@@ -151,6 +176,7 @@ func scanAlert(scanner alertScanner) (*Alert, error) {
 		&data,
 		&acknowledged,
 		&alert.CreatedAt,
+		&resolvedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("alert not found")
@@ -164,6 +190,9 @@ func scanAlert(scanner alertScanner) (*Alert, error) {
 	alert.Status = levelForConfidence(alert.Confidence)
 	alert.ScoreKind = ScoreKindHeuristicV1
 	alert.Acknowledged = acknowledged != 0
+	if resolvedAt.Valid {
+		alert.ResolvedAt = &resolvedAt.Int64
+	}
 	return &alert, nil
 }
 

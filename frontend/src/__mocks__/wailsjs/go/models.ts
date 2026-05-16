@@ -41,6 +41,7 @@ export namespace alerts {
     data: string = ''
     acknowledged: boolean = false
     created_at: number = 0
+    resolved_at?: number
 
     static createFrom(source: Record<string, unknown> = {}) {
       return new Alert(source)
@@ -59,6 +60,7 @@ export namespace alerts {
       this.data = source['data'] as string
       this.acknowledged = source['acknowledged'] as boolean
       this.created_at = source['created_at'] as number
+      this.resolved_at = source['resolved_at'] as number | undefined
     }
   }
 

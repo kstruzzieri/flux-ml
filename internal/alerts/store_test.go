@@ -200,6 +200,85 @@ func TestStoreUpsertAlertRefreshesOpenAlertInsteadOfAppendingEveryStep(t *testin
 	}
 }
 
+func TestStoreResolveOpenAlert(t *testing.T) {
+	store := newTestAlertStore(t)
+
+	inserted, err := store.UpsertAlert(Alert{
+		ExperimentID: store.experimentID,
+		Type:         TypeKLDrift,
+		Step:         10,
+		Confidence:   0.72,
+		CreatedAt:    1000,
+	})
+	if err != nil {
+		t.Fatalf("UpsertAlert failed: %v", err)
+	}
+
+	if err := store.ResolveOpenAlert(store.experimentID, TypeKLDrift, 1100); err != nil {
+		t.Fatalf("ResolveOpenAlert failed: %v", err)
+	}
+	if _, err := store.GetOpenByType(store.experimentID, TypeKLDrift); err == nil {
+		t.Fatal("expected resolved alert to be absent from open alert lookup")
+	}
+
+	alerts, err := store.ListByExperiment(store.experimentID)
+	if err != nil {
+		t.Fatalf("ListByExperiment failed: %v", err)
+	}
+	if len(alerts) != 1 {
+		t.Fatalf("expected 1 resolved alert, got %d", len(alerts))
+	}
+	if alerts[0].ID != inserted.ID {
+		t.Errorf("resolved alert ID = %d, want %d", alerts[0].ID, inserted.ID)
+	}
+	if alerts[0].ResolvedAt == nil || *alerts[0].ResolvedAt != 1100 {
+		t.Fatalf("ResolvedAt = %v, want 1100", alerts[0].ResolvedAt)
+	}
+}
+
+func TestStoreUpsertAlertCreatesNewEpisodeAfterResolution(t *testing.T) {
+	store := newTestAlertStore(t)
+
+	inserted, err := store.UpsertAlert(Alert{
+		ExperimentID: store.experimentID,
+		Type:         TypeRewardCollapse,
+		Step:         10,
+		Confidence:   0.7,
+		CreatedAt:    1000,
+	})
+	if err != nil {
+		t.Fatalf("UpsertAlert failed: %v", err)
+	}
+	if err := store.ResolveOpenAlert(store.experimentID, TypeRewardCollapse, 1100); err != nil {
+		t.Fatalf("ResolveOpenAlert failed: %v", err)
+	}
+
+	next, err := store.UpsertAlert(Alert{
+		ExperimentID: store.experimentID,
+		Type:         TypeRewardCollapse,
+		Step:         12,
+		Confidence:   0.75,
+		CreatedAt:    1200,
+	})
+	if err != nil {
+		t.Fatalf("second UpsertAlert failed: %v", err)
+	}
+	if next.ID == inserted.ID {
+		t.Fatal("expected a new alert episode after resolution")
+	}
+	if next.ResolvedAt != nil {
+		t.Fatalf("new alert ResolvedAt = %v, want nil", next.ResolvedAt)
+	}
+
+	alerts, err := store.ListByExperiment(store.experimentID)
+	if err != nil {
+		t.Fatalf("ListByExperiment failed: %v", err)
+	}
+	if len(alerts) != 2 {
+		t.Fatalf("expected resolved history plus new open alert, got %d", len(alerts))
+	}
+}
+
 func TestStoreUpsertAlertCreatesNewEpisodeAfterAcknowledgement(t *testing.T) {
 	store := newTestAlertStore(t)
 

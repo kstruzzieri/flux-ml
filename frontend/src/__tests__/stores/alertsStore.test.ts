@@ -48,6 +48,7 @@ describe('useAlertsStore', () => {
       step: 10,
       confidence: 0.81,
       status: 'elevated',
+      resolved_at: 1700,
     })
 
     await act(async () => {
@@ -60,6 +61,7 @@ describe('useAlertsStore', () => {
       type: 'sycophancy',
       pattern: 'Sycophancy',
       confidence: 0.81,
+      resolved_at: 1700,
     })
   })
 

@@ -390,6 +390,52 @@ func TestQueryRewardSignals_FilterByStepRange(t *testing.T) {
 	}
 }
 
+func TestLatestRewardSignals_ReturnsHighestStepPerComponent(t *testing.T) {
+	store := newTestMetricsStore(t)
+
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
+		{Step: 100, Component: "helpfulness", Value: 0.80, Distribution: `{"old":true}`},
+		{Step: 200, Component: "helpfulness", Value: 0.91, Distribution: `{"new":true}`},
+		{Step: 150, Component: "harmlessness", Value: 0.72},
+		{Step: 250, Component: "honesty", Value: 0.85},
+		{Step: 50, Component: "honesty", Value: 0.40},
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
+
+	results, err := store.LatestRewardSignals(store.experimentID)
+	if err != nil {
+		t.Fatalf("LatestRewardSignals failed: %v", err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("expected 3 latest signals, got %d", len(results))
+	}
+
+	byComponent := make(map[string]RewardSignal)
+	for _, result := range results {
+		byComponent[result.Component] = result
+	}
+	if byComponent["helpfulness"].Step != 200 || byComponent["helpfulness"].Value != 0.91 {
+		t.Errorf("helpfulness = %+v, want latest step 200 value 0.91", byComponent["helpfulness"])
+	}
+	if byComponent["helpfulness"].Distribution != `{"new":true}` {
+		t.Errorf("helpfulness distribution = %q, want latest distribution", byComponent["helpfulness"].Distribution)
+	}
+	if byComponent["harmlessness"].Step != 150 {
+		t.Errorf("harmlessness step = %d, want 150", byComponent["harmlessness"].Step)
+	}
+	if byComponent["honesty"].Step != 250 {
+		t.Errorf("honesty step = %d, want 250", byComponent["honesty"].Step)
+	}
+}
+
+func TestLatestRewardSignalsValidation(t *testing.T) {
+	store := newTestMetricsStore(t)
+	if _, err := store.LatestRewardSignals(""); err == nil {
+		t.Fatal("expected error for empty experiment ID")
+	}
+}
+
 // --- LatestMetrics tests ---
 
 func TestLatestMetrics_ReturnsHighestStep(t *testing.T) {

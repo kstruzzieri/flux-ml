@@ -22,4 +22,5 @@ export interface PersistedAlert {
   data: string
   acknowledged: boolean
   created_at: number
+  resolved_at?: number
 }

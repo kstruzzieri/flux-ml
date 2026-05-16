@@ -50,6 +50,7 @@ type Alert struct {
 	Data         string         `json:"data"`
 	Acknowledged bool           `json:"acknowledged"`
 	CreatedAt    int64          `json:"created_at"`
+	ResolvedAt   *int64         `json:"resolved_at,omitempty"`
 }
 
 func patternForType(alertType string) string {

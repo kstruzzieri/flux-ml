@@ -262,6 +262,49 @@ func (s *Store) QueryRewardSignals(experimentID, component string, startStep, en
 	return results, nil
 }
 
+// LatestRewardSignals returns the most recent reward signal per component for
+// the given experiment. Returns an empty slice if no reward signals exist.
+func (s *Store) LatestRewardSignals(experimentID string) ([]RewardSignal, error) {
+	if experimentID == "" {
+		return nil, fmt.Errorf("experiment ID cannot be empty")
+	}
+
+	query := `SELECT rs.experiment_id, rs.step, rs.component, rs.value, rs.distribution
+		FROM reward_signals rs
+		INNER JOIN (
+			SELECT component, MAX(step) AS max_step
+			FROM reward_signals
+			WHERE experiment_id = ?
+			GROUP BY component
+		) latest ON rs.component = latest.component AND rs.step = latest.max_step
+		WHERE rs.experiment_id = ?
+		ORDER BY rs.component ASC`
+
+	rows, err := s.db.Query(query, experimentID, experimentID)
+	if err != nil {
+		return nil, fmt.Errorf("querying latest reward signals: %w", err)
+	}
+	defer rows.Close()
+
+	results := []RewardSignal{}
+	for rows.Next() {
+		var sig RewardSignal
+		var dist sql.NullString
+		if err := rows.Scan(&sig.ExperimentID, &sig.Step, &sig.Component, &sig.Value, &dist); err != nil {
+			return nil, fmt.Errorf("scanning latest reward signal: %w", err)
+		}
+		if dist.Valid {
+			sig.Distribution = dist.String
+		}
+		results = append(results, sig)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating latest reward signals: %w", err)
+	}
+
+	return results, nil
+}
+
 // LatestMetrics returns the most recent metric (highest step) per metric name
 // for the given experiment. Returns an empty slice if no metrics exist.
 func (s *Store) LatestMetrics(experimentID string) ([]Metric, error) {

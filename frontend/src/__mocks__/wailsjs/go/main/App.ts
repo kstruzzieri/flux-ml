@@ -606,6 +606,7 @@ export function __addMockAlert(
     data: alert.data ?? '',
     acknowledged: alert.acknowledged ?? false,
     created_at: alert.created_at ?? Math.floor(Date.now() / 1000),
+    resolved_at: alert.resolved_at,
   } as Record<string, unknown>)
   mockAlerts.push(created)
   return created
