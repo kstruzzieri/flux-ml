@@ -1,15 +1,19 @@
 import { render, screen } from '@testing-library/react'
 import { MetricsGrid } from '@components/Experiments/MetricsGrid'
+import { useAlertsStore, __resetAlertsStore } from '@stores/alertsStore'
 import { useMetricsStore, __resetMetricsStore } from '@stores/metricsStore'
 import { __resetMockState } from '../../../__mocks__/wailsjs/go/main/App'
 
 beforeEach(() => {
   __resetMockState()
+  __resetAlertsStore()
   __resetMetricsStore()
+  useAlertsStore.setState({
+    fetchDetections: jest.fn(async () => {}),
+  })
   useMetricsStore.setState({
     fetchLatestMetrics: jest.fn(async () => {}),
     fetchSparklineData: jest.fn(async () => {}),
-    fetchLatestRewardSignals: jest.fn(async () => {}),
   })
 })
 

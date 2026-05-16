@@ -14,6 +14,7 @@ func (a *App) RecordMetrics(experimentID string, m []metrics.Metric) error {
 	if err := a.metrics.RecordMetrics(experimentID, m); err != nil {
 		return err
 	}
+	a.evaluateAlertsForExperiment(experimentID)
 	a.emitEvent("metrics:recorded", map[string]interface{}{"experimentId": experimentID, "count": len(m)})
 	return nil
 }
@@ -35,6 +36,7 @@ func (a *App) RecordRewardSignals(experimentID string, signals []metrics.RewardS
 	if err := a.metrics.RecordRewardSignals(experimentID, signals); err != nil {
 		return err
 	}
+	a.evaluateAlertsForExperiment(experimentID)
 	a.emitEvent("rewards:recorded", map[string]interface{}{"experimentId": experimentID, "count": len(signals)})
 	return nil
 }

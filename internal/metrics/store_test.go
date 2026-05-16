@@ -209,6 +209,49 @@ func TestQueryMetrics_NoMatches(t *testing.T) {
 	}
 }
 
+func TestQueryRecentMetrics(t *testing.T) {
+	store := newTestMetricsStore(t)
+	now := time.Now().Unix()
+
+	if err := store.RecordMetrics(store.experimentID, []Metric{
+		{Step: 1, Name: "reward", Value: 0.1, Timestamp: now},
+		{Step: 2, Name: "reward", Value: 0.2, Timestamp: now},
+		{Step: 3, Name: "reward", Value: 0.3, Timestamp: now},
+		{Step: 4, Name: "reward", Value: 0.4, Timestamp: now},
+		{Step: 5, Name: "reward", Value: 0.5, Timestamp: now},
+		{Step: 5, Name: "loss", Value: 0.9, Timestamp: now},
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
+
+	results, err := store.QueryRecentMetrics(store.experimentID, "reward", 3)
+	if err != nil {
+		t.Fatalf("QueryRecentMetrics failed: %v", err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("expected 3 metrics, got %d", len(results))
+	}
+	wantSteps := []int64{3, 4, 5}
+	for i, want := range wantSteps {
+		if results[i].Step != want {
+			t.Errorf("results[%d].Step = %d, want %d", i, results[i].Step, want)
+		}
+	}
+}
+
+func TestQueryRecentMetricsValidation(t *testing.T) {
+	store := newTestMetricsStore(t)
+	if _, err := store.QueryRecentMetrics("", "reward", 3); err == nil {
+		t.Fatal("expected error for empty experiment ID")
+	}
+	if _, err := store.QueryRecentMetrics(store.experimentID, "", 3); err == nil {
+		t.Fatal("expected error for empty metric name")
+	}
+	if _, err := store.QueryRecentMetrics(store.experimentID, "reward", 0); err == nil {
+		t.Fatal("expected error for non-positive limit")
+	}
+}
+
 // --- RecordRewardSignals tests ---
 
 func TestRecordRewardSignals(t *testing.T) {

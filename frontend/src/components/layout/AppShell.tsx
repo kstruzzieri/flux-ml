@@ -12,6 +12,7 @@ import {
 } from '../../../wailsjs/go/main/App'
 import { useKeyboardShortcuts, useLayoutPersistence } from '../../hooks'
 import { useExperimentStore } from '../../stores/experimentStore'
+import { useAlertsStore } from '../../stores/alertsStore'
 import { useProjectStore } from '../../stores/projectStore'
 import {
   ProjectSwitcher,
@@ -59,6 +60,7 @@ export function AppShell() {
   const currentProject = useProjectStore((s) => s.currentProject)
   const hydrated = useProjectStore((s) => s.hydrated)
   const initialize = useProjectStore((s) => s.initialize)
+  const initializeAlerts = useAlertsStore((s) => s.initialize)
   const recentProjects = useProjectStore((s) => s.recentProjects)
   const fetchStatus = useProjectStore((s) => s.fetchStatus)
   const fetchRecentProjects = useProjectStore((s) => s.fetchRecentProjects)
@@ -80,7 +82,8 @@ export function AppShell() {
 
   useEffect(() => {
     void initialize()
-  }, [initialize])
+    initializeAlerts()
+  }, [initialize, initializeAlerts])
 
   useEffect(() => {
     GetAppInfo()

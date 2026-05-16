@@ -121,6 +121,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 				lr := 3e-4 * math.Exp(-0.002*t)
 				rewardVar := 0.05*math.Exp(-0.015*t) + 0.008
 				entropy := 4.5 - 0.02*t + 0.05*math.Sin(t*0.2)
+				responseLength := 180 + 2*math.Sin(t*0.2)
 
 				metrics = append(metrics,
 					Metric{Step: step, Name: "loss", Value: round(loss, 4), Timestamp: ts},
@@ -129,6 +130,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 					Metric{Step: step, Name: "learning_rate", Value: round(lr, 8), Timestamp: ts},
 					Metric{Step: step, Name: "reward_variance", Value: round(rewardVar, 4), Timestamp: ts},
 					Metric{Step: step, Name: "policy_entropy", Value: round(entropy, 4), Timestamp: ts},
+					Metric{Step: step, Name: "response_length", Value: round(responseLength, 2), Timestamp: ts},
 				)
 
 				// Reward signals every 5 steps
@@ -152,6 +154,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 				lr := 5e-4 * math.Exp(-0.003*t)
 				rewardVar := 0.08*math.Exp(-0.02*t) + 0.005
 				entropy := 4.8 - 0.025*t + 0.04*math.Sin(t*0.15)
+				responseLength := 190 + 3*math.Sin(t*0.12)
 
 				metrics = append(metrics,
 					Metric{Step: step, Name: "loss", Value: round(loss, 4), Timestamp: ts},
@@ -160,6 +163,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 					Metric{Step: step, Name: "learning_rate", Value: round(lr, 8), Timestamp: ts},
 					Metric{Step: step, Name: "reward_variance", Value: round(rewardVar, 4), Timestamp: ts},
 					Metric{Step: step, Name: "policy_entropy", Value: round(entropy, 4), Timestamp: ts},
+					Metric{Step: step, Name: "response_length", Value: round(responseLength, 2), Timestamp: ts},
 				)
 
 				if step%10 == 0 {
@@ -182,6 +186,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 				lr := 1e-3 * math.Exp(-0.01*t)
 				rewardVar := 0.06*math.Exp(-0.08*t) + 0.001
 				entropy := 4.0 - 0.15*t
+				responseLength := 160 + 8*t
 
 				metrics = append(metrics,
 					Metric{Step: step, Name: "loss", Value: round(loss, 4), Timestamp: ts},
@@ -190,6 +195,7 @@ func (s *Store) seedDemoMetricsForExperiments(experiments []experimentStatus) er
 					Metric{Step: step, Name: "learning_rate", Value: round(lr, 8), Timestamp: ts},
 					Metric{Step: step, Name: "reward_variance", Value: round(rewardVar, 4), Timestamp: ts},
 					Metric{Step: step, Name: "policy_entropy", Value: round(entropy, 4), Timestamp: ts},
+					Metric{Step: step, Name: "response_length", Value: round(responseLength, 2), Timestamp: ts},
 				)
 
 				if step%5 == 0 {

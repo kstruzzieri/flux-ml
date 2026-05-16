@@ -1,5 +1,5 @@
 // Mock for Wails Go bindings - used in Jest tests
-import { annotation, event, experiment, main, metrics, project } from '../models'
+import { alerts, annotation, event, experiment, main, metrics, project } from '../models'
 
 const DEFAULT_LAYOUT: main.LayoutState = {
   leftWidth: 280,
@@ -17,8 +17,11 @@ let mockExperiments: experiment.Experiment[] = []
 let mockEvents: event.Event[] = []
 let mockMetrics: metrics.Metric[] = []
 let mockRewardSignals: metrics.RewardSignal[] = []
+let mockAlerts: alerts.Alert[] = []
+let mockDetections: Record<string, alerts.DetectionResult[]> = {}
 let mockAnnotations: annotation.Annotation[] = []
 let nextEventId = 1
+let nextAlertId = 1
 let nextAnnotationId = 1
 let listExperimentsOverride: (() => Promise<experiment.Experiment[]>) | null = null
 let mockCurrentProject: project.Project | null = null
@@ -230,6 +233,57 @@ export function QueryRewardSignals(
   return Promise.resolve(results)
 }
 
+// --- Alert API ---
+
+function defaultDetections(): alerts.DetectionResult[] {
+  return [
+    new alerts.DetectionResult({
+      type: 'length_gaming',
+      pattern: 'Length Gaming',
+      status: 'clear',
+      confidence: null,
+      score_kind: 'heuristic_v1',
+      step: 0,
+      data: '',
+    } as Record<string, unknown>),
+    new alerts.DetectionResult({
+      type: 'sycophancy',
+      pattern: 'Sycophancy',
+      status: 'clear',
+      confidence: null,
+      score_kind: 'heuristic_v1',
+      step: 0,
+      data: '',
+    } as Record<string, unknown>),
+    new alerts.DetectionResult({
+      type: 'kl_drift',
+      pattern: 'KL Drift',
+      status: 'clear',
+      confidence: null,
+      score_kind: 'heuristic_v1',
+      step: 0,
+      data: '',
+    } as Record<string, unknown>),
+    new alerts.DetectionResult({
+      type: 'reward_collapse',
+      pattern: 'Reward Collapse',
+      status: 'clear',
+      confidence: null,
+      score_kind: 'heuristic_v1',
+      step: 0,
+      data: '',
+    } as Record<string, unknown>),
+  ]
+}
+
+export function GetDetections(experimentID: string): Promise<alerts.DetectionResult[]> {
+  return Promise.resolve(mockDetections[experimentID] ?? defaultDetections())
+}
+
+export function GetAlerts(experimentID: string): Promise<alerts.Alert[]> {
+  return Promise.resolve(mockAlerts.filter((a) => a.experiment_id === experimentID))
+}
+
 // --- Annotation API ---
 
 export function CreateAnnotation(
@@ -438,8 +492,11 @@ export function __resetMockState(): void {
   mockEvents = []
   mockMetrics = []
   mockRewardSignals = []
+  mockAlerts = []
+  mockDetections = {}
   mockAnnotations = []
   nextEventId = 1
+  nextAlertId = 1
   nextAnnotationId = 1
   listExperimentsOverride = null
   mockCurrentProject = null
@@ -522,6 +579,36 @@ export function __setOpenProjectError(error: unknown): void {
 
 export function __setOpenFolderAsProjectError(error: unknown): void {
   mockOpenFolderAsProjectError = error
+}
+
+export function __setMockDetections(
+  experimentID: string,
+  detections: Array<Partial<alerts.DetectionResult>>,
+): void {
+  mockDetections[experimentID] = detections.map(
+    (d) => new alerts.DetectionResult(d as Record<string, unknown>)
+  )
+}
+
+export function __addMockAlert(
+  experimentID: string,
+  alert: Partial<alerts.Alert>,
+): alerts.Alert {
+  const created = new alerts.Alert({
+    id: nextAlertId++,
+    experiment_id: experimentID,
+    type: alert.type ?? 'kl_drift',
+    pattern: alert.pattern ?? 'KL Drift',
+    step: alert.step ?? 1,
+    confidence: alert.confidence ?? 0.72,
+    score_kind: alert.score_kind ?? 'heuristic_v1',
+    status: alert.status ?? 'elevated',
+    data: alert.data ?? '',
+    acknowledged: alert.acknowledged ?? false,
+    created_at: alert.created_at ?? Math.floor(Date.now() / 1000),
+  } as Record<string, unknown>)
+  mockAlerts.push(created)
+  return created
 }
 
 // Keep backward-compatible alias

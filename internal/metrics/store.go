@@ -122,6 +122,52 @@ func (s *Store) QueryMetrics(experimentID, name string, startStep, endStep int64
 	return results, nil
 }
 
+// QueryRecentMetrics returns the most recent metric rows for a metric name,
+// ordered by step ASC. The limit is required to keep detector/window consumers
+// from loading unbounded histories.
+func (s *Store) QueryRecentMetrics(experimentID, name string, limit int) ([]Metric, error) {
+	if experimentID == "" {
+		return nil, fmt.Errorf("experiment ID cannot be empty")
+	}
+	if name == "" {
+		return nil, fmt.Errorf("metric name cannot be empty")
+	}
+	if limit <= 0 {
+		return nil, fmt.Errorf("limit must be positive")
+	}
+
+	rows, err := s.db.Query(
+		`SELECT experiment_id, step, name, value, timestamp
+		 FROM (
+		   SELECT experiment_id, step, name, value, timestamp
+		   FROM metrics
+		   WHERE experiment_id = ? AND name = ?
+		   ORDER BY step DESC
+		   LIMIT ?
+		 )
+		 ORDER BY step ASC`,
+		experimentID, name, limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("querying recent metrics: %w", err)
+	}
+	defer rows.Close()
+
+	results := []Metric{}
+	for rows.Next() {
+		var m Metric
+		if err := rows.Scan(&m.ExperimentID, &m.Step, &m.Name, &m.Value, &m.Timestamp); err != nil {
+			return nil, fmt.Errorf("scanning recent metric: %w", err)
+		}
+		results = append(results, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating recent metrics: %w", err)
+	}
+
+	return results, nil
+}
+
 // RecordRewardSignals inserts a batch of reward signals in a single transaction.
 func (s *Store) RecordRewardSignals(experimentID string, signals []RewardSignal) error {
 	if experimentID == "" {

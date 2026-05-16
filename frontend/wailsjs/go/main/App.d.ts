@@ -4,6 +4,7 @@ import {event} from '../models';
 import {annotation} from '../models';
 import {experiment} from '../models';
 import {project} from '../models';
+import {alerts} from '../models';
 import {main} from '../models';
 import {metrics} from '../models';
 
@@ -25,6 +26,8 @@ export function DeleteAnnotation(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteExperiment(arg1:string):Promise<void>;
 
+export function GetAlerts(arg1:string):Promise<Array<alerts.Alert>>;
+
 export function GetAppInfo():Promise<main.AppInfo>;
 
 export function GetCurrentProject():Promise<project.Project>;
@@ -34,6 +37,8 @@ export function GetCurrentProjectStatus():Promise<main.CurrentProjectStatus>;
 export function GetDBStatus():Promise<string>;
 
 export function GetDefaultProjectsDir():Promise<string>;
+
+export function GetDetections(arg1:string):Promise<Array<alerts.DetectionResult>>;
 
 export function GetExperiment(arg1:string):Promise<experiment.Experiment>;
 

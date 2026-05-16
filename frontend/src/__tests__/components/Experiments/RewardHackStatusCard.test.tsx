@@ -47,6 +47,14 @@ describe('RewardHackStatusCard', () => {
     expect(screen.getByText('0.68')).toBeInTheDocument()
   })
 
+  it('labels confidence as a heuristic score', () => {
+    render(<RewardHackStatusCard detections={withWarning} />)
+    expect(screen.getByLabelText('Sycophancy heuristic score')).toHaveAttribute(
+      'title',
+      'Heuristic score, not a calibrated probability'
+    )
+  })
+
   it('renders em dash for confidence when null', () => {
     render(<RewardHackStatusCard detections={allClear} />)
     const dashes = screen.getAllByTestId('detection-confidence')

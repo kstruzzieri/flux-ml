@@ -1,3 +1,64 @@
+export namespace alerts {
+
+	export class Alert {
+	    id: number;
+	    experiment_id: string;
+	    type: string;
+	    pattern: string;
+	    step: number;
+	    confidence: number;
+	    score_kind: string;
+	    status: string;
+	    data: string;
+	    acknowledged: boolean;
+	    created_at: number;
+
+	    static createFrom(source: any = {}) {
+	        return new Alert(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.experiment_id = source["experiment_id"];
+	        this.type = source["type"];
+	        this.pattern = source["pattern"];
+	        this.step = source["step"];
+	        this.confidence = source["confidence"];
+	        this.score_kind = source["score_kind"];
+	        this.status = source["status"];
+	        this.data = source["data"];
+	        this.acknowledged = source["acknowledged"];
+	        this.created_at = source["created_at"];
+	    }
+	}
+	export class DetectionResult {
+	    type: string;
+	    pattern: string;
+	    status: string;
+	    confidence?: number;
+	    score_kind: string;
+	    step: number;
+	    data: string;
+
+	    static createFrom(source: any = {}) {
+	        return new DetectionResult(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.type = source["type"];
+	        this.pattern = source["pattern"];
+	        this.status = source["status"];
+	        this.confidence = source["confidence"];
+	        this.score_kind = source["score_kind"];
+	        this.step = source["step"];
+	        this.data = source["data"];
+	    }
+	}
+
+}
+
 export namespace annotation {
 
 	export class Annotation {

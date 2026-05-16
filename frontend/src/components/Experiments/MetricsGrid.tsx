@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
+import { DEFAULT_DETECTIONS, useAlertsStore } from '@stores/alertsStore'
 import { useMetricsStore } from '@stores/metricsStore'
-import { computeTrend, assessHealth, deriveDetections } from '@utils/health'
+import { computeTrend, assessHealth } from '@utils/health'
 import { MetricCard } from './MetricCard'
 import { RewardHackStatusCard } from './RewardHackStatusCard'
 
@@ -18,35 +19,16 @@ const METRIC_CARDS = [
 export function MetricsGrid({ experimentId }: MetricsGridProps) {
   const latestMetrics = useMetricsStore((s) => s.latestMetrics[experimentId])
   const sparklineData = useMetricsStore((s) => s.sparklineData[experimentId])
-  const latestRewardSignals = useMetricsStore((s) => s.latestRewardSignals[experimentId])
+  const detections = useAlertsStore((s) => s.detections[experimentId] ?? DEFAULT_DETECTIONS)
   const fetchLatestMetrics = useMetricsStore((s) => s.fetchLatestMetrics)
   const fetchSparklineData = useMetricsStore((s) => s.fetchSparklineData)
-  const fetchLatestRewardSignals = useMetricsStore((s) => s.fetchLatestRewardSignals)
+  const fetchDetections = useAlertsStore((s) => s.fetchDetections)
 
   useEffect(() => {
     fetchLatestMetrics(experimentId)
     fetchSparklineData(experimentId)
-    fetchLatestRewardSignals(experimentId)
-  }, [experimentId, fetchLatestMetrics, fetchSparklineData, fetchLatestRewardSignals])
-
-  // Compute trends for cross-metric detection
-  const trends = {
-    kl: sparklineData?.kl ? computeTrend(sparklineData.kl) : undefined,
-    reward: sparklineData?.reward ? computeTrend(sparklineData.reward) : undefined,
-    reward_variance: sparklineData?.reward_variance
-      ? computeTrend(sparklineData.reward_variance)
-      : undefined,
-    policy_entropy: sparklineData?.policy_entropy
-      ? computeTrend(sparklineData.policy_entropy)
-      : undefined,
-  }
-
-  const rewardComponents = (latestRewardSignals ?? []).map((s) => ({
-    name: s.component,
-    value: s.value,
-  }))
-
-  const detections = deriveDetections(trends, rewardComponents)
+    fetchDetections(experimentId)
+  }, [experimentId, fetchLatestMetrics, fetchSparklineData, fetchDetections])
 
   // Derive latest step from sparkline data
   let latestStep: number | null = null
@@ -57,6 +39,10 @@ export function MetricsGrid({ experimentId }: MetricsGridProps) {
       }
     }
   }
+  const detectionStep = detections.reduce<number | null>((max, detection) => {
+    if (!detection.step) return max
+    return max === null || detection.step > max ? detection.step : max
+  }, null)
 
   return (
     <div className="metrics-grid" data-testid="metrics-grid">
@@ -78,7 +64,7 @@ export function MetricsGrid({ experimentId }: MetricsGridProps) {
           />
         )
       })}
-      <RewardHackStatusCard detections={detections} step={latestStep} />
+      <RewardHackStatusCard detections={detections} step={detectionStep ?? latestStep} />
     </div>
   )
 }

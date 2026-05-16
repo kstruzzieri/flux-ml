@@ -32,7 +32,7 @@ Flux is a lightweight, workspace-focused IDE designed specifically for machine l
 - **Inline Metrics**: Live loss and reward values displayed on each experiment card
 - **Sparkline Charts**: Mini SVG trend charts with LTTB downsampling for at-a-glance metric visualization
 - **Diagnostic Metric Cards**: KL divergence, learning rate, reward variance, and policy entropy with health-colored borders, trend indicators, and inline sparklines
-- **Reward Hack Detection**: Automated cross-metric pattern analysis for length gaming, sycophancy, KL drift, and reward collapse
+- **Reward Hack Indicators**: Go-backed heuristic pattern analysis for length gaming when response length is logged, sycophancy, KL drift, and reward collapse, with persisted alert records
 - **Chart Foundation**: uPlot-based time-series, reward-component, annotation, and histogram chart components
 - **Resizable Panel Layout**: Persistent, draggable panel arrangement with collapsible columns
 - **Event-Driven Updates**: Real-time metric streaming via Wails event system -- no polling
@@ -43,7 +43,7 @@ Flux is a lightweight, workspace-focused IDE designed specifically for machine l
 - **Chart Interactions**: Zoom/pan, click-to-inspect, anomaly zones, distribution views, and baseline overlays
 - **Chart Scalability**: Backend downsampling/windowing for large metric histories
 - **Run Profiles**: First-class support for ML training scripts and deployment commands
-- **Alert Engine**: Persistent alert patterns, evidence display, and alert actions
+- **Alert UI**: Evidence display, alert badges, acknowledgement/ignore actions, and inline training-output alerts
 - **File System Views**: Project file tree, config editing, and click-to-source navigation
 
 ## Tech Stack
@@ -100,7 +100,7 @@ This project is in active development. See the [GitHub Issues](https://github.co
 - **Phase 1: Foundation** -- Wails setup, core UI shell with resizable panels, icon system, design tokens
 - **Phase 2A: Data Layer** -- SQLite integration, experiment CRUD, event sourcing, metrics storage
 - **Phase 2B: Experiment List** -- Wails bindings, experiment list UI, inline metrics display, sparkline charts
-- **Phase 2C: Experiment Detail** -- Diagnostic metric cards with health indicators, reward hack detection, uPlot chart integration with live updates
+- **Phase 2C: Experiment Detail** -- Diagnostic metric cards with health indicators, Go-backed reward hack indicators, uPlot chart integration with live updates
 - **Phase 2D: Project Model & UI** -- `flux.yaml`, project-scoped experiments, new/import/open flows, recent projects, and degraded mode
 
 ### In Progress
@@ -112,7 +112,7 @@ This project is in active development. See the [GitHub Issues](https://github.co
 1. **Foundation** - Wails setup, core infrastructure
 2. **Experiments Core & Projects** - SQLite, experiment management, metrics storage, experiment UI, project model
 3. **Charts & Visualization** - Interactive charts, reward-component analysis, distributions, overlays
-4. **Alert System** - Alert detection engine, storage, evidence UI, alert actions
+4. **Alert System** - Detector hardening, evidence UI, alert actions, badges, and inline alert surfaces
 5. **Integration** - Training logs/processes, file system views, comparison workflows
 6. **Polish** - Performance optimization, keyboard UX, exports, documentation
 
