@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kstruzzieri/flux-ml/internal/alerts"
 	"github.com/kstruzzieri/flux-ml/internal/annotation"
 	"github.com/kstruzzieri/flux-ml/internal/database"
 	"github.com/kstruzzieri/flux-ml/internal/event"
@@ -30,6 +31,7 @@ func newTestApp(t *testing.T) *App {
 		experiments: experiment.NewStore(db),
 		events:      event.NewStore(db),
 		metrics:     metrics.NewStore(db),
+		alerts:      alerts.NewStore(db),
 		annotations: annotation.NewStore(db),
 		projects:    project.NewStore(db),
 		localState:  ls,
@@ -353,6 +355,79 @@ func TestApp_NilMetricsStore(t *testing.T) {
 	_, err = app.GetLatestMetrics("id")
 	if err == nil || err.Error() != "database not initialized" {
 		t.Errorf("GetLatestMetrics: expected 'database not initialized', got %v", err)
+	}
+}
+
+// --- Alert API Tests ---
+
+func TestApp_GetDetectionsAndAlerts(t *testing.T) {
+	app := newTestApp(t)
+	exp, err := app.CreateExperiment("alert-test", "{}")
+	if err != nil {
+		t.Fatalf("CreateExperiment failed: %v", err)
+	}
+
+	reward := []metrics.Metric{
+		{Step: 1, Name: "reward", Value: 0.2, Timestamp: 1001},
+		{Step: 2, Name: "reward", Value: 0.22, Timestamp: 1002},
+		{Step: 3, Name: "reward", Value: 0.25, Timestamp: 1003},
+		{Step: 4, Name: "reward", Value: 0.4, Timestamp: 1004},
+		{Step: 5, Name: "reward", Value: 0.55, Timestamp: 1005},
+		{Step: 6, Name: "reward", Value: 0.7, Timestamp: 1006},
+	}
+	kl := []metrics.Metric{
+		{Step: 1, Name: "kl", Value: 0.01, Timestamp: 1001},
+		{Step: 2, Name: "kl", Value: 0.012, Timestamp: 1002},
+		{Step: 3, Name: "kl", Value: 0.014, Timestamp: 1003},
+		{Step: 4, Name: "kl", Value: 0.03, Timestamp: 1004},
+		{Step: 5, Name: "kl", Value: 0.05, Timestamp: 1005},
+		{Step: 6, Name: "kl", Value: 0.08, Timestamp: 1006},
+	}
+	if err := app.RecordMetrics(exp.ID, reward); err != nil {
+		t.Fatalf("RecordMetrics(reward) failed: %v", err)
+	}
+	if err := app.RecordMetrics(exp.ID, kl); err != nil {
+		t.Fatalf("RecordMetrics(kl) failed: %v", err)
+	}
+
+	detections, err := app.GetDetections(exp.ID)
+	if err != nil {
+		t.Fatalf("GetDetections failed: %v", err)
+	}
+	if len(detections) != 4 {
+		t.Fatalf("expected 4 detections, got %d", len(detections))
+	}
+	var foundKL bool
+	for _, detection := range detections {
+		if detection.Type == alerts.TypeKLDrift {
+			foundKL = true
+			if detection.Status != alerts.LevelElevated {
+				t.Fatalf("KL status = %q, want elevated", detection.Status)
+			}
+		}
+	}
+	if !foundKL {
+		t.Fatal("KL detection not found")
+	}
+
+	persisted, err := app.GetAlerts(exp.ID)
+	if err != nil {
+		t.Fatalf("GetAlerts failed: %v", err)
+	}
+	if len(persisted) == 0 {
+		t.Fatal("expected persisted alerts")
+	}
+}
+
+func TestApp_NilAlertStore(t *testing.T) {
+	app := &App{}
+	_, err := app.GetDetections("id")
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("GetDetections: expected 'database not initialized', got %v", err)
+	}
+	_, err = app.GetAlerts("id")
+	if err == nil || err.Error() != "database not initialized" {
+		t.Errorf("GetAlerts: expected 'database not initialized', got %v", err)
 	}
 }
 

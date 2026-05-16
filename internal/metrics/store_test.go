@@ -209,6 +209,49 @@ func TestQueryMetrics_NoMatches(t *testing.T) {
 	}
 }
 
+func TestQueryRecentMetrics(t *testing.T) {
+	store := newTestMetricsStore(t)
+	now := time.Now().Unix()
+
+	if err := store.RecordMetrics(store.experimentID, []Metric{
+		{Step: 1, Name: "reward", Value: 0.1, Timestamp: now},
+		{Step: 2, Name: "reward", Value: 0.2, Timestamp: now},
+		{Step: 3, Name: "reward", Value: 0.3, Timestamp: now},
+		{Step: 4, Name: "reward", Value: 0.4, Timestamp: now},
+		{Step: 5, Name: "reward", Value: 0.5, Timestamp: now},
+		{Step: 5, Name: "loss", Value: 0.9, Timestamp: now},
+	}); err != nil {
+		t.Fatalf("RecordMetrics failed: %v", err)
+	}
+
+	results, err := store.QueryRecentMetrics(store.experimentID, "reward", 3)
+	if err != nil {
+		t.Fatalf("QueryRecentMetrics failed: %v", err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("expected 3 metrics, got %d", len(results))
+	}
+	wantSteps := []int64{3, 4, 5}
+	for i, want := range wantSteps {
+		if results[i].Step != want {
+			t.Errorf("results[%d].Step = %d, want %d", i, results[i].Step, want)
+		}
+	}
+}
+
+func TestQueryRecentMetricsValidation(t *testing.T) {
+	store := newTestMetricsStore(t)
+	if _, err := store.QueryRecentMetrics("", "reward", 3); err == nil {
+		t.Fatal("expected error for empty experiment ID")
+	}
+	if _, err := store.QueryRecentMetrics(store.experimentID, "", 3); err == nil {
+		t.Fatal("expected error for empty metric name")
+	}
+	if _, err := store.QueryRecentMetrics(store.experimentID, "reward", 0); err == nil {
+		t.Fatal("expected error for non-positive limit")
+	}
+}
+
 // --- RecordRewardSignals tests ---
 
 func TestRecordRewardSignals(t *testing.T) {
@@ -344,6 +387,52 @@ func TestQueryRewardSignals_FilterByStepRange(t *testing.T) {
 		if s.Step < 100 || s.Step > 200 {
 			t.Errorf("Step = %d, want in range [100, 200]", s.Step)
 		}
+	}
+}
+
+func TestLatestRewardSignals_ReturnsHighestStepPerComponent(t *testing.T) {
+	store := newTestMetricsStore(t)
+
+	if err := store.RecordRewardSignals(store.experimentID, []RewardSignal{
+		{Step: 100, Component: "helpfulness", Value: 0.80, Distribution: `{"old":true}`},
+		{Step: 200, Component: "helpfulness", Value: 0.91, Distribution: `{"new":true}`},
+		{Step: 150, Component: "harmlessness", Value: 0.72},
+		{Step: 250, Component: "honesty", Value: 0.85},
+		{Step: 50, Component: "honesty", Value: 0.40},
+	}); err != nil {
+		t.Fatalf("RecordRewardSignals failed: %v", err)
+	}
+
+	results, err := store.LatestRewardSignals(store.experimentID)
+	if err != nil {
+		t.Fatalf("LatestRewardSignals failed: %v", err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("expected 3 latest signals, got %d", len(results))
+	}
+
+	byComponent := make(map[string]RewardSignal)
+	for _, result := range results {
+		byComponent[result.Component] = result
+	}
+	if byComponent["helpfulness"].Step != 200 || byComponent["helpfulness"].Value != 0.91 {
+		t.Errorf("helpfulness = %+v, want latest step 200 value 0.91", byComponent["helpfulness"])
+	}
+	if byComponent["helpfulness"].Distribution != `{"new":true}` {
+		t.Errorf("helpfulness distribution = %q, want latest distribution", byComponent["helpfulness"].Distribution)
+	}
+	if byComponent["harmlessness"].Step != 150 {
+		t.Errorf("harmlessness step = %d, want 150", byComponent["harmlessness"].Step)
+	}
+	if byComponent["honesty"].Step != 250 {
+		t.Errorf("honesty step = %d, want 250", byComponent["honesty"].Step)
+	}
+}
+
+func TestLatestRewardSignalsValidation(t *testing.T) {
+	store := newTestMetricsStore(t)
+	if _, err := store.LatestRewardSignals(""); err == nil {
+		t.Fatal("expected error for empty experiment ID")
 	}
 }
 

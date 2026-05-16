@@ -1,13 +1,8 @@
 import { formatStepCount } from '@utils/formatting'
+import type { DetectionLevel, DetectionStatus } from '@/types/alert'
 import './RewardHackStatusCard.css'
 
-export type DetectionLevel = 'clear' | 'monitoring' | 'elevated' | 'detected'
-
-export interface DetectionStatus {
-  pattern: string
-  status: DetectionLevel
-  confidence: number | null
-}
+export type { DetectionLevel, DetectionStatus }
 
 interface RewardHackStatusCardProps {
   detections: DetectionStatus[]
@@ -60,7 +55,16 @@ export function RewardHackStatusCard({ detections, step }: RewardHackStatusCardP
             <span className={`hack-row__status hack-row__status--${d.status}`}>
               {STATUS_LABELS[d.status]}
             </span>
-            <span className="hack-row__confidence" data-testid="detection-confidence">
+            <span
+              className="hack-row__confidence"
+              data-testid="detection-confidence"
+              aria-label={`${d.pattern} heuristic score`}
+              title={
+                d.confidence != null
+                  ? 'Heuristic score, not a calibrated probability'
+                  : 'No heuristic score'
+              }
+            >
               {d.confidence != null ? d.confidence.toFixed(2) : '\u2014'}
             </span>
           </div>

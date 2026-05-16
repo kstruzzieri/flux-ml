@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kstruzzieri/flux-ml/internal/alerts"
 	"github.com/kstruzzieri/flux-ml/internal/annotation"
 	"github.com/kstruzzieri/flux-ml/internal/database"
 	"github.com/kstruzzieri/flux-ml/internal/event"
@@ -25,6 +26,7 @@ type App struct {
 	experiments *experiment.Store
 	events      *event.Store
 	metrics     *metrics.Store
+	alerts      *alerts.Store
 	annotations *annotation.Store
 	projects    *project.Store
 	localState  *project.LocalState
@@ -87,6 +89,7 @@ func (a *App) startup(ctx context.Context) {
 	a.experiments = experiment.NewStore(db)
 	a.events = event.NewStore(db)
 	a.metrics = metrics.NewStore(db)
+	a.alerts = alerts.NewStore(db)
 	a.annotations = annotation.NewStore(db)
 	a.projects = project.NewStore(db)
 

@@ -38,6 +38,10 @@ export function DeleteExperiment(arg1) {
   return window['go']['main']['App']['DeleteExperiment'](arg1);
 }
 
+export function GetAlerts(arg1) {
+  return window['go']['main']['App']['GetAlerts'](arg1);
+}
+
 export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
@@ -56,6 +60,10 @@ export function GetDBStatus() {
 
 export function GetDefaultProjectsDir() {
   return window['go']['main']['App']['GetDefaultProjectsDir']();
+}
+
+export function GetDetections(arg1) {
+  return window['go']['main']['App']['GetDetections'](arg1);
 }
 
 export function GetExperiment(arg1) {

@@ -1,4 +1,5 @@
 export { useAnnotationStore } from './annotationStore'
+export { useAlertsStore } from './alertsStore'
 export { useExperimentStore } from './experimentStore'
 export { useMetricsStore } from './metricsStore'
 export { useProjectStore } from './projectStore'

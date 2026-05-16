@@ -28,6 +28,69 @@ export namespace annotation {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace alerts {
+  export class Alert {
+    id: number = 0
+    experiment_id: string = ''
+    type: string = ''
+    pattern: string = ''
+    step: number = 0
+    confidence: number = 0
+    score_kind: string = ''
+    status: string = ''
+    data: string = ''
+    acknowledged: boolean = false
+    created_at: number = 0
+    resolved_at?: number
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new Alert(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.id = source['id'] as number
+      this.experiment_id = source['experiment_id'] as string
+      this.type = source['type'] as string
+      this.pattern = source['pattern'] as string
+      this.step = source['step'] as number
+      this.confidence = source['confidence'] as number
+      this.score_kind = source['score_kind'] as string
+      this.status = source['status'] as string
+      this.data = source['data'] as string
+      this.acknowledged = source['acknowledged'] as boolean
+      this.created_at = source['created_at'] as number
+      this.resolved_at = source['resolved_at'] as number | undefined
+    }
+  }
+
+  export class DetectionResult {
+    type: string = ''
+    pattern: string = ''
+    status: string = ''
+    confidence?: number
+    score_kind: string = ''
+    step: number = 0
+    data: string = ''
+
+    static createFrom(source: Record<string, unknown> = {}) {
+      return new DetectionResult(source)
+    }
+
+    constructor(source: Record<string, unknown> = {}) {
+      if ('string' === typeof source) source = JSON.parse(source)
+      this.type = source['type'] as string
+      this.pattern = source['pattern'] as string
+      this.status = source['status'] as string
+      this.confidence = source['confidence'] as number | undefined
+      this.score_kind = source['score_kind'] as string
+      this.step = source['step'] as number
+      this.data = source['data'] as string
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace event {
   export class Event {
     id: number = 0
