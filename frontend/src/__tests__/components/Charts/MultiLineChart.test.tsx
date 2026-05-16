@@ -88,4 +88,37 @@ describe('MultiLineChart', () => {
     expect(screen.getByTestId('multiline-chart')).toBeInTheDocument()
     expect(MockUplot).not.toHaveBeenCalled()
   })
+
+  it('configures anomaly zone plugin when zones are provided', () => {
+    render(
+      <MultiLineChart
+        data={SAMPLE_DATA}
+        seriesLabels={['a', 'b', 'c']}
+        anomalyZones={[
+          {
+            id: 'reward-divergence-1-1',
+            startStep: 1.5,
+            endStep: 2.5,
+            startIndex: 1,
+            endIndex: 1,
+            peak: {
+              step: 2,
+              index: 1,
+              highComponent: 'a',
+              highValue: 0.6,
+              lowComponent: 'c',
+              lowValue: 0.2,
+              spread: 0.4,
+              ratio: 3,
+            },
+            samples: [],
+          },
+        ]}
+      />
+    )
+
+    const [opts] = MockUplot.mock.calls[0]
+    expect(opts.plugins).toHaveLength(1)
+    expect(opts.plugins[0].hooks.drawClear).toBeInstanceOf(Function)
+  })
 })
