@@ -36,7 +36,7 @@ function createMockUPlot(over = document.createElement('div')) {
   const ctx = createMockCtx()
   const mockUPlot = {
     ctx,
-    bbox: { left: 0, top: 10, width: 800, height: 300 },
+    bbox: { left: 50, top: 10, width: 800, height: 300 },
     cursor: { left: 200 },
     over,
     valToPos: jest.fn((step: number) => step * 10),
@@ -87,13 +87,13 @@ describe('rewardDivergencePlugin', () => {
     over.getBoundingClientRect = jest.fn(
       () =>
         ({
-          left: 0,
+          left: 10,
           top: 0,
           width: 800,
           height: 300,
-          right: 800,
+          right: 810,
           bottom: 300,
-          x: 0,
+          x: 10,
           y: 0,
           toJSON: () => ({}),
         }) as DOMRect
@@ -102,9 +102,10 @@ describe('rewardDivergencePlugin', () => {
     const { mockUPlot } = createMockUPlot(over)
 
     ;(plugin.hooks.ready as (u: unknown) => void)(mockUPlot)
-    over.dispatchEvent(new MouseEvent('click', { clientX: 200 }))
+    over.dispatchEvent(new MouseEvent('click', { clientX: 135 }))
+    over.dispatchEvent(new MouseEvent('click', { clientX: 210 }))
     ;(plugin.hooks.destroy as (u: unknown) => void)(mockUPlot)
-    over.dispatchEvent(new MouseEvent('click', { clientX: 200 }))
+    over.dispatchEvent(new MouseEvent('click', { clientX: 210 }))
 
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledWith(zone)

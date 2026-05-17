@@ -37,6 +37,12 @@ function zoneAtCursor(
   )
 }
 
+function eventPlotCssLeft(u: uPlot, event: MouseEvent): number {
+  const rect = u.over.getBoundingClientRect()
+  const dpr = window.devicePixelRatio || 1
+  return event.clientX - rect.left - u.bbox.left / dpr
+}
+
 function drawZoneFill(
   u: uPlot,
   zone: RewardDivergenceZone,
@@ -109,8 +115,7 @@ export function rewardDivergencePlugin({
         if (!onSelect || !u.over || zones.length === 0) return
 
         clickHandler = (event: MouseEvent) => {
-          const rect = u.over.getBoundingClientRect()
-          const cursorLeft = event.clientX - rect.left
+          const cursorLeft = eventPlotCssLeft(u, event)
           const zone = zoneAtCursor(u, zones, cursorLeft)
           if (zone) onSelect(zone)
         }
