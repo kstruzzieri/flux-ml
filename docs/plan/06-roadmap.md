@@ -10,7 +10,7 @@ Flux is an ML development environment focused on reward model workflows, experim
 - Completed: Phase 1 foundation, Phase 2A data layer, Phase 2B experiment list, Phase 2C experiment detail/chart foundation, the project model/project UI foundation, and Phase 4A alert engine v1.
 - Recently landed: project open/import/new-project flows, recent-project handling, canonical project path fixes, seeded-project reopen behavior, wizard/default-folder follow-ups, and backend reward-hack detections with alert persistence/retrieval.
 - Verification baseline: `npm test -- --runInBand`, `npm run typecheck`, `npm run lint`, `go test ./...`, and `git diff --check`.
-- Next focus: finish reward component divergence/anomaly visualization, then build Phase 4B alert UI evidence/actions/header surfaces on top of the persisted alert engine.
+- Next focus: finish full chart click-to-inspect behavior and remaining Phase 3 chart interactions, then build Phase 4B alert UI evidence/actions/header surfaces on top of the persisted alert engine.
 
 ## Phase 1: Foundation (Weeks 1-3)
 
@@ -76,8 +76,8 @@ Flux is an ML development environment focused on reward model workflows, experim
 
 ### 3B: Reward Components Chart
 - [x] Multi-line chart for components
-- [ ] Divergence visualization
-- [ ] Anomaly zone highlighting
+- [x] Divergence visualization
+- [x] Anomaly zone highlighting
 - [ ] Click-to-inspect interactions
 
 ### 3C: Distribution Charts

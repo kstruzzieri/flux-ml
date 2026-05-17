@@ -3,7 +3,9 @@ import type { AlignedData, Options } from 'uplot'
 import { useUPlot } from './useUPlot'
 import { buildAxes, buildCursor, buildScales, CHART_COLORS } from './chartTheme'
 import { annotationsPlugin } from './annotationsPlugin'
+import { rewardDivergencePlugin } from './rewardDivergencePlugin'
 import type { Annotation } from '../../types/annotation'
+import type { RewardDivergenceZone } from '@utils/rewardDivergence'
 import './Charts.css'
 
 interface MultiLineChartProps {
@@ -12,6 +14,9 @@ interface MultiLineChartProps {
   seriesColors?: string[]
   height?: number
   annotations?: Annotation[]
+  anomalyZones?: RewardDivergenceZone[]
+  selectedAnomalyZoneId?: string | null
+  onAnomalyZoneSelect?: (zone: RewardDivergenceZone) => void
 }
 
 export function MultiLineChart({
@@ -20,6 +25,9 @@ export function MultiLineChart({
   seriesColors,
   height,
   annotations,
+  anomalyZones,
+  selectedAnomalyZoneId,
+  onAnomalyZoneSelect,
 }: MultiLineChartProps) {
   if (process.env.NODE_ENV !== 'production' && data.length > 0) {
     const expectedDataArrays = seriesLabels.length + 1 // +1 for x-axis
@@ -44,10 +52,20 @@ export function MultiLineChart({
     ]
   }, [seriesLabels, seriesColors])
 
-  const plugins = useMemo(
-    () => (annotations?.length ? [annotationsPlugin(annotations)] : []),
-    [annotations]
-  )
+  const plugins = useMemo(() => {
+    const configuredPlugins = []
+    if (anomalyZones?.length) {
+      configuredPlugins.push(
+        rewardDivergencePlugin({
+          zones: anomalyZones,
+          selectedZoneId: selectedAnomalyZoneId,
+          onSelect: onAnomalyZoneSelect,
+        })
+      )
+    }
+    if (annotations?.length) configuredPlugins.push(annotationsPlugin(annotations))
+    return configuredPlugins
+  }, [annotations, anomalyZones, selectedAnomalyZoneId, onAnomalyZoneSelect])
 
   const containerRef = useUPlot(
     (w, h) => ({

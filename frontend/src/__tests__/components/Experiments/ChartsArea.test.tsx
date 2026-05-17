@@ -40,6 +40,12 @@ const OVERVIEW_CHART_DATA: AlignedData = [
 ]
 
 const REWARD_COMPONENT_CHART_DATA: AlignedData = [[10], [0.8], [0.7], [0.75]]
+const DIVERGENT_REWARD_COMPONENT_CHART_DATA: AlignedData = [
+  [10, 20, 30],
+  [0.8, 0.84, 0.86],
+  [0.7, 0.31, 0.74],
+  [0.75, 0.79, 0.8],
+]
 
 describe('ChartsArea', () => {
   it('renders three chart tabs', () => {
@@ -112,6 +118,7 @@ describe('ChartsArea', () => {
     render(<ChartsArea experimentId="exp-1" />)
     fireEvent.click(screen.getByText('Reward Components'))
     expect(screen.getByTestId('multiline-chart')).toBeInTheDocument()
+    expect(screen.getByText('Components balanced')).toBeInTheDocument()
   })
 
   it('shows placeholder in Reward Components tab when no data', () => {
@@ -119,5 +126,27 @@ describe('ChartsArea', () => {
     fireEvent.click(screen.getByText('Reward Components'))
     expect(screen.getByText('No metrics data yet')).toBeInTheDocument()
     expect(screen.queryByTestId('multiline-chart')).not.toBeInTheDocument()
+  })
+
+  it('shows reward divergence summary when components diverge', () => {
+    useMetricsStore.setState((state) => ({
+      rewardComponentChartData: {
+        ...state.rewardComponentChartData,
+        'exp-1': DIVERGENT_REWARD_COMPONENT_CHART_DATA,
+      },
+    }))
+
+    render(<ChartsArea experimentId="exp-1" />)
+    fireEvent.click(screen.getByText('Reward Components'))
+
+    expect(screen.getByTestId('reward-divergence-summary')).toBeInTheDocument()
+    expect(screen.getByText('Reward divergence')).toBeInTheDocument()
+    expect(screen.getByText('1 zone')).toBeInTheDocument()
+    expect(screen.getByText('Peak 2.7x at step 20')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Step 20 2.7x/ })).toHaveClass(
+      'charts-area__divergence-zone--selected'
+    )
+    expect(screen.getByText('Helpfulness 0.840')).toBeInTheDocument()
+    expect(screen.getByText('Harmlessness 0.310')).toBeInTheDocument()
   })
 })

@@ -105,7 +105,7 @@ This project is in active development. See the [GitHub Issues](https://github.co
 
 ### In Progress
 
-- **Phase 3: Charts & Visualization** -- uPlot integration, reusable chart components, live updates, annotations, reward components, and histogram component are complete. Remaining work is focused on chart scalability, zoom/pan, click-to-inspect, divergence/anomaly highlighting, distribution views, and baseline overlays.
+- **Phase 3: Charts & Visualization** -- uPlot integration, reusable chart components, live updates, annotations, reward components, divergence/anomaly zones, and histogram component are complete. Remaining work is focused on chart scalability, zoom/pan, click-to-inspect, distribution views, and baseline overlays.
 
 ### Phases
 
